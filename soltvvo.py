@@ -72,7 +72,7 @@ def arr2num(arr):
     for i in range(6):
         res2 *= 3
         res2 += arr[i][1]
-    return res1 * 10000000 + res2
+    return res1 * 10000 + res2
 
 # 逆手順を返す
 def reverse(arr):
@@ -229,6 +229,48 @@ def start_p():
         print(solved_color[i])
     print(solved)
 
+    #枝刈り用のco配列とcp配列
+    inf = 100
+    cp = [[inf for _ in range(7)] for _ in range(7)]
+    co = [[inf for _ in range(3)] for _ in range(7)]
+    for i in range(7):
+        for j in range(7):
+            que = deque([[deepcopy(solved), 0, -1]])
+            while len(que) and cp[i][j] == inf:
+                tmp = que.popleft()
+                arr = tmp[0]
+                num = tmp[1]
+                l_mov = tmp[2]
+                tmp_arr = [arr[k][0] for k in range(7)]
+                if arr[i][0] == j:
+                    cp[i][j] = num
+                for mov in range(9):
+                    if num != 0 and mov // 3 == l_mov // 3:
+                        continue
+                    n_arr = move(deepcopy(arr), mov)
+                    if [n_arr[k][0] for k in range(7)].index(i) != tmp_arr.index(i):
+                        que.append([n_arr, num + 1, mov])
+    for i in range(7):
+        for j in range(3):
+            que = deque([[deepcopy(solved), 0, -1]])
+            while len(que) and co[i][j] == inf:
+                tmp = que.popleft()
+                arr = tmp[0]
+                num = tmp[1]
+                l_mov = tmp[2]
+                tmp_arr = [arr[k][0] for k in range(7)]
+                if arr[i][0] == solved[i][0] and arr[i][1] == j:
+                    co[i][j] = num
+                for mov in range(9):
+                    if num != 0 and mov // 3 == l_mov // 3:
+                        continue
+                    n_arr = move(deepcopy(arr), mov)
+                    if [n_arr[k][0] for k in range(7)].index(i) != tmp_arr.index(i):
+                        que.append([n_arr, num + 1, mov])
+    for i in range(7):
+        print(cp[i])
+    print(co)
+
     # IDA*
     idx1 = arr2num(puzzle)
     idx2 = arr2num(puzzle)
@@ -238,7 +280,6 @@ def start_p():
         que.extend(deepcopy(marked[1][1]))
         marked[0] = deepcopy(marked[1])
         marked[1] = [[], []]
-        #print('marked_1', marked)
         fins = -1
         ans = []
         while len(que) and not len(ans):
@@ -262,7 +303,14 @@ def start_p():
                     ans = res
                     fins = time()
                     break
-            if num < depth:
+            pls = inf
+            for i in range(7):
+                pls = min(pls, cp[i][arr[i][0]])
+            if pls == 0:
+                pls = inf
+                for i in range(7):
+                    pls = min(pls, co[i][arr[i][1]])
+            if (pls == 0 and num < depth) or (pls != 0 and num + pls <= depth):
                 for i in range(9):
                     if num != 0 and i // 3 == moves[-1] // 3:
                         continue
@@ -276,8 +324,7 @@ def start_p():
                         marked[1][mode].sort(key=lambda x:x[4])
                     if num + 1 == depth:
                         que.append([n_arr, num + 1, n_moves, mode])
-        #print('d', depth, ans)
-        #print('marked_2', marked)
+        print('depth', depth)
         if ans != []:
             break
     print('answer:', num2moves(ans))
@@ -327,7 +374,7 @@ start.pack()
 surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
 #j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 150], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
 circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
 idx = 0
 
@@ -336,7 +383,7 @@ fn = 'pic.jpg'
 def detect():
     global idx, colors
     with picamera.PiCamera() as camera:
-        camera.resolution = (1024, 768)
+        camera.resolution = (100, 75)
         camera.start_preview()
         camera.capture(fn)
         sleep(0.02)
@@ -346,8 +393,7 @@ def detect():
     #ret, frame = capture.read()
     size_x = 100
     size_y = 75
-    windowsize = (size_x, size_y)
-    frame = cv2.resize(frame, windowsize)
+    frame = cv2.resize(frame, (size_x, size_y))
     show_frame = deepcopy(frame)
     d = 20
     center = [size_x // 2, size_y // 2]
