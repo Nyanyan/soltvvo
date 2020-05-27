@@ -1,4 +1,3 @@
-# coding:utf-8
 '''
 arr[その位置にあるパーツの番号][ステッカーの向き]
 U面
@@ -18,11 +17,10 @@ L [欠番] [6, 0] R
 from copy import deepcopy
 from collections import deque
 from math import factorial
-from time import time, sleep
+from time import time
 import tkinter
 import cv2
 import numpy as np
-import picamera
 
 # 回転番号に則って実際にパズルの状態配列を変化させる
 def move(n_arr, num):
@@ -309,32 +307,26 @@ start = tkinter.Button(canvas, text="start", command=start_p)
 start.pack()
 
 
+# カメラでパズルの色を取ってくる
+capture = cv2.VideoCapture(0)
 surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
 #j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 150], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+color_low = [[50, 50, 50],   [80, 50, 50],    [160, 100, 50], [0, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+color_hgh = [[80, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
 circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
 idx = 0
 
-fn = 'pic.jpg'
-
 def detect():
     global idx, colors
-    with picamera.PiCamera() as camera:
-        camera.resolution = (1024, 768)
-        camera.start_preview()
-        camera.capture(fn)
-        sleep(0.02)
-    frame = cv2.imread(fn)#VideoCapture(0)
     if idx >= 4:
         return
-    #ret, frame = capture.read()
-    size_x = 100
-    size_y = 75
+    ret, frame = capture.read()
+    size_x = 400
+    size_y = 300
     windowsize = (size_x, size_y)
     frame = cv2.resize(frame, windowsize)
     show_frame = deepcopy(frame)
-    d = 20
+    d = 70
     center = [size_x // 2, size_y // 2]
     tmp_colors = [['' for _ in range(8)] for _ in range(6)]
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
@@ -363,10 +355,20 @@ def detect():
         print(idx)
         idx += 1
         confirm_p()
+        '''
+        for i in range(6):
+            print(tmp_colors[i])
+        print('')
+        for i in range(6):
+            print(colors[i])
+        print('')
+        '''
     cv2.imshow('title',show_frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        return
     root.after(5, detect)
 
 root.after(5, detect)
 root.mainloop()
 
-#capture.release()
+capture.release()
