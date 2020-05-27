@@ -133,6 +133,28 @@ def confirm_p():
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
 
+#にぶたん
+def search(arr, num):
+    if not len(arr):
+        return -1
+    l = 0
+    r = len(arr) - 1
+    while r - l > 1:
+        c = (r + l) // 2
+        if arr[c][0] > num:
+            r = c
+        elif arr[c][0] < num:
+            l = c
+        else:
+            r = c
+            l = c
+    if arr[l][0] == num:
+        return l
+    elif arr[r][0] == num:
+        return r
+    else:
+        return -1
+
 # メイン処理
 def start_p():
     strt = time()
@@ -207,64 +229,77 @@ def start_p():
         print(solved_color[i])
     print(solved)
 
-    # 双方向幅優先探索
-    que = deque([[deepcopy(puzzle), 0, [], 0], [deepcopy(solved), 0, [], 1]])
-    marked = [[[[] for _ in range(3 ** 6)] for _ in range(factorial(7))] for _ in range(2)]
-    idx1, idx2 = arr2num(solved)
-    marked[0][idx1][idx2] = [-1]
-    idx1, idx2 = arr2num(puzzle)
-    marked[1][idx1][idx2] = [-1]
-    flag = True
-    fins = -1
-    ans = []
-    while flag and len(que):
-        tmp = que.popleft()
-        arr = tmp[0]
-        num = tmp[1]
-        moves = tmp[2]
-        mode = tmp[3]
-        if arr == solved and mode == 0:
-            ans = moves
-            fins = time()
-            flag = False
-        elif arr == puzzle and mode == 1:
-            ans = reverse(moves)
-            fins = time()
-            flag = False
-        if num < 6:
-            for i in range(9):
-                if num != 0 and i // 3 == moves[-1] // 3:
-                    continue
-                n_arr = move(deepcopy(arr), i)
-                n_moves = deepcopy(moves)
-                n_moves.append(i)
-                if n_arr == solved and mode == 0:
-                    ans = n_moves
-                    fins = time()
-                    flag = False
-                    break
-                elif n_arr == puzzle and mode == 1:
-                    ans = reverse(n_moves)
-                    fins = time()
-                    flag = False
-                    break
-                idx1, idx2 = arr2num(n_arr)
-                if len(marked[(mode + 1) % 2][idx1][idx2]):
-                    res = []
-                    if mode == 0:
-                        res = n_moves
-                        res.extend(reverse(marked[(mode + 1) % 2][idx1][idx2]))
-                    else:
-                        res = marked[(mode + 1) % 2][idx1][idx2]
-                        res.extend(reverse(n_moves))
-                    ans = res
-                    fins = time()
-                    flag = False
-                    break
-                elif len(marked[mode][idx1][idx2]):
-                    continue
-                marked[mode][idx1][idx2] = n_moves
-                que.append([n_arr, num + 1, n_moves, mode])
+    # IDA*
+    for depth in range(6):
+        que = deque([[deepcopy(puzzle), 0, [], 0], [deepcopy(solved), 0, [], 1]])
+        marked = [[], []]
+        #idx1, idx2 = arr2num(solved)
+        #marked[0][idx1][idx2] = [-1]
+        #idx1, idx2 = arr2num(puzzle)
+        #marked[1][idx1][idx2] = [-1]
+        flag = True
+        fins = -1
+        ans = []
+        while flag and len(que):
+            #print('marked', marked)
+            tmp = que.popleft()
+            arr = tmp[0]
+            num = tmp[1]
+            moves = tmp[2]
+            mode = tmp[3]
+            if arr == solved and mode == 0:
+                ans = moves
+                fins = time()
+                flag = False
+            elif arr == puzzle and mode == 1:
+                ans = reverse(moves)
+                fins = time()
+                flag = False
+            if num < depth:
+                for i in range(9):
+                    if num != 0 and i // 3 == moves[-1] // 3:
+                        continue
+                    n_arr = move(deepcopy(arr), i)
+                    n_moves = deepcopy(moves)
+                    n_moves.append(i)
+                    if n_arr == solved and mode == 0:
+                        ans = n_moves
+                        fins = time()
+                        flag = False
+                        break
+                    elif n_arr == puzzle and mode == 1:
+                        ans = reverse(n_moves)
+                        fins = time()
+                        flag = False
+                        break
+                    idx1, idx2 = arr2num(n_arr)
+                    dmode = 1 if mode == 0 else 0
+                    searched = search(marked[dmode], idx1 * 10000000 + idx2)
+                    if searched != -1:
+                        res = []
+                        if mode == 0:
+                            res = n_moves
+                            res.extend(reverse(marked[dmode][searched][1]))
+                        else:
+                            res = marked[dmode][searched][1]
+                            res.extend(reverse(n_moves))
+                        ans = res
+                        fins = time()
+                        flag = False
+                        break
+                    #marked[mode][idx1][idx2] = n_moves
+                    que.append([n_arr, num + 1, n_moves, mode])
+                    if num + 2 == depth and mode == 1:
+                        idx1, idx2 = arr2num(n_arr)
+                        marked[mode].append([idx1 * 10000000 + idx2, n_moves])
+                        marked[mode].sort()
+            elif num == depth:
+                idx1, idx2 = arr2num(arr)
+                marked[mode].append([idx1 * 10000000 + idx2, moves])
+                marked[mode].sort()
+        print('d', depth, ans)
+        if ans != []:
+            break
     print('answer:', num2moves(ans))
     print(fins - strt, 's')
 
