@@ -23,24 +23,8 @@ import tkinter
 import cv2
 import numpy as np
 from itertools import permutations
-#import picamera
 
-# 回転番号に則って実際にパズルの状態配列を変化させる
-def move(n_arr, num):
-    idx = num // 3
-    rot_arr1 = np.matrix([[n_arr[surface[idx][i]][0] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr1 = np.rot90(rot_arr1, 3 - num % 3).tolist()
-    rot_arr2 = np.matrix([[n_arr[surface[idx][i]][1] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr2 = np.rot90(rot_arr2, 3 - num % 3).tolist()
-    tmp = [[[2, 1], [1, 2]], [[0, 0], [0, 0]], [[2, 1], [1, 2]]]
-    if num // 3 != 0:
-        rot_arr2 = [[(rot_arr2[j][i] + tmp[num % 3][j][i]) % 3 for i in range(2)] for j in range(2)]
-    for i in range(4):
-        n_arr[surface[idx][i]][0] = rot_arr1[i // 2][i % 2]
-        n_arr[surface[idx][i]][1] = rot_arr2[i // 2][i % 2]
-    return n_arr
-
-#CPのみの処理
+# 回転処理 CP
 def move_cp(n_arr, num):
     idx = num // 3
     rot_arr1 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
@@ -49,7 +33,7 @@ def move_cp(n_arr, num):
         n_arr[surface[idx][i]] = rot_arr1[i // 2][i % 2]
     return n_arr
 
-#COのみの処理
+# 回転処理 CO
 def move_co(n_arr, num):
     idx = num // 3
     rot_arr2 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
@@ -61,26 +45,19 @@ def move_co(n_arr, num):
         n_arr[surface[idx][i]] = rot_arr2[i // 2][i % 2]
     return n_arr
 
-# スクランブルする 使用されていない
-def scrm(n_arr, move_num):
-    if len(scramble_arr) == move_num:
-        return n_arr
-    n_arr = move(n_arr, scramble_arr[move_num])
-    n_arr = scrm(n_arr, move_num + 1)
-    return n_arr
+# 回転番号に則って実際にパズルの状態配列を変化させる
+def move(n_arr, num):
+    idx = num // 3
+    cp_arr = move_cp([n_arr[i][0] for i in range(7)], num)
+    co_arr = move_co([n_arr[i][1] for i in range(7)], num)
+    res = [[cp_arr[i], co_arr[i]] for i in range(7)]
+    return res
 
 # 回転番号を回転記号に変換
 def num2moves(arr):
     res = ''
     for i in arr:
         res += move_candidate[i] + ' '
-    return res
-
-# 回転記号を回転番号に変換 使用されていない
-def moves2num(arr):
-    res = []
-    for i in arr:
-        res.append(move_candidate.index(i))
     return res
 
 # パズルの状態配列固有の番号を返す
@@ -368,7 +345,7 @@ def start_p():
             que.append([n_arr, num + 1, mov, n_idx])
     print(time() - strt, 's')
 
-    # 双方向IDA*
+    # 双方向IDA* with 枝刈り
     idx1 = arr2num(puzzle)
     idx2 = arr2num(puzzle)
     marked = [[[], []], [[[deepcopy(puzzle), 0, [], 0, idx1]], [[deepcopy(solved), 0, [], 1, idx2]]]]
@@ -462,7 +439,6 @@ confirm.pack()
 
 start = tkinter.Button(canvas, text="start", command=start_p)
 start.pack()
-
 
 surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
 #j2color = ['g', 'b', 'r', 'o', 'y', 'w']
