@@ -106,7 +106,7 @@ def reverse(arr):
             arr[i] -= 2
     return arr
 
-# ボックスから色の情報を取ってくる
+# ボックスから色の情報を取ってくる -> ボックスに色を反映させる
 def confirm_p():
     global colors
 
@@ -155,7 +155,7 @@ def confirm_p():
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
 
-#にぶたん
+# にぶたん
 def search(arr, num):
     if not len(arr):
         return -1
@@ -177,7 +177,7 @@ def search(arr, num):
     else:
         return -1
 
-#固有の番号からcp配列を作成
+# 固有の番号からcp配列を作成
 def i2cp(num):
     res = []
     pls = [0 for _ in range(7)]
@@ -189,7 +189,7 @@ def i2cp(num):
         num -= num // tmp * tmp
     return res
 
-#cp配列から固有の番号を作成
+# cp配列から固有の番号を作成
 def cp2i(arr):
     res = 0
     marked = set([])
@@ -198,7 +198,7 @@ def cp2i(arr):
         marked.add(arr[i])
     return res
 
-#固有の番号からco配列を作成
+# 固有の番号からco配列を作成
 def i2co(num):
     res = []
     for i in range(7):
@@ -206,7 +206,7 @@ def i2co(num):
         num -= num // 3 * 3
     return res
 
-#co配列から固有の番号を作成
+# co配列から固有の番号を作成
 def co2i(arr):
     res = 0
     for i in arr:
@@ -214,6 +214,45 @@ def co2i(arr):
         res += i
     return res
 
+# パズルの状態の取得
+def detect():
+    global idx, colors
+    if idx >= 4:
+        return
+    ret, frame = capture.read()
+    size_x = 100
+    size_y = 75
+    frame = cv2.resize(frame, (size_x, size_y))
+    show_frame = deepcopy(frame)
+    d = 20
+    center = [size_x // 2, size_y // 2]
+    tmp_colors = [['' for _ in range(8)] for _ in range(6)]
+    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+    dx = [-1, -1, 1, 1]
+    dy = [-1, 1, -1, 1]
+    for i in range(4):
+        y = center[0] + dy[i] * d
+        x = center[1] + dx[i] * d
+        cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
+        val = hsv[x, y]
+        for j in range(6):
+            flag = True
+            for k in range(3):
+                if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
+                    flag = False
+            if flag:
+                tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
+                #print(j2color[j], end=' ')
+                cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
+                break
+    if cv2.waitKey(1) & 0xFF == ord('n'):
+        for i in range(4):
+            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+        print(idx)
+        idx += 1
+        confirm_p()
+    cv2.imshow('title',show_frame)
+    root.after(5, detect)
 
 # メイン処理
 def start_p():
@@ -293,7 +332,6 @@ def start_p():
     inf = 100
     cp = [inf for _ in range(factorial(7))]
     cp_solved = [solved[i][0] for i in range(7)]
-    #print('depth', depth)
     que = deque([[deepcopy(cp_solved), 0, -1, cp2i(cp_solved)]])
     while len(que):
         tmp = que.popleft()
@@ -328,8 +366,6 @@ def start_p():
             n_arr = move_co(deepcopy(arr), mov)
             n_idx = co2i(n_arr)
             que.append([n_arr, num + 1, mov, n_idx])
-    #print(cp)
-    #print(co)
     print(time() - strt, 's')
 
     # 双方向IDA*
@@ -439,56 +475,6 @@ idx = 0
 
 fn = 'pic.jpg'
 capture = cv2.VideoCapture(0)
-
-def detect():
-    global idx, colors
-    if idx >= 4:
-        return
-    '''
-    with picamera.PiCamera() as camera:
-        camera.resolution = (100, 75)
-        camera.start_preview()
-        camera.capture(fn)
-        sleep(0.02)
-    frame = cv2.imread(fn)#VideoCapture(0)
-    '''
-    ret, frame = capture.read()
-    #ret, frame = capture.read()
-    size_x = 100
-    size_y = 75
-    frame = cv2.resize(frame, (size_x, size_y))
-    show_frame = deepcopy(frame)
-    d = 20
-    center = [size_x // 2, size_y // 2]
-    tmp_colors = [['' for _ in range(8)] for _ in range(6)]
-    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-    dx = [-1, -1, 1, 1]
-    dy = [-1, 1, -1, 1]
-    for i in range(4):
-        y = center[0] + dy[i] * d
-        x = center[1] + dx[i] * d
-        cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
-        val = hsv[x, y]
-        #print(val, end='')
-        for j in range(6):
-            flag = True
-            for k in range(3):
-                if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
-                    flag = False
-            if flag:
-                tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
-                #print(j2color[j], end=' ')
-                cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
-                break
-    #print('')
-    if cv2.waitKey(1) & 0xFF == ord('n'):
-        for i in range(4):
-            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-        print(idx)
-        idx += 1
-        confirm_p()
-    cv2.imshow('title',show_frame)
-    root.after(5, detect)
 
 root.after(5, detect)
 root.mainloop()
