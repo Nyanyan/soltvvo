@@ -22,14 +22,15 @@ from time import time, sleep
 import tkinter
 import cv2
 import numpy as np
-import picamera
+from itertools import permutations
+#import picamera
 
 # 回転番号に則って実際にパズルの状態配列を変化させる
 def move(n_arr, num):
     idx = num // 3
     rot_arr1 = np.matrix([[n_arr[surface[idx][i]][0] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr2 = np.matrix([[n_arr[surface[idx][i]][1] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
     rot_arr1 = np.rot90(rot_arr1, 3 - num % 3).tolist()
+    rot_arr2 = np.matrix([[n_arr[surface[idx][i]][1] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
     rot_arr2 = np.rot90(rot_arr2, 3 - num % 3).tolist()
     tmp = [[[2, 1], [1, 2]], [[0, 0], [0, 0]], [[2, 1], [1, 2]]]
     if num // 3 != 0:
@@ -37,6 +38,27 @@ def move(n_arr, num):
     for i in range(4):
         n_arr[surface[idx][i]][0] = rot_arr1[i // 2][i % 2]
         n_arr[surface[idx][i]][1] = rot_arr2[i // 2][i % 2]
+    return n_arr
+
+#CPのみの処理
+def move_cp(n_arr, num):
+    idx = num // 3
+    rot_arr1 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
+    rot_arr1 = np.rot90(rot_arr1, 3 - num % 3).tolist()
+    for i in range(4):
+        n_arr[surface[idx][i]] = rot_arr1[i // 2][i % 2]
+    return n_arr
+
+#COのみの処理
+def move_co(n_arr, num):
+    idx = num // 3
+    rot_arr2 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
+    rot_arr2 = np.rot90(rot_arr2, 3 - num % 3).tolist()
+    tmp = [[[2, 1], [1, 2]], [[0, 0], [0, 0]], [[2, 1], [1, 2]]]
+    if num // 3 != 0:
+        rot_arr2 = [[(rot_arr2[j][i] + tmp[num % 3][j][i]) % 3 for i in range(2)] for j in range(2)]
+    for i in range(4):
+        n_arr[surface[idx][i]] = rot_arr2[i // 2][i % 2]
     return n_arr
 
 # スクランブルする 使用されていない
@@ -155,6 +177,44 @@ def search(arr, num):
     else:
         return -1
 
+#固有の番号からcp配列を作成
+def i2cp(num):
+    res = []
+    pls = [0 for _ in range(7)]
+    for i in range(7):
+        tmp = factorial(6 - i)
+        res.append(num // tmp + pls[num // tmp])
+        for j in range(num // tmp, 7):
+            pls[j] += 1
+        num -= num // tmp * tmp
+    return res
+
+#cp配列から固有の番号を作成
+def cp2i(arr):
+    res = 0
+    marked = set([])
+    for i in range(7):
+        res += factorial(6 - i) * len(set(range(arr[i])) - marked)
+        marked.add(arr[i])
+    return res
+
+#固有の番号からco配列を作成
+def i2co(num):
+    res = []
+    for i in range(7):
+        res.append(num // 3)
+        num -= num // 3 * 3
+    return res
+
+#co配列から固有の番号を作成
+def co2i(arr):
+    res = 0
+    for i in arr:
+        res *= 3
+        res += i
+    return res
+
+
 # メイン処理
 def start_p():
     strt = time()
@@ -229,49 +289,50 @@ def start_p():
         print(solved_color[i])
     print(solved)
 
-    #枝刈り用のco配列とcp配列
+    # 枝刈り用のco配列とcp配列
     inf = 100
-    cp = [[inf for _ in range(7)] for _ in range(7)]
-    co = [[inf for _ in range(3)] for _ in range(7)]
-    for i in range(7):
-        for j in range(7):
-            que = deque([[deepcopy(solved), 0, -1]])
-            while len(que) and cp[i][j] == inf:
-                tmp = que.popleft()
-                arr = tmp[0]
-                num = tmp[1]
-                l_mov = tmp[2]
-                tmp_arr = [arr[k][0] for k in range(7)]
-                if arr[i][0] == j:
-                    cp[i][j] = num
-                for mov in range(9):
-                    if num != 0 and mov // 3 == l_mov // 3:
-                        continue
-                    n_arr = move(deepcopy(arr), mov)
-                    if [n_arr[k][0] for k in range(7)].index(i) != tmp_arr.index(i):
-                        que.append([n_arr, num + 1, mov])
-    for i in range(7):
-        for j in range(3):
-            que = deque([[deepcopy(solved), 0, -1]])
-            while len(que) and co[i][j] == inf:
-                tmp = que.popleft()
-                arr = tmp[0]
-                num = tmp[1]
-                l_mov = tmp[2]
-                tmp_arr = [arr[k][0] for k in range(7)]
-                if arr[i][0] == solved[i][0] and arr[i][1] == j:
-                    co[i][j] = num
-                for mov in range(9):
-                    if num != 0 and mov // 3 == l_mov // 3:
-                        continue
-                    n_arr = move(deepcopy(arr), mov)
-                    if [n_arr[k][0] for k in range(7)].index(i) != tmp_arr.index(i):
-                        que.append([n_arr, num + 1, mov])
-    for i in range(7):
-        print(cp[i])
-    print(co)
+    cp = [inf for _ in range(factorial(7))]
+    cp_solved = [solved[i][0] for i in range(7)]
+    #print('depth', depth)
+    que = deque([[deepcopy(cp_solved), 0, -1, cp2i(cp_solved)]])
+    while len(que):
+        tmp = que.popleft()
+        arr = tmp[0]
+        num = tmp[1]
+        l_mov = tmp[2]
+        idx = tmp[3]
+        if cp[idx] != inf:
+            continue
+        cp[idx] = num
+        for mov in range(9):
+            if num != 0 and mov // 3 == l_mov // 3:
+                continue
+            n_arr = move_cp(deepcopy(arr), mov)
+            n_idx = cp2i(n_arr)
+            que.append([n_arr, num + 1, mov, n_idx])
+    co = [inf for _ in range(3 ** 7)]
+    co_solved = [solved[i][1] for i in range(7)]
+    que = deque([[deepcopy(co_solved), 0, -1, co2i(co_solved)]])
+    while len(que):
+        tmp = que.popleft()
+        arr = tmp[0]
+        num = tmp[1]
+        l_mov = tmp[2]
+        idx = tmp[3]
+        if co[idx] != inf:
+            continue
+        co[idx] = num
+        for mov in range(9):
+            if num != 0 and mov // 3 == l_mov // 3:
+                continue
+            n_arr = move_co(deepcopy(arr), mov)
+            n_idx = co2i(n_arr)
+            que.append([n_arr, num + 1, mov, n_idx])
+    #print(cp)
+    #print(co)
+    print(time() - strt, 's')
 
-    # IDA*
+    # 双方向IDA*
     idx1 = arr2num(puzzle)
     idx2 = arr2num(puzzle)
     marked = [[[], []], [[[deepcopy(puzzle), 0, [], 0, idx1]], [[deepcopy(solved), 0, [], 1, idx2]]]]
@@ -280,7 +341,6 @@ def start_p():
         que.extend(deepcopy(marked[1][1]))
         marked[0] = deepcopy(marked[1])
         marked[1] = [[], []]
-        fins = -1
         ans = []
         while len(que) and not len(ans):
             tmp = que.pop()
@@ -301,34 +361,31 @@ def start_p():
                         res = marked[i][dmode][searched][2]
                         res.extend(reverse(moves))
                     ans = res
-                    fins = time()
                     break
-            pls = inf
-            for i in range(7):
-                pls = min(pls, cp[i][arr[i][0]])
-            if pls == 0:
-                pls = inf
-                for i in range(7):
-                    pls = min(pls, co[i][arr[i][1]])
-            if (pls == 0 and num < depth) or (pls != 0 and num + pls <= depth):
-                for i in range(9):
-                    if num != 0 and i // 3 == moves[-1] // 3:
-                        continue
-                    n_arr = move(deepcopy(arr), i)
-                    n_moves = deepcopy(moves)
-                    n_moves.append(i)
-                    idx = arr2num(n_arr)
-                    searched = search(marked[1][mode], idx)
-                    if searched == -1:
-                        marked[1][mode].append([n_arr, num + 1, n_moves, mode, idx])
-                        marked[1][mode].sort(key=lambda x:x[4])
-                    if num + 1 == depth:
-                        que.append([n_arr, num + 1, n_moves, mode])
-        print('depth', depth)
+            cp_pls = cp2i([arr[i][0] for i in range(7)])
+            co_pls = co2i([arr[i][1] for i in range(7)])
+            pls = max(cp[cp_pls], co[co_pls])
+            #print(pls)
+            if 2 * num - 1 + pls > 11 or num + 1 > depth:
+                continue
+            for i in range(9):
+                if num != 0 and i // 3 == moves[-1] // 3:
+                    continue
+                n_arr = move(deepcopy(arr), i)
+                n_moves = deepcopy(moves)
+                n_moves.append(i)
+                idx = arr2num(n_arr)
+                searched = search(marked[1][mode], idx)
+                if searched == -1:
+                    marked[1][mode].append([n_arr, num + 1, n_moves, mode, idx])
+                    marked[1][mode].sort(key=lambda x:x[4])
+                    #if num + 1 == depth:
+                    que.append([n_arr, num + 1, n_moves, mode])
+        print('depth:', depth)
         if ans != []:
             break
     print('answer:', num2moves(ans))
-    print(fins - strt, 's')
+    print(time() - strt, 's')
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
@@ -373,23 +430,29 @@ start.pack()
 
 surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
 #j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+#color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+#color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
 circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
 idx = 0
 
 fn = 'pic.jpg'
+capture = cv2.VideoCapture(0)
 
 def detect():
     global idx, colors
+    if idx >= 4:
+        return
+    '''
     with picamera.PiCamera() as camera:
         camera.resolution = (100, 75)
         camera.start_preview()
         camera.capture(fn)
         sleep(0.02)
     frame = cv2.imread(fn)#VideoCapture(0)
-    if idx >= 4:
-        return
+    '''
+    ret, frame = capture.read()
     #ret, frame = capture.read()
     size_x = 100
     size_y = 75
@@ -430,4 +493,4 @@ def detect():
 root.after(5, detect)
 root.mainloop()
 
-#capture.release()
+capture.release()
