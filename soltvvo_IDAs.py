@@ -1,3 +1,4 @@
+# coding:utf-8
 '''
 arr[その位置にあるパーツの番号][ステッカーの向き]
 U面
@@ -17,47 +18,47 @@ L [欠番] [6, 0] R
 from copy import deepcopy
 from collections import deque
 from math import factorial
-from time import time
+from time import time, sleep
 import tkinter
 import cv2
 import numpy as np
-import serial
+from itertools import permutations
+import heapq
 
-# 回転番号に則って実際にパズルの状態配列を変化させる
-def move(n_arr, num):
+# 回転処理 CP
+def move_cp(n_arr, num):
     idx = num // 3
-    rot_arr1 = np.matrix([[n_arr[surface[idx][i]][0] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr2 = np.matrix([[n_arr[surface[idx][i]][1] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
+    rot_arr1 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
     rot_arr1 = np.rot90(rot_arr1, 3 - num % 3).tolist()
+    for i in range(4):
+        n_arr[surface[idx][i]] = rot_arr1[i // 2][i % 2]
+    return n_arr
+
+# 回転処理 CO
+def move_co(n_arr, num):
+    idx = num // 3
+    rot_arr2 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
     rot_arr2 = np.rot90(rot_arr2, 3 - num % 3).tolist()
     tmp = [[[2, 1], [1, 2]], [[0, 0], [0, 0]], [[2, 1], [1, 2]]]
     if num // 3 != 0:
         rot_arr2 = [[(rot_arr2[j][i] + tmp[num % 3][j][i]) % 3 for i in range(2)] for j in range(2)]
     for i in range(4):
-        n_arr[surface[idx][i]][0] = rot_arr1[i // 2][i % 2]
-        n_arr[surface[idx][i]][1] = rot_arr2[i // 2][i % 2]
+        n_arr[surface[idx][i]] = rot_arr2[i // 2][i % 2]
     return n_arr
 
-# スクランブルする 使用されていない
-def scrm(n_arr, move_num):
-    if len(scramble_arr) == move_num:
-        return n_arr
-    n_arr = move(n_arr, scramble_arr[move_num])
-    n_arr = scrm(n_arr, move_num + 1)
-    return n_arr
+# 回転番号に則って実際にパズルの状態配列を変化させる
+def move(n_arr, num):
+    idx = num // 3
+    cp_arr = move_cp([n_arr[i][0] for i in range(7)], num)
+    co_arr = move_co([n_arr[i][1] for i in range(7)], num)
+    res = [[cp_arr[i], co_arr[i]] for i in range(7)]
+    return res
 
 # 回転番号を回転記号に変換
 def num2moves(arr):
     res = ''
     for i in arr:
         res += move_candidate[i] + ' '
-    return res
-
-# 回転記号を回転番号に変換 使用されていない
-def moves2num(arr):
-    res = []
-    for i in arr:
-        res.append(move_candidate.index(i))
     return res
 
 # パズルの状態配列固有の番号を返す
@@ -71,7 +72,7 @@ def arr2num(arr):
     for i in range(6):
         res2 *= 3
         res2 += arr[i][1]
-    return res1, res2
+    return res1 * 10000 + res2
 
 # 逆手順を返す
 def reverse(arr):
@@ -83,7 +84,7 @@ def reverse(arr):
             arr[i] -= 2
     return arr
 
-# ボックスから色の情報を取ってくる
+# ボックスから色の情報を取ってくる -> ボックスに色を反映させる
 def confirm_p():
     global colors
 
@@ -132,17 +133,76 @@ def confirm_p():
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
 
+# にぶたん
+def search(arr, num):
+    if not len(arr):
+        return -1
+    l = 0
+    r = len(arr) - 1
+    while r - l > 1:
+        c = (r + l) // 2
+        if arr[c][4] > num:
+            r = c
+        elif arr[c][4] < num:
+            l = c
+        else:
+            r = c
+            l = c
+    if arr[l][4] == num:
+        return l
+    elif arr[r][4] == num:
+        return r
+    else:
+        return -1
+
+# 固有の番号からcp配列を作成
+def i2cp(num):
+    res = []
+    pls = [0 for _ in range(7)]
+    for i in range(7):
+        tmp = factorial(6 - i)
+        res.append(num // tmp + pls[num // tmp])
+        for j in range(num // tmp, 7):
+            pls[j] += 1
+        num -= num // tmp * tmp
+    return res
+
+# cp配列から固有の番号を作成
+def cp2i(arr):
+    res = 0
+    marked = set([])
+    for i in range(7):
+        res += factorial(6 - i) * len(set(range(arr[i])) - marked)
+        marked.add(arr[i])
+    return res
+
+# 固有の番号からco配列を作成
+def i2co(num):
+    res = []
+    for i in range(7):
+        res.append(num // 3)
+        num -= num // 3 * 3
+    return res
+
+# co配列から固有の番号を作成
+def co2i(arr):
+    res = 0
+    for i in arr:
+        res *= 3
+        res += i
+    return res
+
+# パズルの状態の取得
 def detect():
     global idx, colors
     if idx >= 4:
         return
     ret, frame = capture.read()
-    size_x = 400
-    size_y = 300
-    windowsize = (size_x, size_y)
-    frame = cv2.resize(frame, windowsize)
+    size_x = 100
+    size_y = 75
+    frame = cv2.resize(frame, (size_x, size_y))
     show_frame = deepcopy(frame)
-    d = 70
+    d = 20
     center = [size_x // 2, size_y // 2]
     tmp_colors = [['' for _ in range(8)] for _ in range(6)]
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
@@ -153,7 +213,6 @@ def detect():
         x = center[1] + dx[i] * d
         cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
         val = hsv[x, y]
-        #print(val, end='')
         for j in range(6):
             flag = True
             for k in range(3):
@@ -164,29 +223,17 @@ def detect():
                 #print(j2color[j], end=' ')
                 cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
                 break
-    #print('')
     if cv2.waitKey(1) & 0xFF == ord('n'):
         for i in range(4):
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
         print(idx)
         idx += 1
         confirm_p()
-        '''
-        for i in range(6):
-            print(tmp_colors[i])
-        print('')
-        for i in range(6):
-            print(colors[i])
-        print('')
-        '''
     cv2.imshow('title',show_frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        return
     root.after(5, detect)
 
-# インスペクション処理
-def inspection_p():
-    global ans
+# メイン処理
+def start_p():
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -259,137 +306,82 @@ def inspection_p():
         print(solved_color[i])
     print(solved)
 
-    # 双方向幅優先探索
-    que = deque([[deepcopy(puzzle), 0, [], 0], [deepcopy(solved), 0, [], 1]])
-    marked = [[[[] for _ in range(3 ** 6)] for _ in range(factorial(7))] for _ in range(2)]
-    idx1, idx2 = arr2num(solved)
-    marked[0][idx1][idx2] = [-1]
-    idx1, idx2 = arr2num(puzzle)
-    marked[1][idx1][idx2] = [-1]
-    flag = True
-    fins = -1
-    while flag and len(que):
+    # 枝刈り用のco配列とcp配列
+    inf = 100
+    cp = [inf for _ in range(factorial(7))]
+    cp_solved = [solved[i][0] for i in range(7)]
+    que = deque([[deepcopy(cp_solved), 0, -1, cp2i(cp_solved)]])
+    while len(que):
         tmp = que.popleft()
         arr = tmp[0]
         num = tmp[1]
-        moves = tmp[2]
-        mode = tmp[3]
-        if arr == solved and mode == 0:
-            ans = moves
-            fins = time()
-            flag = False
-        elif arr == puzzle and mode == 1:
-            ans = reverse(moves)
-            fins = time()
-            flag = False
-        if num < 6:
+        l_mov = tmp[2]
+        idx = tmp[3]
+        if cp[idx] != inf:
+            continue
+        cp[idx] = num
+        for mov in range(9):
+            if num != 0 and mov // 3 == l_mov // 3:
+                continue
+            n_arr = move_cp(deepcopy(arr), mov)
+            n_idx = cp2i(n_arr)
+            que.append([n_arr, num + 1, mov, n_idx])
+    co = [inf for _ in range(3 ** 7)]
+    co_solved = [solved[i][1] for i in range(7)]
+    que = deque([[deepcopy(co_solved), 0, -1, co2i(co_solved)]])
+    while len(que):
+        tmp = que.popleft()
+        arr = tmp[0]
+        num = tmp[1]
+        l_mov = tmp[2]
+        idx = tmp[3]
+        if co[idx] != inf:
+            continue
+        co[idx] = num
+        for mov in range(9):
+            if num != 0 and mov // 3 == l_mov // 3:
+                continue
+            n_arr = move_co(deepcopy(arr), mov)
+            n_idx = co2i(n_arr)
+            que.append([n_arr, num + 1, mov, n_idx])
+    print(time() - strt, 's')
+
+    # IDA* with 枝刈り
+    puzzle_cp = [puzzle[i][0] for i in range(7)]
+    puzzle_co = [puzzle[i][1] for i in range(7)]
+    ans = []
+    for depth in range(1, 12):
+        que = [[max(cp[cp2i(puzzle_cp)], co[co2i(puzzle_co)]), deepcopy(puzzle), 0, []]]
+        heapq.heapify(que)
+        while len(que):
+            tmp = heapq.heappop(que)
+            arr = tmp[1]
+            num = tmp[2]
+            moves = tmp[3]
+            if arr == solved:
+                ans = moves
+                break
+            if num >= depth:
+                continue
             for i in range(9):
                 if num != 0 and i // 3 == moves[-1] // 3:
                     continue
-                n_arr = move(deepcopy(arr), i)
+                n_arr = move(arr, i)
                 n_moves = deepcopy(moves)
                 n_moves.append(i)
-                if n_arr == solved and mode == 0:
-                    ans = n_moves
-                    fins = time()
-                    flag = False
-                    break
-                elif n_arr == puzzle and mode == 1:
-                    ans = reverse(n_moves)
-                    fins = time()
-                    flag = False
-                    break
-                idx1, idx2 = arr2num(n_arr)
-                if len(marked[(mode + 1) % 2][idx1][idx2]):
-                    res = []
-                    if mode == 0:
-                        res = n_moves
-                        res.extend(reverse(marked[(mode + 1) % 2][idx1][idx2]))
-                    else:
-                        res = marked[(mode + 1) % 2][idx1][idx2]
-                        res.extend(reverse(n_moves))
-                    ans = res
-                    fins = time()
-                    flag = False
-                    break
-                elif len(marked[mode][idx1][idx2]):
-                    continue
-                marked[mode][idx1][idx2] = n_moves
-                que.append([n_arr, num + 1, n_moves, mode])
+                idx = arr2num(n_arr)
+                cp_pls = cp2i([n_arr[i][0] for i in range(7)])
+                co_pls = co2i([n_arr[i][1] for i in range(7)])
+                pls = max(cp[cp_pls], co[co_pls])
+                if num + 1 + pls <= depth:
+                    heapq.heappush(que, [num + 1 + pls, n_arr, num + 1, n_moves])
+        print('depth:', depth)
+        if len(ans):
+            break
     print('answer:', num2moves(ans))
-    print(fins - strt, 's')
-    if len(ans):
-        solution = tkinter.Label(text=num2moves(ans))
-        solution.place(x = 0, y = 8 * grid)
-        start.pack()
+    print(time() - strt, 's')
 
-'''
-direction
-UFについて、
-0: UF
-1: UR
-2: UB
-3: UL
-4: FD
-8: RD
-12: DB
-16: BD
-20: LD
-'''
-'''
-move_num
-["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'", "D", "D2", "D'", "B", "B2", "B'", "L", "L2", "L'"]
-面番号
-U: 0
-F: 1
-R: 2
-D: 3
-B: 4
-L: 5
-'''
-
-def proc_motor():
-    direction = 4
-    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
-    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
-    regrip_arr = [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]
-    rot = []
-    grip = []
-    for i in range(len(ans)):
-        u_face = direction // 4
-        f_face = f_arr[u_face][direction % 4]
-        r_face = r_arr[u_face][f_face]
-        d_face = (u_face + 3) % 6
-        b_face = (f_face + 3) % 6
-        l_face = (r_face + 3) % 6
-        move_able = [f_face, r_face, b_face, l_face]
-        move_face = ans[i] // 3
-        move_amount = ans[i] % 3
-        if move_face == u_face or move_face == d_face:
-            rot.append([[1, 0], [3, 2]])
-            grip.append([0, 1, 0, 1])
-            direction = regrip_arr[direction]
-            u_face = direction // 4
-            f_face = f_arr[u_face][direction % 4]
-            r_face = r_arr[u_face][f_face]
-            d_face = (u_face + 3) % 6
-            b_face = (f_face + 3) % 6
-            l_face = (r_face + 3) % 6
-            move_able = [f_face, r_face, b_face, l_face]
-        tmp = move_able.index(move_face)
-        rot.append([[tmp, move_amount]])
-        grip.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
-    return rot, grip
-
-
-
-def start_p():
-    rot, grip = proc_motor()
-    print(rot)
-    print(grip)
-
-
-move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"]
+move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
 
 colors = [['' for _ in range(8)] for _ in range(6)]
@@ -401,17 +393,6 @@ j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
 
-capture = cv2.VideoCapture(0)
-surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
-#j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-color_low = [[50, 50, 50],   [80, 50, 50],    [160, 100, 50], [0, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-color_hgh = [[80, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
-idx = 0
-
-ans = []
-
-#ser = serial.Serial('COM4', baudrate=115200, parity=serial.PARITY_NONE)
 
 #scramble = list(input().split(' '))
 root = tkinter.Tk()
@@ -434,13 +415,23 @@ for i in range(6):
             entry[i][j] = tkinter.Entry(width=2, bg='gray')
             entry[i][j].place(x = j * grid + offset, y = i * grid + offset)
 
-#confirm = tkinter.Button(canvas, text="confirm", command=confirm_p)
-#confirm.pack()
-
-inspection = tkinter.Button(canvas, text="inspection", command=inspection_p)
-inspection.pack()
+confirm = tkinter.Button(canvas, text="confirm", command=confirm_p)
+confirm.pack()
 
 start = tkinter.Button(canvas, text="start", command=start_p)
+start.pack()
+
+surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
+#j2color = ['g', 'b', 'r', 'o', 'y', 'w']
+#color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+#color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
+idx = 0
+
+fn = 'pic.jpg'
+capture = cv2.VideoCapture(0)
 
 root.after(5, detect)
 root.mainloop()
