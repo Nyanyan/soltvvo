@@ -94,7 +94,7 @@ def arr2num(arr):
     for i in range(6):
         res2 *= 3
         res2 += arr[i][1]
-    return res1 * 10000 + res2
+    return res1, res2
 
 # 逆手順を返す
 def reverse(arr):
@@ -154,28 +154,6 @@ def confirm_p():
         for j in range(8):
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
-
-#にぶたん
-def search(arr, num):
-    if not len(arr):
-        return -1
-    l = 0
-    r = len(arr) - 1
-    while r - l > 1:
-        c = (r + l) // 2
-        if arr[c][4] > num:
-            r = c
-        elif arr[c][4] < num:
-            l = c
-        else:
-            r = c
-            l = c
-    if arr[l][4] == num:
-        return l
-    elif arr[r][4] == num:
-        return r
-    else:
-        return -1
 
 #固有の番号からcp配列を作成
 def i2cp(num):
@@ -293,7 +271,6 @@ def start_p():
     inf = 100
     cp = [inf for _ in range(factorial(7))]
     cp_solved = [solved[i][0] for i in range(7)]
-    #print('depth', depth)
     que = deque([[deepcopy(cp_solved), 0, -1, cp2i(cp_solved)]])
     while len(que):
         tmp = que.popleft()
@@ -332,58 +309,52 @@ def start_p():
     #print(co)
     print(time() - strt, 's')
 
-    # 双方向IDA*
-    idx1 = arr2num(puzzle)
-    idx2 = arr2num(puzzle)
-    marked = [[[], []], [[[deepcopy(puzzle), 0, [], 0, idx1]], [[deepcopy(solved), 0, [], 1, idx2]]]]
-    for depth in range(1, 7):
-        que = deepcopy(marked[1][0])
-        que.extend(deepcopy(marked[1][1]))
-        marked[0] = deepcopy(marked[1])
-        marked[1] = [[], []]
-        ans = []
-        while len(que):
-            tmp = que.pop()
-            arr = tmp[0]
-            num = tmp[1]
-            moves = tmp[2]
-            mode = tmp[3]
-            idx = arr2num(arr)
-            dmode = 1 if mode == 0 else 0
-            cp_pls = cp2i([arr[i][0] for i in range(7)])
-            co_pls = co2i([arr[i][1] for i in range(7)])
-            pls = max(cp[cp_pls], co[co_pls])
-            if 2 * num - 1 + pls > 11 or num + 1 > depth:
-                continue
-            for i in range(2):
-                searched = search(marked[i][dmode], idx)
-                if searched != -1:
-                    res = []
-                    if mode == 0:
-                        res = moves
-                        res.extend(reverse(marked[i][dmode][searched][2]))
-                    else:
-                        res = marked[i][dmode][searched][2]
-                        res.extend(reverse(moves))
-                    ans = res
-                    break
-            if len(ans):
+    # 双方向幅優先探索with枝刈り
+    idx1, idx2 = arr2num(puzzle)
+    idx3, idx4 = arr2num(solved)
+    marked = [[[[] for _ in range(3 ** 6)] for _ in range(factorial(7))] for _ in range(2)]
+    que = deque([[deepcopy(puzzle), 0, [], 0, idx1, idx2], [deepcopy(solved), 0, [], 1, idx3, idx4]])
+    ans = []
+    depth = 0
+    while len(que):
+        tmp = que.popleft()
+        arr = tmp[0]
+        num = tmp[1]
+        moves = tmp[2]
+        mode = tmp[3]
+        idx1 = tmp[4]
+        idx2 = tmp[5]
+        if num != depth:
+            depth = num
+            print('depth', depth)
+        dmode = 1 if mode == 0 else 0
+        cp_pls = cp2i([arr[i][0] for i in range(7)])
+        co_pls = co2i([arr[i][1] for i in range(7)])
+        if num + max(cp[cp_pls], co[co_pls]) > 11:
+            continue
+        for i in range(2):
+            if len(marked[dmode][idx1][idx2]):
+                res = []
+                if mode == 0:
+                    res = moves
+                    res.extend(reverse(marked[dmode][idx1][idx2]))
+                else:
+                    res = marked[dmode][idx1][idx2]
+                    res.extend(reverse(moves))
+                ans = res
                 break
-            for i in range(9):
-                if num != 0 and i // 3 == moves[-1] // 3:
-                    continue
-                n_arr = move(deepcopy(arr), i)
-                n_moves = deepcopy(moves)
-                n_moves.append(i)
-                idx = arr2num(n_arr)
-                searched = search(marked[1][mode], idx)
-                if searched == -1:
-                    marked[1][mode].append([n_arr, num + 1, n_moves, mode, idx])
-                    marked[1][mode].sort(key=lambda x:x[4])
-                    que.append([n_arr, num + 1, n_moves, mode])
-        print('depth:', depth)
-        if ans != []:
+        if len(ans):
             break
+        for i in range(9):
+            if num != 0 and i // 3 == moves[-1] // 3:
+                continue
+            n_arr = move(deepcopy(arr), i)
+            n_moves = deepcopy(moves)
+            n_moves.append(i)
+            n_idx1, n_idx2 = arr2num(n_arr)
+            if not len(marked[mode][n_idx1][n_idx2]):
+                marked[mode][n_idx1][n_idx2] = n_moves
+                que.append([n_arr, num + 1, n_moves, mode, n_idx1, n_idx2])
     print('answer:', num2moves(ans))
     print(time() - strt, 's')
 
