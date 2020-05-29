@@ -17,22 +17,20 @@ L [欠番] [6, 0] R
 
 from copy import deepcopy
 from collections import deque
-from time import time, sleep
+from time import time
 import tkinter
 import cv2
 import numpy as np
-from itertools import permutations
 
 # 回転処理 CP
 def move_cp(n_arr, num):
     surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
-    replace = [1, 3, 0, 2]
+    replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
     idx = num // 3
     rot_arr = [n_arr[surface[idx][i]] for i in range(4)]
-    for i in range(num % 3 + 1):
-        tmp = deepcopy(rot_arr)
-        for j in range(4):
-            rot_arr[replace[j]] = tmp[j]
+    tmp = deepcopy(rot_arr)
+    for j in range(4):
+        rot_arr[replace[num % 3][j]] = tmp[j]
     res = deepcopy(n_arr)
     for i in range(4):
         res[surface[idx][i]] = rot_arr[i]
@@ -202,11 +200,11 @@ def detect():
     if idx >= 4:
         return
     ret, frame = capture.read()
-    size_x = 100
-    size_y = 75
+    size_x = 200
+    size_y = 150
     frame = cv2.resize(frame, (size_x, size_y))
     show_frame = deepcopy(frame)
-    d = 20
+    d = 40
     center = [size_x // 2, size_y // 2]
     tmp_colors = [['' for _ in range(8)] for _ in range(6)]
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
@@ -236,8 +234,76 @@ def detect():
     cv2.imshow('title',show_frame)
     root.after(5, detect)
 
-# メイン処理
-def start_p():
+# 回転記号番号の配列から回すモーターを決定する
+def proc_motor(rot, grip, num, direction):
+    if num == len(ans):
+        return rot, grip, num, direction
+    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
+    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
+    regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
+    regrip_rot = [[[1, 0], [3, 2]], [[0, 0], [2, 2]]]
+    regrip_grip = [[0, 1, 0, 1], [1, 0, 1, 0]]
+    u_face = direction // 4
+    f_face = f_arr[u_face][direction % 4]
+    r_face = r_arr[u_face][f_face]
+    d_face = (u_face + 3) % 6
+    b_face = (f_face + 3) % 6
+    l_face = (r_face + 3) % 6
+    move_able = [f_face, r_face, b_face, l_face]
+    move_face = ans[num] // 3
+    move_amount = ans[num] % 3
+    if move_face == u_face or move_face == d_face:
+        rot_tmp = [deepcopy(rot) for _ in range(2)]
+        grip_tmp = [deepcopy(grip) for _ in range(2)]
+        direction_tmp = [-1, -1]
+        num_tmp = [num, num]
+        for j in range(2):
+            rot_tmp[j].append(regrip_rot[j])
+            grip_tmp[j].append(regrip_grip[j])
+            direction_tmp[j] = regrip_arr[j][direction]
+            rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j])
+        idx = 0 if len(grip_tmp[0]) < len(grip_tmp[1]) else 1
+        rot_res = rot_tmp[idx]
+        grip_res = grip_tmp[idx]
+        num_res = num_tmp[idx]
+        direction_res = direction_tmp[idx]
+    else:
+        tmp = move_able.index(move_face)
+        rot_res = deepcopy(rot)
+        grip_res = deepcopy(grip)
+        rot_res.append([[tmp, move_amount]])
+        grip_res.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
+        rot_res, grip_res, num_res, direction_res = proc_motor(rot_res, grip_res, num + 1, direction)
+    return rot_res, grip_res, num_res, direction_res
+
+'''
+direction
+UFについて、
+0: UF
+1: UR
+2: UB
+3: UL
+4: FD
+8: RD
+12: DB
+16: BD
+20: LD
+'''
+'''
+move_num
+["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'", "D", "D2", "D'", "B", "B2", "B'", "L", "L2", "L'"]
+面番号
+U: 0
+F: 1
+R: 2
+D: 3
+B: 4
+L: 5
+'''
+
+# インスペクション処理
+def inspection_p():
+    global ans, rot, grip
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -352,10 +418,9 @@ def start_p():
     print('co', time() - strt, 's')
 
     # IDA*
-    ans = []
     puzzle_cp = [puzzle[i][0] for i in range(7)]
     puzzle_co = [puzzle[i][1] for i in range(7)]
-    for depth in range(1, 23):
+    for depth in range(1, 12):
         que = [[deepcopy(puzzle), []]]
         while que and not ans:
             arr, moves = que.pop()
@@ -376,22 +441,44 @@ def start_p():
                     break
                 cp_arr = [n_arr[i][0] for i in range(7)]
                 co_arr = [n_arr[i][1] for i in range(7)]
-                h = cp[cp2i(cp_arr)] + co[co2i(co_arr)]
+                h = max(cp[cp2i(cp_arr)], co[co2i(co_arr)])
                 if num + 1 + h + pls < depth:
                     que.append([n_arr, n_moves])
         #print('depth:', depth)
-        if len(ans):
+        if ans:
             break
     print('answer:', num2moves(ans))
-    print('all', time() - strt, 's')
+
+    if ans:
+        solution = tkinter.Label(text=num2moves(ans))
+        solution.place(x = 0, y = 9 * grid)
+        rot, grip, num, direction = proc_motor(rot, grip, 0, 4)
+        print(rot)
+        print(grip)
+        print(len(rot))
+        print('all', time() - strt, 's')
+        start.pack()
+    else:
+        print('cannot solve!')
+
+def start_p():
+    pass
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 
 colors = [['' for _ in range(8)] for _ in range(6)]
-
+ans = []
+rot = []
+grip = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-
+surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]]
+#color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
+#color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for PC
+color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
+idx = 0
 
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
@@ -421,22 +508,12 @@ for i in range(6):
             entry[i][j] = tkinter.Entry(width=2, bg='gray')
             entry[i][j].place(x = j * grid + offset, y = i * grid + offset)
 
-confirm = tkinter.Button(canvas, text="confirm", command=confirm_p)
-confirm.pack()
+inspection = tkinter.Button(canvas, text="inspection", command=inspection_p)
+inspection.pack()
 
 start = tkinter.Button(canvas, text="start", command=start_p)
 start.pack()
 
-surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]] #[[0, 2], [0, 3], [1, 2], [1, 3]], [[4, 2], [4, 3], [5, 2], [5, 3]]
-#j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-#color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-#color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]]
-color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
-idx = 0
-
-fn = 'pic.jpg'
 capture = cv2.VideoCapture(0)
 
 root.after(5, detect)
