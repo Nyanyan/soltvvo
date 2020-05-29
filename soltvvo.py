@@ -184,9 +184,42 @@ def detect():
         return
     root.after(5, detect)
 
+def proc_motor():
+    direction = 4
+    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
+    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
+    regrip_arr = [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]
+    rot = []
+    grip = []
+    for i in range(len(ans)):
+        u_face = direction // 4
+        f_face = f_arr[u_face][direction % 4]
+        r_face = r_arr[u_face][f_face]
+        d_face = (u_face + 3) % 6
+        b_face = (f_face + 3) % 6
+        l_face = (r_face + 3) % 6
+        move_able = [f_face, r_face, b_face, l_face]
+        move_face = ans[i] // 3
+        move_amount = ans[i] % 3
+        if move_face == u_face or move_face == d_face:
+            rot.append([[1, 0], [3, 2]])
+            grip.append([0, 1, 0, 1])
+            direction = regrip_arr[direction]
+            u_face = direction // 4
+            f_face = f_arr[u_face][direction % 4]
+            r_face = r_arr[u_face][f_face]
+            d_face = (u_face + 3) % 6
+            b_face = (f_face + 3) % 6
+            l_face = (r_face + 3) % 6
+            move_able = [f_face, r_face, b_face, l_face]
+        tmp = move_able.index(move_face)
+        rot.append([[tmp, move_amount]])
+        grip.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
+    return rot, grip
+
 # インスペクション処理
 def inspection_p():
-    global ans
+    global ans, rot, grip
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -267,7 +300,6 @@ def inspection_p():
     idx1, idx2 = arr2num(puzzle)
     marked[1][idx1][idx2] = [-1]
     flag = True
-    fins = -1
     while flag and len(que):
         tmp = que.popleft()
         arr = tmp[0]
@@ -283,9 +315,12 @@ def inspection_p():
             fins = time()
             flag = False
         if num < 6:
-            for i in range(9):
-                if num != 0 and i // 3 == moves[-1] // 3:
-                    continue
+            if len(moves):
+                t = (moves[-1] // 3) * 3
+                lst = set(range(9)) - set([t, t + 1, t + 2])
+            else:
+                lst = range(9)
+            for i in lst:
                 n_arr = move(deepcopy(arr), i)
                 n_moves = deepcopy(moves)
                 n_moves.append(i)
@@ -309,7 +344,6 @@ def inspection_p():
                         res = marked[(mode + 1) % 2][idx1][idx2]
                         res.extend(reverse(n_moves))
                     ans = res
-                    fins = time()
                     flag = False
                     break
                 elif len(marked[mode][idx1][idx2]):
@@ -317,10 +351,16 @@ def inspection_p():
                 marked[mode][idx1][idx2] = n_moves
                 que.append([n_arr, num + 1, n_moves, mode])
     print('answer:', num2moves(ans))
-    print(fins - strt, 's')
+    print(time() - strt, 's')
+
     if len(ans):
         solution = tkinter.Label(text=num2moves(ans))
-        solution.place(x = 0, y = 8 * grid)
+        solution.place(x = 0, y = 9 * grid)
+        rot, grip = proc_motor()
+        print(rot)
+        print(grip)
+        print(len(rot))
+        print(time() - strt, 's')
         start.pack()
 
 '''
@@ -348,45 +388,10 @@ B: 4
 L: 5
 '''
 
-def proc_motor():
-    direction = 4
-    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
-    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
-    regrip_arr = [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]
-    rot = []
-    grip = []
-    for i in range(len(ans)):
-        u_face = direction // 4
-        f_face = f_arr[u_face][direction % 4]
-        r_face = r_arr[u_face][f_face]
-        d_face = (u_face + 3) % 6
-        b_face = (f_face + 3) % 6
-        l_face = (r_face + 3) % 6
-        move_able = [f_face, r_face, b_face, l_face]
-        move_face = ans[i] // 3
-        move_amount = ans[i] % 3
-        if move_face == u_face or move_face == d_face:
-            rot.append([[1, 0], [3, 2]])
-            grip.append([0, 1, 0, 1])
-            direction = regrip_arr[direction]
-            u_face = direction // 4
-            f_face = f_arr[u_face][direction % 4]
-            r_face = r_arr[u_face][f_face]
-            d_face = (u_face + 3) % 6
-            b_face = (f_face + 3) % 6
-            l_face = (r_face + 3) % 6
-            move_able = [f_face, r_face, b_face, l_face]
-        tmp = move_able.index(move_face)
-        rot.append([[tmp, move_amount]])
-        grip.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
-    return rot, grip
-
 
 
 def start_p():
-    rot, grip = proc_motor()
-    print(rot)
-    print(grip)
+    pass
 
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"]
@@ -410,6 +415,8 @@ circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 25
 idx = 0
 
 ans = []
+rot = []
+grip = []
 
 #ser = serial.Serial('COM4', baudrate=115200, parity=serial.PARITY_NONE)
 

@@ -17,34 +17,38 @@ L [欠番] [6, 0] R
 
 from copy import deepcopy
 from collections import deque
-from math import factorial
 from time import time, sleep
 import tkinter
 import cv2
 import numpy as np
 from itertools import permutations
-import heapq
 
 # 回転処理 CP
 def move_cp(n_arr, num):
+    surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+    replace = [1, 3, 0, 2]
     idx = num // 3
-    rot_arr1 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr1 = np.rot90(rot_arr1, 3 - num % 3).tolist()
+    rot_arr = [n_arr[surface[idx][i]] for i in range(4)]
+    for i in range(num % 3 + 1):
+        tmp = deepcopy(rot_arr)
+        for j in range(4):
+            rot_arr[replace[j]] = tmp[j]
+    res = deepcopy(n_arr)
     for i in range(4):
-        n_arr[surface[idx][i]] = rot_arr1[i // 2][i % 2]
-    return n_arr
+        res[surface[idx][i]] = rot_arr[i]
+    return res
 
 # 回転処理 CO
 def move_co(n_arr, num):
+    surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+    pls = [2, 1, 1, 2]
     idx = num // 3
-    rot_arr2 = np.matrix([[n_arr[surface[idx][i]] for i in range(j * 2, j * 2 + 2)] for j in range(2)])
-    rot_arr2 = np.rot90(rot_arr2, 3 - num % 3).tolist()
-    tmp = [[[2, 1], [1, 2]], [[0, 0], [0, 0]], [[2, 1], [1, 2]]]
-    if num // 3 != 0:
-        rot_arr2 = [[(rot_arr2[j][i] + tmp[num % 3][j][i]) % 3 for i in range(2)] for j in range(2)]
-    for i in range(4):
-        n_arr[surface[idx][i]] = rot_arr2[i // 2][i % 2]
-    return n_arr
+    res = move_cp(n_arr, num)
+    if num // 3 != 0 and num % 3 != 1:
+        for i in range(4):
+            res[surface[idx][i]] += pls[i]
+            res[surface[idx][i]] %= 3
+    return res
 
 # 回転番号に則って実際にパズルの状態配列を変化させる
 def move(n_arr, num):
@@ -66,7 +70,7 @@ def arr2num(arr):
     res1 = 0
     marked = set([])
     for i in range(7):
-        res1 += factorial(6 - i) * len(set(range(arr[i][0])) - marked)
+        res1 += fac[6 - i] * len(set(range(arr[i][0])) - marked)
         marked.add(arr[i][0])
     res2 = 0
     for i in range(6):
@@ -160,7 +164,7 @@ def i2cp(num):
     res = []
     pls = [0 for _ in range(7)]
     for i in range(7):
-        tmp = factorial(6 - i)
+        tmp = fac[6 - i]
         res.append(num // tmp + pls[num // tmp])
         for j in range(num // tmp, 7):
             pls[j] += 1
@@ -172,7 +176,7 @@ def cp2i(arr):
     res = 0
     marked = set([])
     for i in range(7):
-        res += factorial(6 - i) * len(set(range(arr[i])) - marked)
+        res += fac[6 - i] * len(set(range(arr[i])) - marked)
         marked.add(arr[i])
     return res
 
@@ -305,84 +309,83 @@ def start_p():
     for i in range(6):
         print(solved_color[i])
     print(solved)
+    print('pre', time() - strt, 's')
 
     # 枝刈り用のco配列とcp配列
     inf = 100
-    cp = [inf for _ in range(factorial(7))]
+    cp = [inf for _ in range(fac[7])]
     cp_solved = [solved[i][0] for i in range(7)]
-    que = deque([[deepcopy(cp_solved), 0, -1, cp2i(cp_solved)]])
-    while len(que):
-        tmp = que.popleft()
-        arr = tmp[0]
-        num = tmp[1]
-        l_mov = tmp[2]
-        idx = tmp[3]
-        if cp[idx] != inf:
-            continue
-        cp[idx] = num
-        for mov in range(9):
-            if num != 0 and mov // 3 == l_mov // 3:
-                continue
-            n_arr = move_cp(deepcopy(arr), mov)
+    cp[cp2i(cp_solved)] = 0
+    que = deque([[deepcopy(cp_solved), 0, -1]])
+    while que:
+        arr, num, l_mov = que.popleft()
+        if num:
+            t = (l_mov // 3) * 3
+            lst = set(range(9)) - set([t, t + 1, t + 2])
+        else:
+            lst = range(9)
+        for mov in lst:
+            n_arr = move_cp(arr, mov)
             n_idx = cp2i(n_arr)
-            que.append([n_arr, num + 1, mov, n_idx])
+            if cp[n_idx] == inf:
+                cp[n_idx] = num + 1
+                que.append([n_arr, num + 1, mov])
+    print('cp', time() - strt, 's')
     co = [inf for _ in range(3 ** 7)]
     co_solved = [solved[i][1] for i in range(7)]
-    que = deque([[deepcopy(co_solved), 0, -1, co2i(co_solved)]])
-    while len(que):
-        tmp = que.popleft()
-        arr = tmp[0]
-        num = tmp[1]
-        l_mov = tmp[2]
-        idx = tmp[3]
-        if co[idx] != inf:
-            continue
-        co[idx] = num
-        for mov in range(9):
-            if num != 0 and mov // 3 == l_mov // 3:
-                continue
-            n_arr = move_co(deepcopy(arr), mov)
+    co[co2i(co_solved)] = 0
+    que = deque([[deepcopy(co_solved), 0, -1]])
+    while que:
+        arr, num, l_mov = que.popleft()
+        if num:
+            t = (l_mov // 3) * 3
+            lst = set(range(9)) - set([t, t + 1, t + 2])
+        else:
+            lst = range(9)
+        for mov in lst:
+            n_arr = move_co(arr, mov)
             n_idx = co2i(n_arr)
-            que.append([n_arr, num + 1, mov, n_idx])
-    print(time() - strt, 's')
+            if co[n_idx] != inf:
+                continue
+            co[n_idx] = num + 1
+            que.append([n_arr, num + 1, mov])
+    print('co', time() - strt, 's')
 
-    # IDA* with 枝刈り
+    # IDA*
+    ans = []
     puzzle_cp = [puzzle[i][0] for i in range(7)]
     puzzle_co = [puzzle[i][1] for i in range(7)]
-    ans = []
-    for depth in range(1, 12):
-        que = [[max(cp[cp2i(puzzle_cp)], co[co2i(puzzle_co)]), deepcopy(puzzle), 0, []]]
-        heapq.heapify(que)
-        while len(que):
-            tmp = heapq.heappop(que)
-            arr = tmp[1]
-            num = tmp[2]
-            moves = tmp[3]
-            if arr == solved:
-                ans = moves
-                break
-            if num >= depth:
-                continue
-            for i in range(9):
-                if num != 0 and i // 3 == moves[-1] // 3:
-                    continue
-                n_arr = move(arr, i)
+    for depth in range(1, 23):
+        que = [[deepcopy(puzzle), []]]
+        while que and not ans:
+            arr, moves = que.pop()
+            num = len(moves)
+            if num:
+                t = (moves[-1] // 3) * 3
+                lst = set(range(9)) - set([t, t + 1, t + 2])
+            else:
+                lst = range(9)
+            for mov in lst:
+                pls = 1 if num > 1 and mov // 3 != moves[-1] // 3 and mov // 3 != moves[-2] // 3 else 0
+                pls = 1 if num <= 1 and mov // 3 == 1 else 0
+                n_arr = move(arr, mov)
                 n_moves = deepcopy(moves)
-                n_moves.append(i)
-                idx = arr2num(n_arr)
-                cp_pls = cp2i([n_arr[i][0] for i in range(7)])
-                co_pls = co2i([n_arr[i][1] for i in range(7)])
-                pls = max(cp[cp_pls], co[co_pls])
-                if num + 1 + pls <= depth:
-                    heapq.heappush(que, [num + 1 + pls, n_arr, num + 1, n_moves])
-        print('depth:', depth)
+                n_moves.append(mov)
+                if n_arr == solved:
+                    ans = n_moves
+                    break
+                cp_arr = [n_arr[i][0] for i in range(7)]
+                co_arr = [n_arr[i][1] for i in range(7)]
+                h = cp[cp2i(cp_arr)] + co[co2i(co_arr)]
+                if num + 1 + h + pls < depth:
+                    que.append([n_arr, n_moves])
+        #print('depth:', depth)
         if len(ans):
             break
     print('answer:', num2moves(ans))
-    print(time() - strt, 's')
+    print('all', time() - strt, 's')
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
-surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
 
 colors = [['' for _ in range(8)] for _ in range(6)]
 
@@ -393,6 +396,9 @@ j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
 
+fac = [1]
+for i in range(1, 8):
+    fac.append(fac[-1] * i)
 
 #scramble = list(input().split(' '))
 root = tkinter.Tk()
