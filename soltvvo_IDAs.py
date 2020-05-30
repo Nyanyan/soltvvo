@@ -238,10 +238,11 @@ def detect():
 def proc_motor(rot, grip, num, direction):
     if num == len(ans):
         return rot, grip, num, direction
+    turn_arr = [1, 2, -1]
     r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
     f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
     regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
-    regrip_rot = [[[1, 0], [3, 2]], [[0, 0], [2, 2]]]
+    regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
     regrip_grip = [[0, 1, 0, 1], [1, 0, 1, 0]]
     u_face = direction // 4
     f_face = f_arr[u_face][direction % 4]
@@ -251,15 +252,15 @@ def proc_motor(rot, grip, num, direction):
     l_face = (r_face + 3) % 6
     move_able = [f_face, r_face, b_face, l_face]
     move_face = ans[num] // 3
-    move_amount = ans[num] % 3
+    move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
         rot_tmp = [deepcopy(rot) for _ in range(2)]
         grip_tmp = [deepcopy(grip) for _ in range(2)]
         direction_tmp = [-1, -1]
         num_tmp = [num, num]
         for j in range(2):
-            rot_tmp[j].append(regrip_rot[j])
-            grip_tmp[j].append(regrip_grip[j])
+            rot_tmp[j].extend(regrip_rot[j])
+            grip_tmp[j].extend([regrip_grip[j]] * 2)
             direction_tmp[j] = regrip_arr[j][direction]
             rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j])
         idx = 0 if len(grip_tmp[0]) < len(grip_tmp[1]) else 1
@@ -271,11 +272,38 @@ def proc_motor(rot, grip, num, direction):
         tmp = move_able.index(move_face)
         rot_res = deepcopy(rot)
         grip_res = deepcopy(grip)
-        rot_res.append([[tmp, move_amount]])
+        rot_res.append([tmp, move_amount])
         grip_res.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
         rot_res, grip_res, num_res, direction_res = proc_motor(rot_res, grip_res, num + 1, direction)
     return rot_res, grip_res, num_res, direction_res
 
+# ロボットの手順の最適化
+def rot_optimise():
+    global rot, grip
+    i = 0
+    tmp_arr = [2, -1, 0, 1, 2, -1, 0]
+    while i < len(rot):
+        if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
+            tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
+            del rot[i + 1]
+            del grip[i + 1]
+            if tmp == 0:
+                del rot[i]
+                del grip[i]
+                i -= 1
+            else:
+                rot[i][1] = tmp
+        elif i < len(rot) - 2 and rot[i][0] == rot[i + 2][0] and rot[i][0] % 2 == rot[i + 1][0] % 2:
+            tmp = tmp_arr[rot[i][1] + rot[i + 2][1] + 2]
+            del rot[i + 2]
+            del grip[i + 2]
+            if tmp == 0:
+                del rot[i]
+                del grip[i]
+                i -= 1
+            else:
+                rot[i][1] = tmp
+        i += 1
 '''
 direction
 UFについて、
@@ -452,7 +480,9 @@ def inspection_p():
     if ans:
         solution = tkinter.Label(text=num2moves(ans))
         solution.place(x = 0, y = 9 * grid)
-        rot, grip, num, direction = proc_motor(rot, grip, 0, 4)
+        rot, grip, _, _ = proc_motor(rot, grip, 0, 4)
+        print(len(rot), len(grip))
+        rot_optimise()
         print(rot)
         print(grip)
         print(len(rot))
@@ -462,7 +492,8 @@ def inspection_p():
         print('cannot solve!')
 
 def start_p():
-    pass
+    for i in range(len(rot)):
+        pass
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 
