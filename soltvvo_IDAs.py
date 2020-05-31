@@ -21,6 +21,7 @@ from time import time
 import tkinter
 import cv2
 import numpy as np
+import serial
 
 # 回転処理 CP
 def move_cp(n_arr, num):
@@ -481,19 +482,42 @@ def inspection_p():
         solution = tkinter.Label(text=num2moves(ans))
         solution.place(x = 0, y = 9 * grid)
         rot, grip, _, _ = proc_motor(rot, grip, 0, 4)
-        print(len(rot), len(grip))
+        print('before: ', len(rot))
         rot_optimise()
         print(rot)
         print(grip)
-        print(len(rot))
+        print('after', len(rot))
         print('all', time() - strt, 's')
         start.pack()
     else:
         print('cannot solve!')
 
+def move_motor(num, com):
+    ser_motor[num].write(com.encode())
+    print(com)
+    ser_motor[num].reset_input_buffer()
+
+def wait_motor(num):
+    tmp = ''
+    while not len(tmp):
+        tmp = ser_motor[num].readline()
+        print(tmp.decode('utf8', 'ignore'), end='')
+
 def start_p():
-    for i in range(len(rot)):
-        pass
+    print('start!')
+    strt_solv = time()
+    i = 0
+    while i < len(rot):
+        ser_num = rot[i][0] // 2
+        move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]) + 'e')
+        if i < len(rot) - 1 and rot[i][0] // 2 != rot[i + 1][0] // 2:
+            move_motor(rot[i + 1][0] // 2, str(rot[i + 1][0]) + ' ' + str(rot[i + 1][1]) + 'e')
+            wait_motor(rot[i + 1][0] // 2)
+            i += 1
+        wait_motor(ser_num)
+        i += 1
+        print('done', i)
+    print('solving time:', time() = strt_solv, 's')
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 
@@ -518,7 +542,10 @@ fac = [1]
 for i in range(1, 8):
     fac.append(fac[-1] * i)
 
-#scramble = list(input().split(' '))
+ser_motor = [None, None]
+ser_motor[0] = serial.Serial('COM5', 115200)
+ser_motor[1] = serial.Serial('COM6', 115200)
+
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x200")
