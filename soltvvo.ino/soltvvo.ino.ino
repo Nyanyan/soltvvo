@@ -10,8 +10,6 @@ int data[2];
 
 Stepper stepper0(turn_steps, 10, 11, 12, 13);
 Stepper stepper1(turn_steps, 6, 7, 8, 9);
-Stepper stepper2(turn_steps, 2, 3, 4, 5);
-Stepper stepper3(turn_steps, A0, A1, A2, A3);
 
 float turning_time(int deg, int speed_motor) {
   return abs(1000 * quarter * deg / turn_steps * 60 / speed_motor);
@@ -24,12 +22,6 @@ void move_motor(int num, int deg, int spd) {
   } else if (num == 1) {
     stepper1.setSpeed(spd);
     stepper1.step(quarter * deg);
-  } else if (num == 2) {
-    stepper2.setSpeed(spd);
-    stepper2.step(quarter * deg);
-  } else if (num == 3) {
-    stepper3.setSpeed(spd);
-    stepper3.step(quarter * deg);
   }
   delay(turning_time(deg, spd) * 1.1);
   Serial.println(turning_time(deg, spd) * 1.1);
@@ -55,5 +47,4 @@ void loop() {
       idx++;
     }
   }
-
 }
