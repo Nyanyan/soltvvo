@@ -242,14 +242,15 @@ def detect():
     root.after(5, detect)
 
 # 回転記号番号の配列から回すモーターを決定する
-def proc_motor(rot, num, direction):
+def proc_motor(rot, grip, num, direction):
     if num == len(ans):
-        return rot, num, direction
+        return rot, grip, num, direction
     turn_arr = [1, 2, -1]
     r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
     f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
     regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
     regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
+    regrip_grip = [[0, 1, 0, 1], [1, 0, 1, 0]]
     u_face = direction // 4
     f_face = f_arr[u_face][direction % 4]
     r_face = r_arr[u_face][f_face]
@@ -261,22 +262,27 @@ def proc_motor(rot, num, direction):
     move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
         rot_tmp = [deepcopy(rot) for _ in range(2)]
+        grip_tmp = [deepcopy(grip) for _ in range(2)]
         direction_tmp = [-1, -1]
         num_tmp = [num, num]
         for j in range(2):
             rot_tmp[j].extend(regrip_rot[j])
+            grip_tmp[j].extend([regrip_grip[j]] * 2)
             direction_tmp[j] = regrip_arr[j][direction]
-            rot_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], num_tmp[j], direction_tmp[j])
-        idx = 0 if len(rot_tmp[0]) < len(rot_tmp[1]) else 1
+            rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], grip_tmp[j], num_tmp[j], direction_tmp[j])
+        idx = 0 if len(grip_tmp[0]) < len(grip_tmp[1]) else 1
         rot_res = rot_tmp[idx]
+        grip_res = grip_tmp[idx]
         num_res = num_tmp[idx]
         direction_res = direction_tmp[idx]
     else:
         tmp = move_able.index(move_face)
         rot_res = deepcopy(rot)
+        grip_res = deepcopy(grip)
         rot_res.append([tmp, move_amount])
-        rot_res, num_res, direction_res = proc_motor(rot_res, num + 1, direction)
-    return rot_res, num_res, direction_res
+        grip_res.append([(tmp + 1) % 2, tmp % 2, (tmp + 1) % 2, tmp % 2])
+        rot_res, grip_res, num_res, direction_res = proc_motor(rot_res, grip_res, num + 1, direction)
+    return rot_res, grip_res, num_res, direction_res
 
 # ロボットの手順の最適化
 def rot_optimise():
@@ -287,16 +293,20 @@ def rot_optimise():
         if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
             tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
             del rot[i + 1]
+            del grip[i + 1]
             if tmp == 0:
                 del rot[i]
+                del grip[i]
                 i -= 1
             else:
                 rot[i][1] = tmp
         elif i < len(rot) - 2 and rot[i][0] == rot[i + 2][0] and rot[i][0] % 2 == rot[i + 1][0] % 2:
             tmp = tmp_arr[rot[i][1] + rot[i + 2][1] + 2]
             del rot[i + 2]
+            del grip[i + 2]
             if tmp == 0:
                 del rot[i]
+                del grip[i]
                 i -= 1
             else:
                 rot[i][1] = tmp
@@ -334,22 +344,15 @@ def inspection_p():
     
     # 色の情報からパズルの状態配列を作る
     confirm_p()
-    puzzle = [[i, 0] for i in range(7)]
+    puzzle = [[i, 0] for i in range(8)]
     set_parts_color = [set(i) for i in parts_color]
-    for i in range(7):
+    for i in range(8):
         tmp = []
         for j in range(3):
             tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
         tmp1 = 'w' if 'w' in tmp else 'y'
         puzzle[i][1] = tmp.index(tmp1)
         puzzle[i][0] = set_parts_color.index(set(tmp))
-    tmp = [puzzle[i][0] for i in range(7)]
-    tmp2 = list(set(range(7)) - set(tmp))
-    if len(tmp2):
-        tmp2 = tmp2[0]
-        for i in range(7):
-            if puzzle[i][0] > tmp2:
-                puzzle[i][0] -= 1
     print('scramble:')
     for i in range(6):
         print(colors[i])
@@ -382,21 +385,14 @@ def inspection_p():
                 for k in range(3):
                     if solved_color[i + dy[k]][j + dx[k]] != '':
                         solved_color[i][j] = solved_color[i + dy[k]][j + dx[k]]
-    solved = [[-1, -1] for _ in range(7)]
-    for i in range(7):
+    solved = [[-1, -1] for _ in range(8)]
+    for i in range(8):
         tmp = []
         for j in range(3):
             tmp.append(solved_color[parts_place[i][j][0]][parts_place[i][j][1]])
         tmp1 = 'w' if 'w' in tmp else 'y'
         solved[i][1] = tmp.index(tmp1)
         solved[i][0] = set_parts_color.index(set(tmp))
-    tmp = [solved[i][0] for i in range(7)]
-    tmp2 = list(set(range(7)) - set(tmp))
-    if len(tmp2):
-        tmp2 = tmp2[0]
-        for i in range(7):
-            if solved[i][0] > tmp2:
-                solved[i][0] -= 1
     print('solved:')
     for i in range(6):
         print(solved_color[i])
@@ -478,12 +474,12 @@ def inspection_p():
     if ans:
         solution = tkinter.Label(text=num2moves(ans))
         solution.place(x = 0, y = 9 * grid)
-        rot, _, _ = proc_motor(rot, 0, 4)
+        rot, grip, _, _ = proc_motor(rot, grip, 0, 4)
         print('before: ', len(rot))
-        #print(rot)
         rot_optimise()
-        print('after', len(rot))
         print(rot)
+        print(grip)
+        print('after', len(rot))
         print('all', time() - strt, 's')
         start.pack()
     else:
@@ -502,6 +498,7 @@ def wait_motor(num):
 
 def start_p():
     print('start!')
+    '''
     strt_solv = time()
     i = 0
     while i < len(rot):
@@ -514,16 +511,17 @@ def start_p():
         wait_motor(ser_num)
         i += 1
         print('done', i)
-    print('solving time:', time() - strt_solv, 's')
+    print('solving time:', time() = strt_solv, 's')
+    '''
 
-move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
+move_candidate = [[0, 1], [0, 2], [0, -1], [1, 1], [1, 2], [1, -1], [2, 1], [2, 2], [2, -1], [3, 1], [3, 2], [3, -1]] #回転の候補
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
-
 
 colors = [['' for _ in range(8)] for _ in range(6)]
 ans = []
 rot = []
+grip = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 idx = 0

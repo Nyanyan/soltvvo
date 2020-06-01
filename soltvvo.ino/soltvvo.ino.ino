@@ -3,6 +3,8 @@
 #define turn_steps 120
 #define rpm 100
 #define quarter 30
+#define arm0 3
+#define arm1 2
 
 char buf[30];
 int idx = 0;
@@ -18,9 +20,15 @@ float turning_time(int deg, int speed_motor) {
 void move_motor(int num, int deg, int spd) {
   if (num == 0) {
     stepper0.setSpeed(spd);
+    digitalWrite(arm0, HIGH);
+    delay(100);
+    digitalWrite(arm1, LOW);
     stepper0.step(quarter * deg);
   } else if (num == 1) {
     stepper1.setSpeed(spd);
+    digitalWrite(arm1, HIGH);
+    delay(100);
+    digitalWrite(arm0, LOW);
     stepper1.step(quarter * deg);
   }
   delay(turning_time(deg, spd) * 1.1);
@@ -29,6 +37,8 @@ void move_motor(int num, int deg, int spd) {
 
 void setup() {
   Serial.begin(115200);
+  pinMode(arm0, OUTPUT);
+  pinMode(arm1, OUTPUT);
 }
 
 void loop() {
