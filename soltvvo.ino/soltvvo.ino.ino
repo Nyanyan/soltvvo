@@ -20,19 +20,25 @@ float turning_time(int deg, int speed_motor) {
 void move_motor(int num, int deg, int spd) {
   if (num == 0) {
     stepper0.setSpeed(spd);
-    digitalWrite(arm0, HIGH);
-    delay(100);
-    digitalWrite(arm1, LOW);
     stepper0.step(quarter * deg);
   } else if (num == 1) {
     stepper1.setSpeed(spd);
-    digitalWrite(arm1, HIGH);
-    delay(100);
-    digitalWrite(arm0, LOW);
     stepper1.step(quarter * deg);
   }
   delay(turning_time(deg, spd) * 1.1);
   Serial.println(turning_time(deg, spd) * 1.1);
+}
+
+void grab_arm(int num){
+  if(num == 0){
+    digitalWrite(arm0, HIGH);
+    delay(100);
+    digitalWrite(arm1, LOW);
+  } else if (num == 1){
+    digitalWrite(arm1, HIGH);
+    delay(100);
+    digitalWrite(arm0, LOW);
+  }
 }
 
 void setup() {
@@ -51,7 +57,8 @@ void loop() {
       idx = 0;
       Serial.println(data[0]);
       Serial.println(data[1]);
-      move_motor(data[0], data[1], rpm);
+      if(data[1] != 0) move_motor(data[0], data[1], rpm);
+      else grab_arm(data[0]);
     }
     else {
       idx++;

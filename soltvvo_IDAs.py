@@ -17,7 +17,7 @@ L [欠番] [6, 0] R
 
 from copy import deepcopy
 from collections import deque
-from time import time
+from time import time, sleep
 import tkinter
 import cv2
 import numpy as np
@@ -203,7 +203,7 @@ def detect():
     color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for PC
     color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
     circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
-    surfacenum = [[[2, 0], [2, 1], [3, 0], [3, 1]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[2, 4], [2, 5], [3, 4], [3, 5]], [[2, 6], [2, 7], [3, 6], [3, 7]]]
+    surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
     if idx >= 4:
         return
     ret, frame = capture.read()
@@ -232,12 +232,27 @@ def detect():
                 #print(j2color[j], end=' ')
                 cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
                 break
+    '''
+    sleep(1)
+    '''
     if cv2.waitKey(1) & 0xFF == ord('n'):
         for i in range(4):
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
         print(idx)
         idx += 1
         confirm_p()
+    '''
+    for i in range(4):
+        colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+    print(idx)
+    idx += 1
+    confirm_p()
+    move_motor(0, '0 -1e')
+    move_motor(1, '3 1e')
+    wait_motor(0)
+    wait_motor(1)
+    idx += 1
+    '''
     cv2.imshow('title',show_frame)
     root.after(5, detect)
 
@@ -411,29 +426,23 @@ def inspection_p():
     que = deque([[deepcopy(cp_solved), 0, -1]])
     while que:
         arr, num, l_mov = que.popleft()
-        if num:
-            t = (l_mov // 3) * 3
-            lst = set(range(9)) - set([t, t + 1, t + 2])
-        else:
-            lst = range(9)
+        t = (l_mov // 3) * 3
+        lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
             n_arr = move_cp(arr, mov)
             n_idx = cp2i(n_arr)
             if cp[n_idx] == inf:
                 cp[n_idx] = num + 1
                 que.append([n_arr, num + 1, mov])
-    print('cp', time() - strt, 's')
+    print('cp:', time() - strt, 's')
     co = [inf for _ in range(3 ** 7)]
     co_solved = [solved[i][1] for i in range(7)]
     co[co2i(co_solved)] = 0
     que = deque([[deepcopy(co_solved), 0, -1]])
     while que:
         arr, num, l_mov = que.popleft()
-        if num:
-            t = (l_mov // 3) * 3
-            lst = set(range(9)) - set([t, t + 1, t + 2])
-        else:
-            lst = range(9)
+        t = (l_mov // 3) * 3
+        lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
             n_arr = move_co(arr, mov)
             n_idx = co2i(n_arr)
@@ -441,7 +450,7 @@ def inspection_p():
                 continue
             co[n_idx] = num + 1
             que.append([n_arr, num + 1, mov])
-    print('co', time() - strt, 's')
+    print('co:', time() - strt, 's')
 
     # IDA*
     puzzle_cp = [puzzle[i][0] for i in range(7)]
@@ -479,10 +488,10 @@ def inspection_p():
         solution = tkinter.Label(text=num2moves(ans))
         solution.place(x = 0, y = 9 * grid)
         rot, _, _ = proc_motor(rot, 0, 4)
-        print('before: ', len(rot))
+        print('before:', len(rot))
         #print(rot)
         rot_optimise()
-        print('after', len(rot))
+        print('after:', len(rot))
         print(rot)
         print('all', time() - strt, 's')
         start.pack()
@@ -505,9 +514,13 @@ def start_p():
     strt_solv = time()
     i = 0
     while i < len(rot):
+        grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
+        for j in range(2):
+            ser_motor[j].write((str(grab[j]) + ' 0e').encode())
+        sleep(0.2)
         ser_num = rot[i][0] // 2
         move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]) + 'e')
-        if i < len(rot) - 1 and rot[i][0] // 2 != rot[i + 1][0] // 2:
+        if i < len(rot) - 1 and ser_num != rot[i + 1][0] // 2:
             move_motor(rot[i + 1][0] // 2, str(rot[i + 1][0]) + ' ' + str(rot[i + 1][1]) + 'e')
             wait_motor(rot[i + 1][0] // 2)
             i += 1
