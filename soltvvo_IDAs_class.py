@@ -14,6 +14,30 @@ L [欠番] [6, 0] R
 
 向きは揃っている方向(白黄ステッカー)から時計回りに1, 2となる
 '''
+'''
+direction
+UFについて、
+0: UF
+1: UR
+2: UB
+3: UL
+4: FD
+8: RD
+12: DB
+16: BD
+20: LD
+'''
+'''
+move_num
+["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'", "D", "D2", "D'", "B", "B2", "B'", "L", "L2", "L'"]
+面番号
+U: 0
+F: 1
+R: 2
+D: 3
+B: 4
+L: 5
+'''
 
 from copy import deepcopy
 from collections import deque
@@ -23,39 +47,122 @@ import cv2
 import numpy as np
 import serial
 
-# 回転処理 CP
-def move_cp(n_arr, num):
-    surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
-    replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
-    idx = num // 3
-    rot_arr = [n_arr[surface[idx][i]] for i in range(4)]
-    tmp = deepcopy(rot_arr)
-    for j in range(4):
-        rot_arr[replace[num % 3][j]] = tmp[j]
-    res = deepcopy(n_arr)
-    for i in range(4):
-        res[surface[idx][i]] = rot_arr[i]
-    return res
+class Cube:
+    def __init__(self):
+        self.Co = [0 for _ in range(7)]
+        self.Cp = list(range(7))
+        self.Moves = []
 
-# 回転処理 CO
-def move_co(n_arr, num):
-    surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
-    pls = [2, 1, 1, 2]
-    idx = num // 3
-    res = move_cp(n_arr, num)
-    if num // 3 != 0 and num % 3 != 1:
+    # 回転処理 CP
+    def move_cp(self, num):
+        surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+        replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+        idx = num // 3
+        rot_arr = [self.Cp[surface[idx][i]] for i in range(4)]
+        tmp = deepcopy(rot_arr)
+        for j in range(4):
+            rot_arr[replace[num % 3][j]] = tmp[j]
+        res = Cube()
+        res.Cp = deepcopy(self.Cp)
+        res.Moves = deepcopy(self.Moves)
         for i in range(4):
-            res[surface[idx][i]] += pls[i]
-            res[surface[idx][i]] %= 3
-    return res
+            res.Cp[surface[idx][i]] = rot_arr[i]
+        res.Moves = deepcopy(self.Moves)
+        res.Moves.append(num)
+        return res
 
-# 回転番号に則って実際にパズルの状態配列を変化させる
-def move(n_arr, num):
-    idx = num // 3
-    cp_arr = move_cp([n_arr[i][0] for i in range(7)], num)
-    co_arr = move_co([n_arr[i][1] for i in range(7)], num)
-    res = [[cp_arr[i], co_arr[i]] for i in range(7)]
-    return res
+    # 回転処理 CO
+    def move_co(self, num):
+        surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+        replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+        pls = [2, 1, 1, 2]
+        idx = num // 3
+        rot_arr = [self.Co[surface[idx][i]] for i in range(4)]
+        tmp = deepcopy(rot_arr)
+        for j in range(4):
+            rot_arr[replace[num % 3][j]] = tmp[j]
+        res = Cube()
+        res.Co = deepcopy(self.Co)
+        for i in range(4):
+            res.Co[surface[idx][i]] = rot_arr[i]
+        if num // 3 != 0 and num % 3 != 1:
+            for i in range(4):
+                res.Co[surface[idx][i]] += pls[i]
+                res.Co[surface[idx][i]] %= 3
+        res.Moves = deepcopy(self.Moves)
+        res.Moves.append(num)
+        return res
+
+    # 回転番号に則って実際にパズルの状態配列を変化させる
+    def move(self, num):
+        res = Cube()
+        res.Co = self.move_co(num).Co
+        res.Cp = self.move_cp(num).Cp
+        res.Moves = deepcopy(self.Moves)
+        res.Moves.append(num)
+        return res
+    
+    # パズルの状態配列固有の番号を返す
+    def arr2num(arr):
+        res1 = 0
+        marked = set([])
+        for i in range(7):
+            res1 += fac[6 - i] * len(set(range(arr[i][0])) - marked)
+            marked.add(arr[i][0])
+        res2 = 0
+        for i in range(6):
+            res2 *= 3
+            res2 += arr[i][1]
+        return res1 * 10000 + res2
+    '''
+    # 逆手順を返す
+    def reverse(arr):
+        arr = list(reversed(arr))
+        for i in range(len(arr)):
+            if arr[i] % 3 == 0:
+                arr[i] += 2
+            elif arr[i] % 3 == 2:
+                arr[i] -= 2
+        return arr
+    '''
+    '''
+    # 固有の番号からcp配列を作成
+    def i2cp(num):
+        res = []
+        pls = [0 for _ in range(7)]
+        for i in range(7):
+            tmp = fac[6 - i]
+            res.append(num // tmp + pls[num // tmp])
+            for j in range(num // tmp, 7):
+                pls[j] += 1
+            num -= num // tmp * tmp
+        return res
+    '''
+
+    # cp配列から固有の番号を作成
+    def cp2i(self):
+        res = 0
+        marked = set([])
+        for i in range(7):
+            res += fac[6 - i] * len(set(range(self.Cp[i])) - marked)
+            marked.add(self.Cp[i])
+        return res
+    '''
+    # 固有の番号からco配列を作成
+    def i2co(num):
+        res = []
+        for i in range(7):
+            res.append(num // 3)
+            num -= num // 3 * 3
+        return res
+    '''
+    # co配列から固有の番号を作成
+    def co2i(self):
+        res = 0
+        for i in self.Co:
+            res *= 3
+            res += i
+        return res
 
 # 回転番号を回転記号に変換
 def num2moves(arr):
@@ -64,33 +171,84 @@ def num2moves(arr):
         res += move_candidate[i] + ' '
     return res
 
-# パズルの状態配列固有の番号を返す
-def arr2num(arr):
-    res1 = 0
-    marked = set([])
-    for i in range(7):
-        res1 += fac[6 - i] * len(set(range(arr[i][0])) - marked)
-        marked.add(arr[i][0])
-    res2 = 0
-    for i in range(6):
-        res2 *= 3
-        res2 += arr[i][1]
-    return res1 * 10000 + res2
+# 回転記号番号の配列から回すモーターを決定する
+def proc_motor(rot, num, direction):
+    if num == len(ans):
+        return rot, num, direction
+    turn_arr = [1, 2, -1]
+    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
+    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
+    regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
+    regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
+    u_face = direction // 4
+    f_face = f_arr[u_face][direction % 4]
+    r_face = r_arr[u_face][f_face]
+    d_face = (u_face + 3) % 6
+    b_face = (f_face + 3) % 6
+    l_face = (r_face + 3) % 6
+    move_able = [f_face, r_face, b_face, l_face]
+    move_face = ans[num] // 3
+    move_amount = turn_arr[ans[num] % 3]
+    if move_face == u_face or move_face == d_face:
+        rot_tmp = [deepcopy(rot) for _ in range(2)]
+        direction_tmp = [-1, -1]
+        num_tmp = [num, num]
+        for j in range(2):
+            rot_tmp[j].extend(regrip_rot[j])
+            direction_tmp[j] = regrip_arr[j][direction]
+            rot_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], num_tmp[j], direction_tmp[j])
+        idx = 0 if len(rot_tmp[0]) < len(rot_tmp[1]) else 1
+        rot_res = rot_tmp[idx]
+        num_res = num_tmp[idx]
+        direction_res = direction_tmp[idx]
+    else:
+        tmp = move_able.index(move_face)
+        rot_res = deepcopy(rot)
+        rot_res.append([tmp, move_amount])
+        rot_res, num_res, direction_res = proc_motor(rot_res, num + 1, direction)
+    return rot_res, num_res, direction_res
 
-# 逆手順を返す
-def reverse(arr):
-    arr = list(reversed(arr))
-    for i in range(len(arr)):
-        if arr[i] % 3 == 0:
-            arr[i] += 2
-        elif arr[i] % 3 == 2:
-            arr[i] -= 2
-    return arr
+# ロボットの手順の最適化
+def rot_optimise():
+    global rot, grip
+    i = 0
+    tmp_arr = [2, -1, 0, 1, 2, -1, 0]
+    while i < len(rot):
+        if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
+            tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
+            del rot[i + 1]
+            if tmp == 0:
+                del rot[i]
+                i -= 1
+            else:
+                rot[i][1] = tmp
+        elif i < len(rot) - 2 and rot[i][0] == rot[i + 2][0] and rot[i][0] % 2 == rot[i + 1][0] % 2:
+            tmp = tmp_arr[rot[i][1] + rot[i + 2][1] + 2]
+            del rot[i + 2]
+            if tmp == 0:
+                del rot[i]
+                i -= 1
+            else:
+                rot[i][1] = tmp
+        i += 1
+
+def move_motor(num, com):
+    ser_motor[num].write(com.encode())
+    print(com)
+    ser_motor[num].reset_input_buffer()
+
+def wait_motor(num):
+    tmp = ''
+    while not len(tmp):
+        tmp = ser_motor[num].readline()
+        print(tmp.decode('utf8', 'ignore'), end='')
+
+
 
 # ボックスから色の情報を取ってくる -> ボックスに色を反映させる
 def confirm_p():
     global colors
-
+    '''
     # ボックスから色の情報を取る
     for i in range(6):
         for j in range(8):
@@ -103,7 +261,11 @@ def confirm_p():
                     entry[i][j]['bg'] = dic[tmp]
                 else:
                     colors[i][j] = ''
-    
+    '''
+    for i in range(6):
+        for j in range(8):
+            if (1 < i < 4 or 1 < j < 4) and colors[i][j] in j2color:
+                entry[i][j]['bg'] = dic[colors[i][j]]
     # 埋まっていないところで色が確定するところを埋める
     for i in range(6):
         for j in range(8):
@@ -135,65 +297,6 @@ def confirm_p():
         for j in range(8):
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
-
-# にぶたん
-def search(arr, num):
-    if not len(arr):
-        return -1
-    l = 0
-    r = len(arr) - 1
-    while r - l > 1:
-        c = (r + l) // 2
-        if arr[c][4] > num:
-            r = c
-        elif arr[c][4] < num:
-            l = c
-        else:
-            r = c
-            l = c
-    if arr[l][4] == num:
-        return l
-    elif arr[r][4] == num:
-        return r
-    else:
-        return -1
-
-# 固有の番号からcp配列を作成
-def i2cp(num):
-    res = []
-    pls = [0 for _ in range(7)]
-    for i in range(7):
-        tmp = fac[6 - i]
-        res.append(num // tmp + pls[num // tmp])
-        for j in range(num // tmp, 7):
-            pls[j] += 1
-        num -= num // tmp * tmp
-    return res
-
-# cp配列から固有の番号を作成
-def cp2i(arr):
-    res = 0
-    marked = set([])
-    for i in range(7):
-        res += fac[6 - i] * len(set(range(arr[i])) - marked)
-        marked.add(arr[i])
-    return res
-
-# 固有の番号からco配列を作成
-def i2co(num):
-    res = []
-    for i in range(7):
-        res.append(num // 3)
-        num -= num // 3 * 3
-    return res
-
-# co配列から固有の番号を作成
-def co2i(arr):
-    res = 0
-    for i in arr:
-        res *= 3
-        res += i
-    return res
 
 # パズルの状態の取得
 def detect():
@@ -256,91 +359,6 @@ def detect():
     cv2.imshow('title',show_frame)
     root.after(5, detect)
 
-# 回転記号番号の配列から回すモーターを決定する
-def proc_motor(rot, num, direction):
-    if num == len(ans):
-        return rot, num, direction
-    turn_arr = [1, 2, -1]
-    r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
-    f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
-    regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
-    regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
-    u_face = direction // 4
-    f_face = f_arr[u_face][direction % 4]
-    r_face = r_arr[u_face][f_face]
-    d_face = (u_face + 3) % 6
-    b_face = (f_face + 3) % 6
-    l_face = (r_face + 3) % 6
-    move_able = [f_face, r_face, b_face, l_face]
-    move_face = ans[num] // 3
-    move_amount = turn_arr[ans[num] % 3]
-    if move_face == u_face or move_face == d_face:
-        rot_tmp = [deepcopy(rot) for _ in range(2)]
-        direction_tmp = [-1, -1]
-        num_tmp = [num, num]
-        for j in range(2):
-            rot_tmp[j].extend(regrip_rot[j])
-            direction_tmp[j] = regrip_arr[j][direction]
-            rot_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], num_tmp[j], direction_tmp[j])
-        idx = 0 if len(rot_tmp[0]) < len(rot_tmp[1]) else 1
-        rot_res = rot_tmp[idx]
-        num_res = num_tmp[idx]
-        direction_res = direction_tmp[idx]
-    else:
-        tmp = move_able.index(move_face)
-        rot_res = deepcopy(rot)
-        rot_res.append([tmp, move_amount])
-        rot_res, num_res, direction_res = proc_motor(rot_res, num + 1, direction)
-    return rot_res, num_res, direction_res
-
-# ロボットの手順の最適化
-def rot_optimise():
-    global rot, grip
-    i = 0
-    tmp_arr = [2, -1, 0, 1, 2, -1, 0]
-    while i < len(rot):
-        if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
-            tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
-            del rot[i + 1]
-            if tmp == 0:
-                del rot[i]
-                i -= 1
-            else:
-                rot[i][1] = tmp
-        elif i < len(rot) - 2 and rot[i][0] == rot[i + 2][0] and rot[i][0] % 2 == rot[i + 1][0] % 2:
-            tmp = tmp_arr[rot[i][1] + rot[i + 2][1] + 2]
-            del rot[i + 2]
-            if tmp == 0:
-                del rot[i]
-                i -= 1
-            else:
-                rot[i][1] = tmp
-        i += 1
-'''
-direction
-UFについて、
-0: UF
-1: UR
-2: UB
-3: UL
-4: FD
-8: RD
-12: DB
-16: BD
-20: LD
-'''
-'''
-move_num
-["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'", "D", "D2", "D'", "B", "B2", "B'", "L", "L2", "L'"]
-面番号
-U: 0
-F: 1
-R: 2
-D: 3
-B: 4
-L: 5
-'''
-
 # インスペクション処理
 def inspection_p():
     global ans, rot, grip
@@ -349,26 +367,26 @@ def inspection_p():
     
     # 色の情報からパズルの状態配列を作る
     confirm_p()
-    puzzle = [[i, 0] for i in range(7)]
+    puzzle = Cube()
     set_parts_color = [set(i) for i in parts_color]
     for i in range(7):
         tmp = []
         for j in range(3):
             tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
         tmp1 = 'w' if 'w' in tmp else 'y'
-        puzzle[i][1] = tmp.index(tmp1)
-        puzzle[i][0] = set_parts_color.index(set(tmp))
-    tmp = [puzzle[i][0] for i in range(7)]
-    tmp2 = list(set(range(7)) - set(tmp))
+        puzzle.Co[i] = tmp.index(tmp1)
+        puzzle.Cp[i] = set_parts_color.index(set(tmp))
+    tmp2 = list(set(range(7)) - set(puzzle.Cp))
     if len(tmp2):
         tmp2 = tmp2[0]
         for i in range(7):
-            if puzzle[i][0] > tmp2:
-                puzzle[i][0] -= 1
+            if puzzle.Cp[i] > tmp2:
+                puzzle.Cp[i] -= 1
     print('scramble:')
     for i in range(6):
         print(colors[i])
-    print(puzzle)
+    print(puzzle.Cp)
+    print(puzzle.Co)
 
     # パズルの向きから、solved状態の配列を作る
     solved_color = [['' for _ in range(8)] for _ in range(6)]
@@ -397,88 +415,86 @@ def inspection_p():
                 for k in range(3):
                     if solved_color[i + dy[k]][j + dx[k]] != '':
                         solved_color[i][j] = solved_color[i + dy[k]][j + dx[k]]
-    solved = [[-1, -1] for _ in range(7)]
+    solved = Cube()
     for i in range(7):
         tmp = []
         for j in range(3):
             tmp.append(solved_color[parts_place[i][j][0]][parts_place[i][j][1]])
         tmp1 = 'w' if 'w' in tmp else 'y'
-        solved[i][1] = tmp.index(tmp1)
-        solved[i][0] = set_parts_color.index(set(tmp))
-    tmp = [solved[i][0] for i in range(7)]
-    tmp2 = list(set(range(7)) - set(tmp))
+        solved.Co[i] = tmp.index(tmp1)
+        solved.Cp[i] = set_parts_color.index(set(tmp))
+    tmp2 = list(set(range(7)) - set(solved.Cp))
     if len(tmp2):
         tmp2 = tmp2[0]
         for i in range(7):
-            if solved[i][0] > tmp2:
-                solved[i][0] -= 1
+            if solved.Cp[i] > tmp2:
+                solved.Cp[i] -= 1
     print('solved:')
     for i in range(6):
         print(solved_color[i])
-    print(solved)
+    print(solved.Cp)
+    print(solved.Co)
     print('pre', time() - strt, 's')
 
     # 枝刈り用のco配列とcp配列
     inf = 100
     cp = [inf for _ in range(fac[7])]
-    cp_solved = [solved[i][0] for i in range(7)]
-    cp[cp2i(cp_solved)] = 0
-    que = deque([[deepcopy(cp_solved), 0, -1]])
+    cp_solved = Cube()
+    cp_solved.Cp = solved.Cp
+    cp[cp_solved.cp2i()] = 0
+    que = deque([cp_solved])
     while que:
-        arr, num, l_mov = que.popleft()
+        status = que.popleft()
+        num = len(status.Moves)
+        l_mov = status.Moves[-1] if num else -1
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
-            n_arr = move_cp(arr, mov)
-            n_idx = cp2i(n_arr)
+            n_status = status.move_cp(mov)
+            n_idx = n_status.cp2i()
             if cp[n_idx] == inf:
                 cp[n_idx] = num + 1
-                que.append([n_arr, num + 1, mov])
+                que.append(n_status)
     print('cp:', time() - strt, 's')
     co = [inf for _ in range(3 ** 7)]
-    co_solved = [solved[i][1] for i in range(7)]
-    co[co2i(co_solved)] = 0
-    que = deque([[deepcopy(co_solved), 0, -1]])
+    co_solved = Cube()
+    co_solved.Co = solved.Co
+    co[co_solved.co2i()] = 0
+    que = deque([co_solved])
     while que:
-        arr, num, l_mov = que.popleft()
+        status = que.popleft()
+        num = len(status.Moves)
+        l_mov = status.Moves[-1] if num else -1
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
-            n_arr = move_co(arr, mov)
-            n_idx = co2i(n_arr)
-            if co[n_idx] != inf:
-                continue
-            co[n_idx] = num + 1
-            que.append([n_arr, num + 1, mov])
+            n_status = status.move_co(mov)
+            n_idx = n_status.co2i()
+            if co[n_idx] == inf:
+                co[n_idx] = num + 1
+                que.append(n_status)
     print('co:', time() - strt, 's')
 
     # IDA*
-    puzzle_cp = [puzzle[i][0] for i in range(7)]
-    puzzle_co = [puzzle[i][1] for i in range(7)]
     for depth in range(1, 20):
-        que = [[deepcopy(puzzle), []]]
+        que = [puzzle]
         while que and not ans:
-            arr, moves = que.pop()
-            num = len(moves)
-            if num:
-                t = (moves[-1] // 3) * 3
-                lst = set(range(9)) - set([t, t + 1, t + 2])
-            else:
-                lst = range(9)
+            status = que.pop()
+            num = len(status.Moves)
+            l_mov = status.Moves[-1] if num else -1
+            t = (l_mov // 3) * 3
+            lst = set(range(9)) - set([t, t + 1, t + 2])
             for mov in lst:
-                pls = 1 if num > 1 and mov // 3 != moves[-1] // 3 and mov // 3 != moves[-2] // 3 else 0
+                pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
                 pls = 1 if num <= 1 and mov // 3 == 1 else 0
-                n_arr = move(arr, mov)
-                n_moves = deepcopy(moves)
-                n_moves.append(mov)
-                if n_arr == solved:
-                    ans = n_moves
+                n_status = status.move(mov)
+                #print(status.Cp, n_status.Cp, n_status.Co, num2moves(n_status.Moves))
+                if n_status.Cp == solved.Cp and n_status.Co == solved.Co:
+                    ans = n_status.Moves
                     break
-                cp_arr = [n_arr[i][0] for i in range(7)]
-                co_arr = [n_arr[i][1] for i in range(7)]
-                h = max(cp[cp2i(cp_arr)], co[co2i(co_arr)])
-                if num + 1 + h + pls < depth:
-                    que.append([n_arr, n_moves])
+                h = max(cp[n_status.cp2i()], co[n_status.co2i()])
+                if len(n_status.Moves) + h + pls < depth:
+                    que.append(n_status)
         #print('depth:', depth)
         if ans:
             break
@@ -497,17 +513,6 @@ def inspection_p():
         start.pack()
     else:
         print('cannot solve!')
-
-def move_motor(num, com):
-    ser_motor[num].write(com.encode())
-    print(com)
-    ser_motor[num].reset_input_buffer()
-
-def wait_motor(num):
-    tmp = ''
-    while not len(tmp):
-        tmp = ser_motor[num].readline()
-        print(tmp.decode('utf8', 'ignore'), end='')
 
 def start_p():
     print('start!')
