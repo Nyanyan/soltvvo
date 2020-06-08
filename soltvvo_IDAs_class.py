@@ -462,12 +462,12 @@ def start_p():
     while i < len(rot):
         grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
         for j in range(2):
-            ser_motor[j].write((str(grab[j]) + ' 0e').encode())
+            ser_motor[j].write((str(grab[j]) + ' 0').encode())
         sleep(0.2)
         ser_num = rot[i][0] // 2
-        move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]) + 'e')
+        move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]))
         if i < len(rot) - 1 and ser_num != rot[i + 1][0] // 2:
-            move_motor(rot[i + 1][0] // 2, str(rot[i + 1][0]) + ' ' + str(rot[i + 1][1]) + 'e')
+            move_motor(rot[i + 1][0] // 2, str(rot[i + 1][0]) + ' ' + str(rot[i + 1][1]))
             wait_motor(rot[i + 1][0] // 2)
             i += 1
         wait_motor(ser_num)
