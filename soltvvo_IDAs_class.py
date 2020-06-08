@@ -52,6 +52,7 @@ class Cube:
         self.Co = [0, 0, 0, 0, 0, 0, 0]
         self.Cp = [0, 1, 2, 3, 4, 5, 6]
         self.Moves = []
+        self.Movnum = 0
 
     # 回転処理 CP
     def move_cp(self, num):
@@ -64,6 +65,9 @@ class Cube:
             res.Cp[i] = self.Cp[surface[idx][j]]
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
+        res.Movnum = self.Movnum + 1
+        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転処理 CO
@@ -82,15 +86,16 @@ class Cube:
                 res.Co[surface[idx][i]] %= 3
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
+        res.Movnum = self.Movnum + 1
+        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
     def move(self, num):
         res = Cube()
-        res.Co = self.move_co(num).Co
+        res = self.move_co(num)
         res.Cp = self.move_cp(num).Cp
-        res.Moves = deepcopy(self.Moves)
-        res.Moves.append(num)
         return res
 
     # cp配列から固有の番号を作成
@@ -136,7 +141,7 @@ def proc_motor(rot, num, direction):
     move_face = ans[num] // 3
     move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
-        rot_tmp = [deepcopy(rot) for _ in range(2)]
+        rot_tmp = [[i for i in rot] for _ in range(2)]
         direction_tmp = [-1, -1]
         num_tmp = [num, num]
         for j in range(2):
@@ -149,7 +154,7 @@ def proc_motor(rot, num, direction):
         direction_res = direction_tmp[idx]
     else:
         tmp = move_able.index(move_face)
-        rot_res = deepcopy(rot)
+        rot_res = [i for i in rot]
         rot_res.append([tmp, move_amount])
         rot_res, num_res, direction_res = proc_motor(rot_res, num + 1, direction)
     return rot_res, num_res, direction_res
@@ -380,14 +385,10 @@ def inspection_p():
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
-            pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
-            pls = 1 if num <= 1 and mov // 3 == 1 else 0
-            for i in range(num - 2):
-                pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
             n_status = status.move_cp(mov)
             n_idx = n_status.cp2i()
             if cp[n_idx] == inf:
-                cp[n_idx] = num + pls + 1
+                cp[n_idx] = status.Movnum
                 que.append(n_status)
     print('cp:', time() - strt, 's')
     co = [inf for _ in range(3 ** 7)]
@@ -402,14 +403,10 @@ def inspection_p():
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
-            pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
-            pls = 1 if num <= 1 and mov // 3 == 1 else 0
-            for i in range(num - 2):
-                pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
             n_status = status.move_co(mov)
             n_idx = n_status.co2i()
             if co[n_idx] == inf:
-                co[n_idx] = num + pls + 1
+                co[n_idx] = status.Movnum
                 que.append(n_status)
     print('co:', time() - strt, 's')
 
@@ -423,22 +420,16 @@ def inspection_p():
             t = (l_mov // 3) * 3
             lst = set(range(9)) - set([t, t + 1, t + 2])
             for mov in lst:
-                pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
-                pls = 1 if num <= 1 and mov // 3 == 1 else 0
-                for i in range(num - 2):
-                    pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
                 n_status = status.move(mov)
-                #print(status.Cp, n_status.Cp, n_status.Co, num2moves(n_status.Moves))
                 if n_status.Cp == solved.Cp and n_status.Co == solved.Co:
                     ans = n_status.Moves
                     break
-                h = max(cp[n_status.cp2i()], co[n_status.co2i()])
-                if len(n_status.Moves) + h + pls < depth:
+                if n_status.Movnum + max(cp[n_status.cp2i()], co[n_status.co2i()]) < depth:
                     que.append(n_status)
-        #print('depth:', depth)
         if ans:
             break
     print('answer:', num2moves(ans))
+    print('IDA*', time() - strt, 's')
 
     if ans:
         solution = tkinter.Label(text=num2moves(ans))
