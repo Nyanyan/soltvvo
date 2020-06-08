@@ -1,17 +1,17 @@
 #include <Stepper.h>
 
 #define turn_steps 120
-#define rpm 100
-#define quarter 30
-#define arm0 3
-#define arm1 2
+#define rpm 200
+#define quarter -30
+#define arm0 7
+#define arm1 8
 
 char buf[30];
 int idx = 0;
 int data[2];
 
-Stepper stepper0(turn_steps, 10, 11, 12, 13);
-Stepper stepper1(turn_steps, 6, 7, 8, 9);
+Stepper stepper0(turn_steps, 9, 10, 11, 12);
+Stepper stepper1(turn_steps, A1, A0, A3, A4);
 
 float turning_time(int deg, int speed_motor) {
   return abs(1000 * quarter * deg / turn_steps * 60 / speed_motor);
@@ -50,7 +50,7 @@ void setup() {
 void loop() {
   if (Serial.available()) {
     buf[idx] = Serial.read();
-    if (buf[idx] == 'e') {
+    if (buf[idx] == '\n') {
       buf[idx] = '\0';
       data[0] = atoi(strtok(buf, " "));
       data[1] = atoi(strtok(NULL, " "));

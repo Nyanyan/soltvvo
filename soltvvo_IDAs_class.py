@@ -49,47 +49,38 @@ import serial
 
 class Cube:
     def __init__(self):
-        self.Co = [0 for _ in range(7)]
-        self.Cp = list(range(7))
+        self.Co = [0, 0, 0, 0, 0, 0, 0]
+        self.Cp = [0, 1, 2, 3, 4, 5, 6]
         self.Moves = []
 
     # 回転処理 CP
     def move_cp(self, num):
         surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
-        replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+        replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
         idx = num // 3
-        rot_arr = [self.Cp[surface[idx][i]] for i in range(4)]
-        tmp = deepcopy(rot_arr)
-        for j in range(4):
-            rot_arr[replace[num % 3][j]] = tmp[j]
         res = Cube()
-        res.Cp = deepcopy(self.Cp)
-        res.Moves = deepcopy(self.Moves)
-        for i in range(4):
-            res.Cp[surface[idx][i]] = rot_arr[i]
-        res.Moves = deepcopy(self.Moves)
+        res.Cp = [i for i in self.Cp]
+        for i, j in zip(surface[idx], replace[num % 3]):
+            res.Cp[i] = self.Cp[surface[idx][j]]
+        res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
         return res
 
     # 回転処理 CO
     def move_co(self, num):
         surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
-        replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+        replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
         pls = [2, 1, 1, 2]
         idx = num // 3
-        rot_arr = [self.Co[surface[idx][i]] for i in range(4)]
-        tmp = deepcopy(rot_arr)
-        for j in range(4):
-            rot_arr[replace[num % 3][j]] = tmp[j]
         res = Cube()
-        res.Co = deepcopy(self.Co)
-        for i in range(4):
-            res.Co[surface[idx][i]] = rot_arr[i]
+        res.Co = [i for i in self.Co]
+        for i, j in zip(surface[idx], replace[num % 3]):
+            res.Co[i] = self.Co[surface[idx][j]]
         if num // 3 != 0 and num % 3 != 1:
             for i in range(4):
                 res.Co[surface[idx][i]] += pls[i]
                 res.Co[surface[idx][i]] %= 3
-        res.Moves = deepcopy(self.Moves)
+        res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
         return res
 
@@ -101,43 +92,6 @@ class Cube:
         res.Moves = deepcopy(self.Moves)
         res.Moves.append(num)
         return res
-    
-    # パズルの状態配列固有の番号を返す
-    def arr2num(arr):
-        res1 = 0
-        marked = set([])
-        for i in range(7):
-            res1 += fac[6 - i] * len(set(range(arr[i][0])) - marked)
-            marked.add(arr[i][0])
-        res2 = 0
-        for i in range(6):
-            res2 *= 3
-            res2 += arr[i][1]
-        return res1 * 10000 + res2
-    '''
-    # 逆手順を返す
-    def reverse(arr):
-        arr = list(reversed(arr))
-        for i in range(len(arr)):
-            if arr[i] % 3 == 0:
-                arr[i] += 2
-            elif arr[i] % 3 == 2:
-                arr[i] -= 2
-        return arr
-    '''
-    '''
-    # 固有の番号からcp配列を作成
-    def i2cp(num):
-        res = []
-        pls = [0 for _ in range(7)]
-        for i in range(7):
-            tmp = fac[6 - i]
-            res.append(num // tmp + pls[num // tmp])
-            for j in range(num // tmp, 7):
-                pls[j] += 1
-            num -= num // tmp * tmp
-        return res
-    '''
 
     # cp配列から固有の番号を作成
     def cp2i(self):
@@ -147,15 +101,7 @@ class Cube:
             res += fac[6 - i] * len(set(range(self.Cp[i])) - marked)
             marked.add(self.Cp[i])
         return res
-    '''
-    # 固有の番号からco配列を作成
-    def i2co(num):
-        res = []
-        for i in range(7):
-            res.append(num // 3)
-            num -= num // 3 * 3
-        return res
-    '''
+    
     # co配列から固有の番号を作成
     def co2i(self):
         res = 0
@@ -210,7 +156,7 @@ def proc_motor(rot, num, direction):
 
 # ロボットの手順の最適化
 def rot_optimise():
-    global rot, grip
+    global rot
     i = 0
     tmp_arr = [2, -1, 0, 1, 2, -1, 0]
     while i < len(rot):
@@ -243,25 +189,9 @@ def wait_motor(num):
         tmp = ser_motor[num].readline()
         print(tmp.decode('utf8', 'ignore'), end='')
 
-
-
-# ボックスから色の情報を取ってくる -> ボックスに色を反映させる
+# ボックスに色を反映させる
 def confirm_p():
     global colors
-    '''
-    # ボックスから色の情報を取る
-    for i in range(6):
-        for j in range(8):
-            #colors[i][j] = ''
-            if 1 < i < 4 or 1 < j < 4:
-                #tmp = entry[i][j].get()
-                tmp = colors[i][j]
-                if tmp in j2color:
-                    colors[i][j] = tmp
-                    entry[i][j]['bg'] = dic[tmp]
-                else:
-                    colors[i][j] = ''
-    '''
     for i in range(6):
         for j in range(8):
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] in j2color:
@@ -314,7 +244,7 @@ def detect():
     size_y = 150
     frame = cv2.resize(frame, (size_x, size_y))
     show_frame = deepcopy(frame)
-    d = 40
+    d = 50
     center = [size_x // 2, size_y // 2]
     tmp_colors = [['' for _ in range(8)] for _ in range(6)]
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
@@ -361,7 +291,7 @@ def detect():
 
 # インスペクション処理
 def inspection_p():
-    global ans, rot, grip
+    global ans, rot
 
     strt = time()
     
@@ -443,17 +373,21 @@ def inspection_p():
     cp_solved.Cp = solved.Cp
     cp[cp_solved.cp2i()] = 0
     que = deque([cp_solved])
-    while que:
+    while len(que):
         status = que.popleft()
         num = len(status.Moves)
         l_mov = status.Moves[-1] if num else -1
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
+            pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
+            pls = 1 if num <= 1 and mov // 3 == 1 else 0
+            for i in range(num - 2):
+                pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
             n_status = status.move_cp(mov)
             n_idx = n_status.cp2i()
             if cp[n_idx] == inf:
-                cp[n_idx] = num + 1
+                cp[n_idx] = num + pls + 1
                 que.append(n_status)
     print('cp:', time() - strt, 's')
     co = [inf for _ in range(3 ** 7)]
@@ -461,17 +395,21 @@ def inspection_p():
     co_solved.Co = solved.Co
     co[co_solved.co2i()] = 0
     que = deque([co_solved])
-    while que:
+    while len(que):
         status = que.popleft()
         num = len(status.Moves)
         l_mov = status.Moves[-1] if num else -1
         t = (l_mov // 3) * 3
         lst = set(range(9)) - set([t, t + 1, t + 2])
         for mov in lst:
+            pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
+            pls = 1 if num <= 1 and mov // 3 == 1 else 0
+            for i in range(num - 2):
+                pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
             n_status = status.move_co(mov)
             n_idx = n_status.co2i()
             if co[n_idx] == inf:
-                co[n_idx] = num + 1
+                co[n_idx] = num + pls + 1
                 que.append(n_status)
     print('co:', time() - strt, 's')
 
@@ -487,6 +425,8 @@ def inspection_p():
             for mov in lst:
                 pls = 1 if num > 1 and mov // 3 != status.Moves[-1] // 3 and mov // 3 != status.Moves[-2] // 3 else 0
                 pls = 1 if num <= 1 and mov // 3 == 1 else 0
+                for i in range(num - 2):
+                    pls += 1 if status.Moves[i + 2] // 3 != status.Moves[i + 1] // 3 and status.Moves[i + 2] // 3 != status.Moves[i] // 3 else 0
                 n_status = status.move(mov)
                 #print(status.Cp, n_status.Cp, n_status.Co, num2moves(n_status.Moves))
                 if n_status.Cp == solved.Cp and n_status.Co == solved.Co:
@@ -514,6 +454,7 @@ def inspection_p():
     else:
         print('cannot solve!')
 
+# 実際にロボットを動かす
 def start_p():
     print('start!')
     strt_solv = time()
@@ -544,6 +485,7 @@ ans = []
 rot = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
+dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
 idx = 0
 
 fac = [1]
@@ -561,12 +503,9 @@ canvas = tkinter.Canvas(root, width = 300, height = 200)
 canvas.place(x=0,y=0)
 
 grid = 20
-
 offset = 50
 
 entry = [[None for _ in range(8)] for _ in range(6)]
-
-dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
 
 for i in range(6):
     for j in range(8):
