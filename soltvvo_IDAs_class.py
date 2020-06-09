@@ -202,6 +202,18 @@ def wait_motor_solenoid(num):
             tmp = ser_motor[num].readline().decode('utf8', 'ignore').replace('\n', '')
     ser_motor[num].flush()
 
+def grab_p():
+    for i in range(2):
+        move_motor_solenoid(i, str(i * 2) + ' 10')
+    for i in range(2):
+        wait_motor_solenoid(i)
+
+def release_p():
+    for i in range(2):
+        move_motor_solenoid(i, str(i * 2) + ' 20')
+    for i in range(2):
+        wait_motor_solenoid(i)
+
 # ボックスに色を反映させる
 def confirm_p():
     global colors
@@ -396,6 +408,10 @@ def inspection_p():
     for idx, d in enumerate(direction_arr):
         if solved_color[5][2] == parts_color[d // 3][d % 3] and solved_color[3][7] == parts_color[d // 3][(d % 3 + 1) % 3]:
             direction = idx
+    if direction == -1:
+        solutionvar.set('cannot solve!')
+        print('cannot solve!')
+        return
     with open('cp'+ str(direction) + '.csv', mode='r') as f:
         cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
     with open('co'+ str(direction) + '.csv', mode='r') as f:
@@ -403,6 +419,7 @@ def inspection_p():
 
     # IDA*
     for depth in range(1, 16):
+        print('depth', depth)
         que = [puzzle]
         while que and not ans:
             status = que.pop()
@@ -436,7 +453,6 @@ def inspection_p():
         print('after:', len(rot))
         print(rot)
         print('all', time() - strt, 's')
-        start.pack()
     else:
         solutionvar.set('cannot solve!')
         print('cannot solve!')
@@ -461,7 +477,7 @@ def start_p():
     while i < len(rot):
         grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
         for j in range(2):
-            ser_motor[j].write((str(grab[j]) + ' 0').encode())
+            move_motor_solenoid(j, str(grab[j]) + ' 0')
         sleep(0.2)
         ser_num = rot[i][0] // 2
         move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]))
@@ -500,8 +516,6 @@ ser_motor = [None, None]
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
-canvas = tkinter.Canvas(root, width = 300, height = 200)
-canvas.place(x=0,y=0)
 
 grid = 20
 offset = 30
@@ -511,23 +525,29 @@ entry = [[None for _ in range(8)] for _ in range(6)]
 for i in range(6):
     for j in range(8):
         if 1 < i < 4 or 1 < j < 4:
-            entry[i][j] = tkinter.Entry(width=2, bg='gray')
+            entry[i][j] = tkinter.Entry(master=root, width=2, bg='gray')
             entry[i][j].place(x = j * grid + offset, y = i * grid + offset)
 
-inspection = tkinter.Button(canvas, text="inspection", command=inspection_p)
-inspection.pack()
+inspection = tkinter.Button(root, text="inspection", command=inspection_p)
+inspection.place(x=0, y=0)
 
-start = tkinter.Button(canvas, text="start", command=start_p)
-start.pack()
+start = tkinter.Button(root, text="start", command=start_p)
+start.place(x=0, y=40)
 
 
-solutionvar = tkinter.StringVar(master=root,value='')
+solutionvar = tkinter.StringVar(master=root, value='')
 solution = tkinter.Label(textvariable=solutionvar)
-solution.place(x = 70, y = 0)
+solution.place(x=70, y=0)
 
-solvingtimevar = tkinter.StringVar(master=root,value='')
+solvingtimevar = tkinter.StringVar(master=root, value='')
 solvingtime = tkinter.Label(textvariable=solvingtimevar)
-solvingtime.place(x = 120, y = 20)
+solvingtime.place(x=120, y=20)
+
+grab = tkinter.Button(root, text="grab", command=grab_p)
+grab.place(x=0, y=120)
+
+release = tkinter.Button(root, text="release", command=release_p)
+release.place(x=120, y=120)
 
 root.mainloop()
 

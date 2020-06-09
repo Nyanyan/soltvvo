@@ -26,7 +26,7 @@ void move_motor(int num, int deg, int spd) {
     stepper1.step(quarter * deg);
   }
   delay(turning_time(deg, spd) * 1.1);
-  for (int i=0;i<10;i++){
+  for (int i = 0; i < 10; i++) {
     Serial.println('f');
     delay(10);
   }
@@ -42,12 +42,31 @@ void grab_arm(int num) {
     delay(100);
     digitalWrite(arm0, LOW);
   }
-  for (int i=0;i<10;i++){
+  for (int i = 0; i < 10; i++) {
     Serial.println('f');
     delay(10);
   }
 }
 
+void grab_all() {
+  digitalWrite(arm0, HIGH);
+  digitalWrite(arm1, HIGH);
+  delay(100);
+  for (int i = 0; i < 10; i++) {
+    Serial.println('f');
+    delay(10);
+  }
+}
+
+void release_all() {
+  digitalWrite(arm0, LOW);
+  digitalWrite(arm1, LOW);
+  delay(100);
+  for (int i = 0; i < 10; i++) {
+    Serial.println('f');
+    delay(10);
+  }
+}
 void setup() {
   Serial.begin(1200);
   pinMode(arm0, OUTPUT);
@@ -63,8 +82,10 @@ void loop() {
       buf[idx] = '\0';
       data[0] = atoi(strtok(buf, " "));
       data[1] = atoi(strtok(NULL, " "));
-      if (data[1] != 0) move_motor(data[0], data[1], rpm);
-      else grab_arm(data[0]);
+      if (data[1] == 0) grab_arm(data[0]);
+      else if (data[1] == 10) grab_all();
+      else if (data[1] == 20) release_all();
+      else move_motor(data[0], data[1], rpm);
       idx = 0;
     }
     else {
