@@ -26,42 +26,51 @@ void move_motor(int num, int deg, int spd) {
     stepper1.step(quarter * deg);
   }
   delay(turning_time(deg, spd) * 1.1);
-  Serial.println(turning_time(deg, spd) * 1.1);
+  for (int i=0;i<10;i++){
+    Serial.println('f');
+    delay(10);
+  }
 }
 
-void grab_arm(int num){
-  if(num == 0){
+void grab_arm(int num) {
+  if (num == 0) {
     digitalWrite(arm0, HIGH);
     delay(100);
     digitalWrite(arm1, LOW);
-  } else if (num == 1){
+  } else if (num == 1) {
     digitalWrite(arm1, HIGH);
     delay(100);
     digitalWrite(arm0, LOW);
   }
+  for (int i=0;i<10;i++){
+    Serial.println('f');
+    delay(10);
+  }
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(1200);
   pinMode(arm0, OUTPUT);
   pinMode(arm1, OUTPUT);
+  pinMode(13, OUTPUT);
 }
 
 void loop() {
   if (Serial.available()) {
+    digitalWrite(13, HIGH);
     buf[idx] = Serial.read();
     if (buf[idx] == '\n') {
       buf[idx] = '\0';
       data[0] = atoi(strtok(buf, " "));
       data[1] = atoi(strtok(NULL, " "));
-      idx = 0;
-      Serial.println(data[0]);
-      Serial.println(data[1]);
-      if(data[1] != 0) move_motor(data[0], data[1], rpm);
+      if (data[1] != 0) move_motor(data[0], data[1], rpm);
       else grab_arm(data[0]);
+      idx = 0;
     }
     else {
+      digitalWrite(13, LOW);
       idx++;
     }
   }
+  Serial.print('\n');
 }

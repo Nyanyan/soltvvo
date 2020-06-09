@@ -183,16 +183,24 @@ def rot_optimise():
                 rot[i][1] = tmp
         i += 1
 
-def move_motor(num, com):
-    ser_motor[num].write(com.encode())
-    print(com)
-    ser_motor[num].reset_input_buffer()
+def move_motor_solenoid(num, com):
+    ser_motor[num].flush()
+    while True:
+        try:
+            ser_motor[num].write((com + '\n').encode())
+            ser_motor[num].flush()
+            break
+        except:
+            continue
+    print('num:', num, 'command:', com)
 
-def wait_motor(num):
+def wait_motor_solenoid(num):
     tmp = ''
     while not len(tmp):
-        tmp = ser_motor[num].readline()
-        print(tmp.decode('utf8', 'ignore'), end='')
+        #print(ser_motor[num].inWaiting())
+        if ser_motor[num].inWaiting():
+            tmp = ser_motor[num].readline().decode('utf8', 'ignore').replace('\n', '')
+    ser_motor[num].flush()
 
 # ボックスに色を反映させる
 def confirm_p():
@@ -371,6 +379,7 @@ def inspection_p():
     print(solved.Co)
     print('pre', time() - strt, 's')
 
+    '''
     # 枝刈り用のco配列とcp配列
     inf = 100
     cp = [inf for _ in range(fac[7])]
@@ -409,9 +418,21 @@ def inspection_p():
                 co[n_idx] = status.Movnum
                 que.append(n_status)
     print('co:', time() - strt, 's')
+    '''
+    
+    # 枝刈り用のco配列とcp配列
+    direction = -1
+    direction_arr = [21, 12, 15, 18, 2, 22, 20, 4, 8, 13, 23, 1, 6, 0, 3, 9, 11, 16, 14, 7, 5, 19, 17, 10]
+    for idx, d in enumerate(direction_arr):
+        if solved_color[5][2] == parts_color[d // 3][d % 3] and solved_color[3][7] == parts_color[d // 3][(d % 3 + 1) % 3]:
+            direction = idx
+    with open('cp'+ str(direction) + '.csv', mode='r') as f:
+        cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
+    with open('co'+ str(direction) + '.csv', mode='r') as f:
+        co = [int(i) for i in f.readline().replace('\n', '').split(',')]
 
     # IDA*
-    for depth in range(1, 20):
+    for depth in range(1, 16):
         que = [puzzle]
         while que and not ans:
             status = que.pop()
@@ -436,7 +457,6 @@ def inspection_p():
         solution.place(x = 0, y = 9 * grid)
         rot, _, _ = proc_motor(rot, 0, 4)
         print('before:', len(rot))
-        #print(rot)
         rot_optimise()
         print('after:', len(rot))
         print(rot)
@@ -452,6 +472,18 @@ def start_p():
     i = 0
     while i < len(rot):
         grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
+        move_motor_solenoid(0, str(grab[0]) + ' 0')
+        wait_motor_solenoid(0)
+        sleep(0.2)
+        ser_num = rot[i][0] // 2
+        if ser_num == 0:
+            move_motor_solenoid(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]))
+            wait_motor_solenoid(ser_num)
+        print('done', i)
+        i += 1        
+    '''
+    while i < len(rot):
+        grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
         for j in range(2):
             ser_motor[j].write((str(grab[j]) + ' 0').encode())
         sleep(0.2)
@@ -462,9 +494,11 @@ def start_p():
             wait_motor(rot[i + 1][0] // 2)
             i += 1
         wait_motor(ser_num)
-        i += 1
         print('done', i)
+        i += 1
+    '''
     print('solving time:', time() - strt_solv, 's')
+
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
@@ -484,8 +518,8 @@ for i in range(1, 8):
     fac.append(fac[-1] * i)
 
 ser_motor = [None, None]
-#ser_motor[0] = serial.Serial('COM5', 115200)
-#ser_motor[1] = serial.Serial('COM6', 115200)
+#ser_motor[0] = serial.Serial('COM8', 1200, write_timeout=0) #/dev/ttyUSB0
+#ser_motor[1] = serial.Serial('COM6', 9600)
 
 root = tkinter.Tk()
 root.title("2x2x2solver")
@@ -516,3 +550,4 @@ root.after(5, detect)
 root.mainloop()
 
 capture.release()
+ser_motor[0].close()
