@@ -244,67 +244,74 @@ def confirm_p():
 # パズルの状態の取得
 def detect():
     global idx, colors
-    #color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for RPi
-    #color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-    color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for PC
-    color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-    circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
-    surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
-    if idx >= 4:
-        return
-    ret, frame = capture.read()
-    size_x = 200
-    size_y = 150
-    frame = cv2.resize(frame, (size_x, size_y))
-    show_frame = deepcopy(frame)
-    d = 50
-    center = [size_x // 2, size_y // 2]
-    tmp_colors = [['' for _ in range(8)] for _ in range(6)]
-    hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-    dx = [-1, -1, 1, 1]
-    dy = [-1, 1, -1, 1]
-    for i in range(4):
-        y = center[0] + dy[i] * d
-        x = center[1] + dx[i] * d
-        cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
-        val = hsv[x, y]
-        for j in range(6):
-            flag = True
-            for k in range(3):
-                if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
-                    flag = False
-            if flag:
-                tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
-                #print(j2color[j], end=' ')
-                cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
-                break
-    '''
-    sleep(1)
-    '''
-    if cv2.waitKey(1) & 0xFF == ord('n'):
+    capture = cv2.VideoCapture(0)
+    idx = 0
+    while idx < 4:
+        #color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for RPi
+        #color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+        color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for PC
+        color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+        circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
+        surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
+        ret, frame = capture.read()
+        size_x = 200
+        size_y = 150
+        frame = cv2.resize(frame, (size_x, size_y))
+        show_frame = deepcopy(frame)
+        d = 50
+        center = [size_x // 2, size_y // 2]
+        tmp_colors = [['' for _ in range(8)] for _ in range(6)]
+        hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+        dx = [-1, -1, 1, 1]
+        dy = [-1, 1, -1, 1]
+        for i in range(4):
+            y = center[0] + dy[i] * d
+            x = center[1] + dx[i] * d
+            cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
+            val = hsv[x, y]
+            for j in range(6):
+                flag = True
+                for k in range(3):
+                    if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
+                        flag = False
+                if flag:
+                    tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
+                    #print(j2color[j], end=' ')
+                    cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
+                    break
+        '''
+        sleep(1)
+        '''
+        if cv2.waitKey(1) & 0xFF == ord('n'):
+            for i in range(4):
+                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+            print(idx)
+            idx += 1
+            confirm_p()
+        '''
         for i in range(4):
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
         print(idx)
         idx += 1
         confirm_p()
-    '''
-    for i in range(4):
-        colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-    print(idx)
-    idx += 1
-    confirm_p()
-    move_motor(0, '0 -1e')
-    move_motor(1, '3 1e')
-    wait_motor(0)
-    wait_motor(1)
-    idx += 1
-    '''
-    cv2.imshow('title',show_frame)
-    root.after(5, detect)
+        move_motor(0, '0 -1e')
+        move_motor(1, '3 1e')
+        wait_motor(0)
+        wait_motor(1)
+        idx += 1
+        '''
+        cv2.imshow('title',show_frame)
+    capture.release()
 
 # インスペクション処理
 def inspection_p():
-    global ans, rot
+    global ans, rot, colors
+
+    ans = []
+    rot = []
+    colors = [['' for _ in range(8)] for _ in range(6)]
+
+    detect()
 
     strt = time()
     
@@ -318,6 +325,10 @@ def inspection_p():
             tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
         tmp1 = 'w' if 'w' in tmp else 'y'
         puzzle.Co[i] = tmp.index(tmp1)
+        if not set(tmp) in set_parts_color:
+            solutionvar.set('cannot solve!')
+            print('cannot solve!')
+            return
         puzzle.Cp[i] = set_parts_color.index(set(tmp))
     tmp2 = list(set(range(7)) - set(puzzle.Cp))
     if len(tmp2):
@@ -379,47 +390,6 @@ def inspection_p():
     print(solved.Co)
     print('pre', time() - strt, 's')
 
-    '''
-    # 枝刈り用のco配列とcp配列
-    inf = 100
-    cp = [inf for _ in range(fac[7])]
-    cp_solved = Cube()
-    cp_solved.Cp = solved.Cp
-    cp[cp_solved.cp2i()] = 0
-    que = deque([cp_solved])
-    while len(que):
-        status = que.popleft()
-        num = len(status.Moves)
-        l_mov = status.Moves[-1] if num else -1
-        t = (l_mov // 3) * 3
-        lst = set(range(9)) - set([t, t + 1, t + 2])
-        for mov in lst:
-            n_status = status.move_cp(mov)
-            n_idx = n_status.cp2i()
-            if cp[n_idx] == inf:
-                cp[n_idx] = status.Movnum
-                que.append(n_status)
-    print('cp:', time() - strt, 's')
-    co = [inf for _ in range(3 ** 7)]
-    co_solved = Cube()
-    co_solved.Co = solved.Co
-    co[co_solved.co2i()] = 0
-    que = deque([co_solved])
-    while len(que):
-        status = que.popleft()
-        num = len(status.Moves)
-        l_mov = status.Moves[-1] if num else -1
-        t = (l_mov // 3) * 3
-        lst = set(range(9)) - set([t, t + 1, t + 2])
-        for mov in lst:
-            n_status = status.move_co(mov)
-            n_idx = n_status.co2i()
-            if co[n_idx] == inf:
-                co[n_idx] = status.Movnum
-                que.append(n_status)
-    print('co:', time() - strt, 's')
-    '''
-    
     # 枝刈り用のco配列とcp配列
     direction = -1
     direction_arr = [21, 12, 15, 18, 2, 22, 20, 4, 8, 13, 23, 1, 6, 0, 3, 9, 11, 16, 14, 7, 5, 19, 17, 10]
@@ -445,7 +415,13 @@ def inspection_p():
                 if n_status.Cp == solved.Cp and n_status.Co == solved.Co:
                     ans = n_status.Moves
                     break
-                if n_status.Movnum + max(cp[n_status.cp2i()], co[n_status.co2i()]) < depth:
+                cp_idx = n_status.cp2i()
+                co_idx = n_status.co2i()
+                if not (0 <= cp_idx < 5040 and 0 <= co_idx < 2187):
+                    solutionvar.set('cannot solve!')
+                    print('cannot solve!')
+                    return
+                if n_status.Movnum + max(cp[cp_idx], co[co_idx]) < depth:
                     que.append(n_status)
         if ans:
             break
@@ -453,8 +429,7 @@ def inspection_p():
     print('IDA*', time() - strt, 's')
 
     if ans:
-        solution = tkinter.Label(text=num2moves(ans))
-        solution.place(x = 0, y = 9 * grid)
+        solutionvar.set(num2moves(ans))
         rot, _, _ = proc_motor(rot, 0, 4)
         print('before:', len(rot))
         rot_optimise()
@@ -463,6 +438,7 @@ def inspection_p():
         print('all', time() - strt, 's')
         start.pack()
     else:
+        solutionvar.set('cannot solve!')
         print('cannot solve!')
 
 # 実際にロボットを動かす
@@ -497,6 +473,7 @@ def start_p():
         print('done', i)
         i += 1
     '''
+    solvingtimevar.set(str(solv_time) + 's')
     print('solving time:', time() - strt_solv, 's')
 
 
@@ -511,24 +488,23 @@ rot = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
-idx = 0
 
 fac = [1]
 for i in range(1, 8):
     fac.append(fac[-1] * i)
 
 ser_motor = [None, None]
-#ser_motor[0] = serial.Serial('COM8', 1200, write_timeout=0) #/dev/ttyUSB0
+#ser_motor[0] = serial.Serial('/dev/ttyUSB0', 1200, write_timeout=0)
 #ser_motor[1] = serial.Serial('COM6', 9600)
 
 root = tkinter.Tk()
 root.title("2x2x2solver")
-root.geometry("300x200")
+root.geometry("300x150")
 canvas = tkinter.Canvas(root, width = 300, height = 200)
 canvas.place(x=0,y=0)
 
 grid = 20
-offset = 50
+offset = 30
 
 entry = [[None for _ in range(8)] for _ in range(6)]
 
@@ -544,10 +520,15 @@ inspection.pack()
 start = tkinter.Button(canvas, text="start", command=start_p)
 start.pack()
 
-capture = cv2.VideoCapture(0)
 
-root.after(5, detect)
+solutionvar = tkinter.StringVar(master=root,value='')
+solution = tkinter.Label(textvariable=solutionvar)
+solution.place(x = 70, y = 0)
+
+solvingtimevar = tkinter.StringVar(master=root,value='')
+solvingtime = tkinter.Label(textvariable=solvingtimevar)
+solvingtime.place(x = 120, y = 20)
+
 root.mainloop()
 
-capture.release()
 ser_motor[0].close()
