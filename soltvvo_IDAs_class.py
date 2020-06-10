@@ -52,7 +52,7 @@ class Cube:
         self.Co = [0, 0, 0, 0, 0, 0, 0]
         self.Cp = [0, 1, 2, 3, 4, 5, 6]
         self.Moves = []
-        self.Movnum = 0
+        #self.Movnum = 0
 
     # 回転処理 CP
     def move_cp(self, num):
@@ -65,9 +65,9 @@ class Cube:
             res.Cp[i] = self.Cp[surface[idx][j]]
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        res.Movnum = self.Movnum + 1
-        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+        #res.Movnum = self.Movnum + 1
+        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転処理 CO
@@ -86,9 +86,9 @@ class Cube:
                 res.Co[surface[idx][i]] %= 3
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        res.Movnum = self.Movnum + 1
-        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+        #res.Movnum = self.Movnum + 1
+        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
@@ -418,8 +418,7 @@ def inspection_p():
         co = [int(i) for i in f.readline().replace('\n', '').split(',')]
 
     # IDA*
-    for depth in range(1, 16):
-        print('depth', depth)
+    for depth in range(1, 12):
         que = [puzzle]
         while que and not ans:
             status = que.pop()
@@ -438,7 +437,7 @@ def inspection_p():
                     solutionvar.set('cannot solve!')
                     print('cannot solve!')
                     return
-                if n_status.Movnum + max(cp[cp_idx], co[co_idx]) < depth:
+                if len(n_status.Moves) + max(cp[cp_idx], co[co_idx]) < depth:
                     que.append(n_status)
         if ans:
             break
@@ -489,8 +488,9 @@ def start_p():
         print('done', i)
         i += 1
     '''
+    solv_time = time() - strt_solv
     solvingtimevar.set(str(solv_time) + 's')
-    print('solving time:', time() - strt_solv, 's')
+    print('solving time:', solv_time, 's')
 
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補

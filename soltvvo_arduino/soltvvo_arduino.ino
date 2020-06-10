@@ -1,8 +1,8 @@
 #include <Stepper.h>
 
 #define turn_steps 120
-#define rpm 200
-#define quarter -30
+#define rpm 50
+#define quarter 32
 #define arm0 7
 #define arm1 8
 

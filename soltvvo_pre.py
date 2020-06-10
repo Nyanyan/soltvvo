@@ -6,7 +6,7 @@ class Cube:
         self.Co = [0, 0, 0, 0, 0, 0, 0]
         self.Cp = [0, 1, 2, 3, 4, 5, 6]
         self.Moves = []
-        self.Movnum = 0
+        #self.Movnum = 0
 
     # 回転処理 CP
     def move_cp(self, num):
@@ -19,9 +19,9 @@ class Cube:
             res.Cp[i] = self.Cp[surface[idx][j]]
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        res.Movnum = self.Movnum + 1
-        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+        #res.Movnum = self.Movnum + 1
+        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転処理 CO
@@ -40,9 +40,9 @@ class Cube:
                 res.Co[surface[idx][i]] %= 3
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        res.Movnum = self.Movnum + 1
-        res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+        #res.Movnum = self.Movnum + 1
+        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
+        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
@@ -148,7 +148,7 @@ for idx, d in enumerate(direction_arr):
             n_status = status.move_cp(mov)
             n_idx = n_status.cp2i()
             if cp[n_idx] == inf:
-                cp[n_idx] = status.Movnum
+                cp[n_idx] = len(n_status.Moves) #n_status.Movnum
                 que.append(n_status)
     co = [inf for _ in range(3 ** 7)]
     co_solved = Cube()
@@ -165,7 +165,7 @@ for idx, d in enumerate(direction_arr):
             n_status = status.move_co(mov)
             n_idx = n_status.co2i()
             if co[n_idx] == inf:
-                co[n_idx] = status.Movnum
+                co[n_idx] = len(n_status.Moves) #n_status.Movnum
                 que.append(n_status)
     
     with open('cp' + str(idx) + '.csv', mode='x') as f:
