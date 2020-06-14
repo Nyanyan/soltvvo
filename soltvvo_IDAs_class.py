@@ -137,7 +137,7 @@ def proc_motor(rot, num, direction):
     d_face = (u_face + 3) % 6
     b_face = (f_face + 3) % 6
     l_face = (r_face + 3) % 6
-    move_able = [l_face, f_face, r_face, b_face]
+    move_able = [r_face, b_face, l_face, f_face]
     move_face = ans[num] // 3
     move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
@@ -183,8 +183,11 @@ def rot_optimise():
                 rot[i][1] = tmp
         i += 1
 
-def move_motor_solenoid(num, arg1, arg2, arg3=None):
-    com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
+def move_actuator(num, arg1, arg2, arg3=None):
+    if arg3 == None:
+        com = str(arg1) + ' ' + str(arg2)
+    else:
+        com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
     ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
     if arg3 != None:
@@ -194,7 +197,7 @@ def move_motor_solenoid(num, arg1, arg2, arg3=None):
     else:
         print('num:', num, 'command:', com)
 
-def wait_motor_solenoid(num):
+def wait_actuator(num):
     tmp = ''
     while not len(tmp):
         #print(ser_motor[num].inWaiting())
@@ -205,12 +208,12 @@ def wait_motor_solenoid(num):
 def grab_p():
     for i in range(2):
         for j in range(2):
-            move_motor_solenoid(i, j, 5)
+            move_actuator(i, j, 5)
 
 def release_p():
     for i in range(2):
         for j in range(2):
-            move_motor_solenoid(i, j, 6)
+            move_actuator(i, j, 6)
 
 # ボックスに色を反映させる
 def confirm_p():
@@ -254,17 +257,16 @@ def confirm_p():
 # パズルの状態の取得
 def detect():
     global idx, colors
-    capture = cv2.VideoCapture(0)
     idx = 0
-    t = 0
     while idx < 4:
-        #color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for RPi
-        #color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
-        color_low = [[40, 50, 50],   [90, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for PC
-        color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
+        #color: g, b, r, o, y, w
+        color_low = [[50, 50, 50],   [90, 150, 50],   [160, 150, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
+        color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
+        capture = cv2.VideoCapture(0)
         ret, frame = capture.read()
+        capture.release()
         size_x = 200
         size_y = 150
         frame = cv2.resize(frame, (size_x, size_y))
@@ -274,7 +276,7 @@ def detect():
         tmp_colors = [['' for _ in range(8)] for _ in range(6)]
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
         dx = [-1, 1, -1, 1]
-        dy = [1, -1, -1, 1]
+        dy = [1, 1, -1, -1]
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
@@ -287,22 +289,11 @@ def detect():
                         flag = False
                 if flag:
                     tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
-                    #print(j2color[j], end=' ')
                     cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
                     break
         cv2.imshow('title',show_frame)
-        cv2.waitKey(0)
-        #sleep(5)
-        '''
-        if cv2.waitKey(1) & 0xFF == ord('n'):
-            for i in range(4):
-                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-            print(idx)
-            idx += 1
-            confirm_p()
-        '''
-        t += 1
-        if t % 50 == 0:
+        key = cv2.waitKey(0)
+        if key == 32: #スペースキーが押されたとき
             for i in range(4):
                 colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
             print(idx)
@@ -310,17 +301,16 @@ def detect():
             confirm_p()
             if idx < 4:
                 for i in range(2):
-                    move_motor_solenoid(i, 0, 5)
-                    move_motor_solenoid(i, 0, (-1) ** i, 50)
-                    move_motor_solenoid(i, 1, 5)
-                    move_motor_solenoid((i + 1) % 2, 1, 5)
-                    move_motor_solenoid(i, 0, 6)
-                    move_motor_solenoid(i, 0, -(-1) ** i, 50)
-                    move_motor_solenoid(i, 0, 5)
-                    move_motor_solenoid(i, 1, 6)
-                    move_motor_solenoid((i + 1) % 2, 1, 6)
-
-    capture.release()
+                    move_actuator(i, 0, 5)
+                    move_actuator(i, 0, (-1) ** i, 50)
+                    move_actuator(i, 1, 5)
+                    move_actuator((i + 1) % 2, 1, 5)
+                    move_actuator(i, 0, 6)
+                    move_actuator(i, 0, -(-1) ** i, 50)
+                    move_actuator(i, 0, 5)
+                    move_actuator(i, 1, 6)
+                    move_actuator((i + 1) % 2, 1, 6)
+        cv2.destroyAllWindows()
 
 # インスペクション処理
 def inspection_p():
@@ -329,18 +319,19 @@ def inspection_p():
     ans = []
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
-    colors[0] = ['', '', 'w', 'w', '', '', '', '']
-    colors[1] = ['', '', 'w', 'w', '', '', '', '']
-    colors[2] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
-    colors[3] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
-    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    
+    colors[0] = ['', '', 'w', 'o', '', '', '', '']
+    colors[1] = ['', '', 'w', 'g', '', '', '', '']
+    colors[2] = ['b', 'o', 'g', 'y', 'r', 'w', 'b', 'r']
+    colors[3] = ['o', 'o', 'g', 'g', 'w', 'r', 'b', 'b']
+    colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
     '''
     grab_p()
     for i in range(2):
-        move_motor_solenoid(i, 1, 6)
+        move_actuator(i, 1, 6)
     detect()
+    '''
 
     strt = time()
     
@@ -478,21 +469,21 @@ def inspection_p():
 def start_p():
     print('start!')
     strt_solv = time()
-    i = 0
-    while i < len(rot):
+    for i in range(len(rot)):
         grab = rot[i][0] % 2
         grab_p()
         sleep(1)
         for j in range(2):
-            move_motor_solenoid(j, (grab + 1) % 2, 6)
+            move_actuator(j, (grab + 1) % 2, 6)
+        sleep(1)
         ser_num = rot[i][0] // 2
-        move_motor_solenoid(ser_num, rot[i][0] % 2, rot[i][1], 50)
+        move_actuator(ser_num, rot[i][0] % 2, -rot[i][1], 50)
         grab_p()
         sleep(1)
-        move_motor_solenoid(rot[i][0] // 2, grab, 6)
-        move_motor_solenoid(ser_num, rot[i][0] % 2, -rot[i][1], 50)
+        move_actuator(rot[i][0] // 2, grab, 6)
+        sleep(1)
+        move_actuator(ser_num, rot[i][0] % 2, rot[i][1], 50)
         print('done', i)
-        i += 1
     
     solv_time = time() - strt_solv
     solvingtimevar.set(str(solv_time) + 's')
@@ -529,8 +520,8 @@ release_p()
 sleep(1)
 for i in range(2):
     for j in range(2):
-        move_motor_solenoid(j, i, 1, 100)
-        move_motor_solenoid(j, i, -1, 100)
+        move_actuator(j, i, 1, 100)
+        move_actuator(j, i, -1, 100)
 
 root = tkinter.Tk()
 root.title("2x2x2solver")
