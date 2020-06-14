@@ -129,7 +129,7 @@ def proc_motor(rot, num, direction):
     turn_arr = [1, 2, -1]
     r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
     f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
-    regrip_arr = [[4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19], [21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2]]
+    regrip_arr = [[21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2], [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]]
     regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
     u_face = direction // 4
     f_face = f_arr[u_face][direction % 4]
@@ -137,7 +137,7 @@ def proc_motor(rot, num, direction):
     d_face = (u_face + 3) % 6
     b_face = (f_face + 3) % 6
     l_face = (r_face + 3) % 6
-    move_able = [f_face, r_face, b_face, l_face]
+    move_able = [l_face, f_face, r_face, b_face]
     move_face = ans[num] // 3
     move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
@@ -183,16 +183,16 @@ def rot_optimise():
                 rot[i][1] = tmp
         i += 1
 
-def move_motor_solenoid(num, com):
+def move_motor_solenoid(num, arg1, arg2, arg3=None):
+    com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
+    ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
-    while True:
-        try:
-            ser_motor[num].write((com + '\n').encode())
-            ser_motor[num].flush()
-            break
-        except:
-            continue
-    print('num:', num, 'command:', com)
+    if arg3 != None:
+        slptim = abs(quarter * arg2 / turn_steps * 60 / arg3 * 1.1)
+        sleep(slptim)
+        print('num:', num, 'command:', com, 'sleep:', slptim)
+    else:
+        print('num:', num, 'command:', com)
 
 def wait_motor_solenoid(num):
     tmp = ''
@@ -204,15 +204,13 @@ def wait_motor_solenoid(num):
 
 def grab_p():
     for i in range(2):
-        move_motor_solenoid(i, str(i * 2) + ' 10')
-    for i in range(2):
-        wait_motor_solenoid(i)
+        for j in range(2):
+            move_motor_solenoid(i, j, 5)
 
 def release_p():
     for i in range(2):
-        move_motor_solenoid(i, str(i * 2) + ' 20')
-    for i in range(2):
-        wait_motor_solenoid(i)
+        for j in range(2):
+            move_motor_solenoid(i, j, 6)
 
 # ボックスに色を反映させる
 def confirm_p():
@@ -258,6 +256,7 @@ def detect():
     global idx, colors
     capture = cv2.VideoCapture(0)
     idx = 0
+    t = 0
     while idx < 4:
         #color_low = [[50, 50, 50],   [80, 50, 50],    [160, 150, 50], [170, 50, 50],   [20, 50, 50],   [0, 0, 50]] #for RPi
         #color_hgh = [[80, 255, 255], [140, 255, 255], [5, 255, 200], [20, 255, 255], [40, 255, 255], [179, 50, 255]]
@@ -274,8 +273,8 @@ def detect():
         center = [size_x // 2, size_y // 2]
         tmp_colors = [['' for _ in range(8)] for _ in range(6)]
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-        dx = [-1, -1, 1, 1]
-        dy = [-1, 1, -1, 1]
+        dx = [-1, 1, -1, 1]
+        dy = [1, -1, -1, 1]
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
@@ -291,8 +290,9 @@ def detect():
                     #print(j2color[j], end=' ')
                     cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
                     break
-        '''
-        sleep(1)
+        cv2.imshow('title',show_frame)
+        cv2.waitKey(0)
+        #sleep(5)
         '''
         if cv2.waitKey(1) & 0xFF == ord('n'):
             for i in range(4):
@@ -301,18 +301,25 @@ def detect():
             idx += 1
             confirm_p()
         '''
-        for i in range(4):
-            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-        print(idx)
-        idx += 1
-        confirm_p()
-        move_motor(0, '0 -1e')
-        move_motor(1, '3 1e')
-        wait_motor(0)
-        wait_motor(1)
-        idx += 1
-        '''
-        cv2.imshow('title',show_frame)
+        t += 1
+        if t % 50 == 0:
+            for i in range(4):
+                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+            print(idx)
+            idx += 1
+            confirm_p()
+            if idx < 4:
+                for i in range(2):
+                    move_motor_solenoid(i, 0, 5)
+                    move_motor_solenoid(i, 0, (-1) ** i, 50)
+                    move_motor_solenoid(i, 1, 5)
+                    move_motor_solenoid((i + 1) % 2, 1, 5)
+                    move_motor_solenoid(i, 0, 6)
+                    move_motor_solenoid(i, 0, -(-1) ** i, 50)
+                    move_motor_solenoid(i, 0, 5)
+                    move_motor_solenoid(i, 1, 6)
+                    move_motor_solenoid((i + 1) % 2, 1, 6)
+
     capture.release()
 
 # インスペクション処理
@@ -322,7 +329,17 @@ def inspection_p():
     ans = []
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'w', 'w', '', '', '', '']
+    colors[2] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
+    colors[3] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
+    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
+    grab_p()
+    for i in range(2):
+        move_motor_solenoid(i, 1, 6)
     detect()
 
     strt = time()
@@ -448,6 +465,7 @@ def inspection_p():
         solutionvar.set(num2moves(ans))
         rot, _, _ = proc_motor(rot, 0, 4)
         print('before:', len(rot))
+        print(rot)
         rot_optimise()
         print('after:', len(rot))
         print(rot)
@@ -462,32 +480,20 @@ def start_p():
     strt_solv = time()
     i = 0
     while i < len(rot):
-        grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
-        move_motor_solenoid(0, str(grab[0]) + ' 0')
-        wait_motor_solenoid(0)
-        sleep(0.2)
-        ser_num = rot[i][0] // 2
-        if ser_num == 0:
-            move_motor_solenoid(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]))
-            wait_motor_solenoid(ser_num)
-        print('done', i)
-        i += 1        
-    '''
-    while i < len(rot):
-        grab = sorted([rot[i][0], (rot[i][0] + 2) % 4])
+        grab = rot[i][0] % 2
+        grab_p()
+        sleep(1)
         for j in range(2):
-            move_motor_solenoid(j, str(grab[j]) + ' 0')
-        sleep(0.2)
+            move_motor_solenoid(j, (grab + 1) % 2, 6)
         ser_num = rot[i][0] // 2
-        move_motor(ser_num, str(rot[i][0]) + ' ' + str(rot[i][1]))
-        if i < len(rot) - 1 and ser_num != rot[i + 1][0] // 2:
-            move_motor(rot[i + 1][0] // 2, str(rot[i + 1][0]) + ' ' + str(rot[i + 1][1]))
-            wait_motor(rot[i + 1][0] // 2)
-            i += 1
-        wait_motor(ser_num)
+        move_motor_solenoid(ser_num, rot[i][0] % 2, rot[i][1], 50)
+        grab_p()
+        sleep(1)
+        move_motor_solenoid(rot[i][0] // 2, grab, 6)
+        move_motor_solenoid(ser_num, rot[i][0] % 2, -rot[i][1], 50)
         print('done', i)
         i += 1
-    '''
+    
     solv_time = time() - strt_solv
     solvingtimevar.set(str(solv_time) + 's')
     print('solving time:', solv_time, 's')
@@ -497,21 +503,34 @@ move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の�
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
 
-
 colors = [['' for _ in range(8)] for _ in range(6)]
+
 ans = []
 rot = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
 
+quarter = 30
+turn_steps = 120
+
 fac = [1]
 for i in range(1, 8):
     fac.append(fac[-1] * i)
 
 ser_motor = [None, None]
-#ser_motor[0] = serial.Serial('/dev/ttyUSB0', 1200, write_timeout=0)
-#ser_motor[1] = serial.Serial('COM6', 9600)
+ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
+ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
+
+sleep(2)
+grab_p()
+sleep(1)
+release_p()
+sleep(1)
+for i in range(2):
+    for j in range(2):
+        move_motor_solenoid(j, i, 1, 100)
+        move_motor_solenoid(j, i, -1, 100)
 
 root = tkinter.Tk()
 root.title("2x2x2solver")
@@ -551,4 +570,5 @@ release.place(x=120, y=120)
 
 root.mainloop()
 
-ser_motor[0].close()
+for i in range(2):
+    ser_motor[i].close()
