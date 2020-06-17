@@ -433,10 +433,9 @@ def inspection_p():
         ans = []
         if dfs(puzzle, depth, 0):
             break
-    print('answer:', num2moves(ans))
-    print('IDA*', time() - strt, 's')
-
+    
     if ans:
+        print('answer:', num2moves(ans))
         solutionvar.set(num2moves(ans))
         rot, _, _ = proc_motor(rot, 0, 4)
         print('before:', len(rot))
