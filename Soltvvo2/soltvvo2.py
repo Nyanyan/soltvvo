@@ -51,23 +51,15 @@ class Cube:
     def __init__(self):
         self.Co = [0, 0, 0, 0, 0, 0, 0]
         self.Cp = [0, 1, 2, 3, 4, 5, 6]
-        self.Moves = []
-        #self.Movnum = 0
 
     # 回転処理 CP
     def move_cp(self, num):
         surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
         replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
         idx = num // 3
-        res = Cube()
-        res.Cp = [i for i in self.Cp]
+        res = [i for i in self.Cp]
         for i, j in zip(surface[idx], replace[num % 3]):
-            res.Cp[i] = self.Cp[surface[idx][j]]
-        res.Moves = [i for i in self.Moves]
-        res.Moves.append(num)
-        #res.Movnum = self.Movnum + 1
-        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+            res[i] = self.Cp[surface[idx][j]]
         return res
 
     # 回転処理 CO
@@ -76,26 +68,20 @@ class Cube:
         replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
         pls = [2, 1, 1, 2]
         idx = num // 3
-        res = Cube()
-        res.Co = [i for i in self.Co]
+        res = [i for i in self.Co]
         for i, j in zip(surface[idx], replace[num % 3]):
-            res.Co[i] = self.Co[surface[idx][j]]
+            res[i] = self.Co[surface[idx][j]]
         if num // 3 != 0 and num % 3 != 1:
             for i in range(4):
-                res.Co[surface[idx][i]] += pls[i]
-                res.Co[surface[idx][i]] %= 3
-        res.Moves = [i for i in self.Moves]
-        res.Moves.append(num)
-        #res.Movnum = self.Movnum + 1
-        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
+                res[surface[idx][i]] += pls[i]
+                res[surface[idx][i]] %= 3
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
     def move(self, num):
         res = Cube()
-        res = self.move_co(num)
-        res.Cp = self.move_cp(num).Cp
+        res.Co = self.move_co(num)
+        res.Cp = self.move_cp(num)
         return res
 
     # cp配列から固有の番号を作成
@@ -408,7 +394,6 @@ def inspection_p():
         print(solved_color[i])
     print(solved.Cp)
     print(solved.Co)
-    print('pre', time() - strt, 's')
 
     # 枝刈り用のco配列とcp配列
     direction = -1
@@ -424,30 +409,29 @@ def inspection_p():
         cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
     with open('co'+ str(direction) + '.csv', mode='r') as f:
         co = [int(i) for i in f.readline().replace('\n', '').split(',')]
+    print('pre', time() - strt, 's')
 
-    # IDA*
-    for depth in range(1, 12):
-        que = [puzzle]
-        while que and not ans:
-            status = que.pop()
-            num = len(status.Moves)
-            l_mov = status.Moves[-1] if num else -1
+    # 深さ優先探索with枝刈り
+    def dfs(status, depth, num):
+        global ans
+        if num + max(cp[status.cp2i()], co[status.co2i()]) <= depth:
+            l_mov = ans[-1] if num else -1
             t = (l_mov // 3) * 3
             lst = set(range(9)) - set([t, t + 1, t + 2])
             for mov in lst:
                 n_status = status.move(mov)
-                if n_status.Cp == solved.Cp and n_status.Co == solved.Co:
-                    ans = n_status.Moves
-                    break
-                cp_idx = n_status.cp2i()
-                co_idx = n_status.co2i()
-                if not (0 <= cp_idx < 5040 and 0 <= co_idx < 2187):
-                    solutionvar.set('cannot solve!')
-                    print('cannot solve!')
-                    return
-                if len(n_status.Moves) + max(cp[cp_idx], co[co_idx]) < depth:
-                    que.append(n_status)
-        if ans:
+                ans.append(mov)
+                if num + 1 == depth and n_status.Cp == solved.Cp and n_status.Co == solved.Co:
+                    return True
+                if dfs(n_status, depth, num + 1):
+                    return True
+                ans.pop()
+        return False
+
+    # IDA*
+    for depth in range(1, 12):
+        ans = []
+        if dfs(puzzle, depth, 0):
             break
     print('answer:', num2moves(ans))
     print('IDA*', time() - strt, 's')
@@ -510,6 +494,7 @@ for i in range(1, 8):
     fac.append(fac[-1] * i)
 
 ser_motor = [None, None]
+'''
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
 
@@ -522,7 +507,7 @@ for i in range(2):
     for j in range(2):
         move_actuator(j, i, 1, 100)
         move_actuator(j, i, -1, 100)
-
+'''
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
