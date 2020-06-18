@@ -1,33 +1,34 @@
-#include <Stepper.h>
+#include <Servo.h>
+#include <MsTimer2.h>
 
-#define turn_steps 120
-//#define rpm 10
-#define quarter 32
-
-const int arm[2] = {8, 7};
+#define turn_steps 200
+const int step_dir[2] = {9, 11};
+const int step_pul[2] = {10, 12};
+const int arm[2] = {5, 6};
 
 char buf[30];
 int idx = 0;
 int data[3];
 
-Stepper stepper0(turn_steps, A1, A0, A3, A4);
-Stepper stepper1(turn_steps, 9, 10, 11, 12);
+int steps, fin, motor_num;
+bool motor_hl;
 
-float turning_time(int deg, int speed_motor) {
-  return abs(1000 * quarter * deg / turn_steps * 60 / speed_motor);
+void move_motor_p() {
+  if (steps < fin) digitalWrite(motor_num, !motor_hl);
+  else MsTimer2::stop();
 }
 
 void move_motor(int num, int deg, int spd) {
-  digitalWrite(13, HIGH);
-  if (num == 0) {
-    stepper0.setSpeed(spd);
-    stepper0.step(quarter * deg);
-  } else if (num == 1) {
-    stepper1.setSpeed(spd);
-    stepper1.step(quarter * deg);
-  }
-  //delay(turning_time(deg, spd) * 1.1);
-  digitalWrite(13, LOW);
+  bool hl = true;
+  if(deg < 0) hl = false;
+  digitalWrite(step_dir[num], hl);
+  int wait_time = 1000 * 60 * 360 / turn_steps / spd / 360;
+  steps = 0;
+  fin = deg / (360 / turn_steps);
+  motor_hl = false;
+  motor_num = num;
+  MsTimer2::set(wait_time, move_motor_p);
+  MsTimer2::start();
 }
 
 void release_arm(int num) {

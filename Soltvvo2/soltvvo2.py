@@ -176,20 +176,7 @@ def move_actuator(num, arg1, arg2, arg3=None):
         com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
     ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
-    if arg3 != None:
-        slptim = abs(quarter * arg2 / turn_steps * 60 / arg3 * 1.1)
-        sleep(slptim)
-        print('num:', num, 'command:', com, 'sleep:', slptim)
-    else:
-        print('num:', num, 'command:', com)
-
-def wait_actuator(num):
-    tmp = ''
-    while not len(tmp):
-        #print(ser_motor[num].inWaiting())
-        if ser_motor[num].inWaiting():
-            tmp = ser_motor[num].readline().decode('utf8', 'ignore').replace('\n', '')
-    ser_motor[num].flush()
+    print('num:', num, 'command:', com)
 
 def grab_p():
     for i in range(2):
@@ -452,20 +439,23 @@ def inspection_p():
 def start_p():
     print('start!')
     strt_solv = time()
-    for i in range(len(rot)):
+    i = 0
+    while i < len(rot):
         grab = rot[i][0] % 2
-        grab_p()
-        sleep(1)
+        for j in range(2):
+            move_actuator(j, grab, 5)
+        sleep(0.5)
         for j in range(2):
             move_actuator(j, (grab + 1) % 2, 6)
-        sleep(1)
+        sleep(0.5)
         ser_num = rot[i][0] // 2
-        move_actuator(ser_num, rot[i][0] % 2, -rot[i][1], 50)
-        grab_p()
-        sleep(1)
-        move_actuator(rot[i][0] // 2, grab, 6)
-        sleep(1)
-        move_actuator(ser_num, rot[i][0] % 2, rot[i][1], 50)
+        rpm = 10
+        move_actuator(ser_num, rot[i][0] % 2, rot[i][1], rpm)
+        max_turn = abs(rot[i][1])
+        if i < len(rot) - 1 and rot[i + 1][0] % 2 == rot[i][0] % 2:
+            move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, rot[i + 1][1], rpm)
+            max_turn = max(max_turn, abs(rot[i + 1][1]))
+        sleep(max_turn / 4 * 60 / rpm * 1.1)
         print('done', i)
     
     solv_time = time() - strt_solv
@@ -484,9 +474,6 @@ rot = []
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
-
-quarter = 30
-turn_steps = 120
 
 fac = [1]
 for i in range(1, 8):
