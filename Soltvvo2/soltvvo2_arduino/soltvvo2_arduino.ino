@@ -2,6 +2,7 @@
 #include <MsTimer2.h>
 
 #define turn_steps 200
+#define quarter 50
 const int step_dir[2] = {9, 11};
 const int step_pul[2] = {10, 12};
 const int arm[2] = {5, 6};
@@ -70,7 +71,7 @@ void loop() {
       */
       if (data[1] == 5) grab_arm(data[0]);
       else if (data[1] == 6) release_arm(data[0]);
-      else move_motor(data[0], data[1], data[2]);
+      else move_motor(data[0], data[1] * quarter, data[2]);
       idx = 0;
     }
     else {

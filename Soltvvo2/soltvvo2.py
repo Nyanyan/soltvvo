@@ -112,11 +112,11 @@ def num2moves(arr):
 def proc_motor(rot, num, direction):
     if num == len(ans):
         return rot, num, direction
-    turn_arr = [1, 2, -1]
+    turn_arr = [-3, -2, -1]
     r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
     f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
     regrip_arr = [[21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2], [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]]
-    regrip_rot = [[[1, 1], [3, -1]], [[0, 1], [2, -1]]]
+    regrip_rot = [[[1, -3], [3, -1]], [[0, -3], [2, -1]]]
     u_face = direction // 4
     f_face = f_arr[u_face][direction % 4]
     r_face = r_arr[u_face][f_face]
@@ -149,12 +149,12 @@ def proc_motor(rot, num, direction):
 def rot_optimise():
     global rot
     i = 0
-    tmp_arr = [2, -1, 0, 1, 2, -1, 0]
+    tmp_arr = [-2, -1, 0, -3, -2, -1, 0]
     while i < len(rot):
         if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
             tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
             del rot[i + 1]
-            if tmp == 0:
+            if not tmp:
                 del rot[i]
                 i -= 1
             else:
