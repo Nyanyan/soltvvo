@@ -149,10 +149,10 @@ def proc_motor(rot, num, direction):
 def rot_optimise():
     global rot
     i = 0
-    tmp_arr = [-2, -1, 0, -3, -2, -1, 0]
+    tmp_arr = [0, -3, -2, -1]
     while i < len(rot):
         if i < len(rot) - 1 and rot[i][0] == rot[i + 1][0]:
-            tmp = tmp_arr[rot[i][1] + rot[i + 1][1] + 2]
+            tmp = tmp_arr[(rot[i][1] + rot[i + 1][1]) % 4]
             del rot[i + 1]
             if not tmp:
                 del rot[i]
@@ -292,13 +292,44 @@ def inspection_p():
     ans = []
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'w', 'w', '', '', '', '']
+    colors[2] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
+    colors[3] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
+    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
+    '''
+    colors[0] = ['', '', 'w', 'r', '', '', '', '']
+    colors[1] = ['', '', 'g', 'w', '', '', '', '']
+    colors[2] = ['b', 'r', 'w', 'b', 'o', 'g', 'y', 'r']
+    colors[3] = ['o', 'y', 'o', 'r', 'b', 'g', 'o', 'b']
+    colors[4] = ['', '', 'g', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'w', '', '', '', '']
+    '''
+    '''
     colors[0] = ['', '', 'w', 'o', '', '', '', '']
     colors[1] = ['', '', 'w', 'g', '', '', '', '']
     colors[2] = ['b', 'o', 'g', 'y', 'r', 'w', 'b', 'r']
     colors[3] = ['o', 'o', 'g', 'g', 'w', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'w', 'w', '', '', '', '']
+    colors[2] = ['b', 'o', 'g', 'g', 'r', 'b', 'o', 'r']
+    colors[3] = ['r', 'o', 'g', 'b', 'o', 'r', 'b', 'g']
+    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'r', 'y', '', '', '', '']
+    colors[2] = ['b', 'y', 'b', 'o', 'b', 'g', 'r', 'r']
+    colors[3] = ['r', 'g', 'y', 'o', 'b', 'o', 'w', 'g']
+    colors[4] = ['', '', 'o', 'w', '', '', '', '']
+    colors[5] = ['', '', 'y', 'g', '', '', '', '']
     '''
     grab_p()
     for i in range(2):
