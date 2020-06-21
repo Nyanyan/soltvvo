@@ -481,13 +481,23 @@ def start_p():
         sleep(0.5)
         ser_num = rot[i][0] // 2
         rpm = 10
-        move_actuator(ser_num, rot[i][0] % 2, rot[i][1], rpm)
+        offset = -3
+        move_actuator(ser_num, rot[i][0] % 2, rot[i][1] * 90 + offset, rpm)
         max_turn = abs(rot[i][1])
-        if i < len(rot) - 1 and rot[i + 1][0] % 2 == rot[i][0] % 2:
-            move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, rot[i + 1][1], rpm)
+        flag = i < len(rot) - 1 and rot[i + 1][0] % 2 == rot[i][0] % 2
+        if flag:
+            move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, rot[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(rot[i + 1][1]))
-        sleep(max_turn / 4 * 60 / rpm * 1.1)
-        print('done', i)
+        slptim = 60 / rpm * (max_turm * 90 + offset) / 360
+        sleep(slptim)
+        move_actuator(ser_num, rot[i][0] % 2, -offset, rpm)
+        if flag:
+            move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, -offset, rpm)
+            i += 1
+        i += 1
+        slptim2 = abs(60 / rpm * offset / 360)
+        sleep(slptim2)
+        print('done', i, 'sleep:', slptim, slptim2)
     
     solv_time = time() - strt_solv
     solvingtimevar.set(str(solv_time) + 's')
