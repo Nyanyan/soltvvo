@@ -169,6 +169,7 @@ def rot_optimise():
                 rot[i][1] = tmp
         i += 1
 
+# アクチュエータを動かすコマンドを送る
 def move_actuator(num, arg1, arg2, arg3=None):
     if arg3 == None:
         com = str(arg1) + ' ' + str(arg2)
@@ -178,15 +179,17 @@ def move_actuator(num, arg1, arg2, arg3=None):
     ser_motor[num].flush()
     print('num:', num, 'command:', com)
 
+# キューブを掴む
 def grab_p():
     for i in range(2):
         for j in range(2):
-            move_actuator(i, j, 5)
+            move_actuator(i, j, 1000)
 
+# キューブを離す
 def release_p():
     for i in range(2):
         for j in range(2):
-            move_actuator(i, j, 6)
+            move_actuator(i, j, 2000)
 
 # ボックスに色を反映させる
 def confirm_p():
@@ -333,7 +336,7 @@ def inspection_p():
     '''
     grab_p()
     for i in range(2):
-        move_actuator(i, 1, 6)
+        move_actuator(i, 1, 2000)
     detect()
     '''
 

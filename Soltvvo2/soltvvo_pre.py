@@ -19,9 +19,6 @@ class Cube:
             res.Cp[i] = self.Cp[surface[idx][j]]
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        #res.Movnum = self.Movnum + 1
-        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転処理 CO
@@ -40,9 +37,6 @@ class Cube:
                 res.Co[surface[idx][i]] %= 3
         res.Moves = [i for i in self.Moves]
         res.Moves.append(num)
-        #res.Movnum = self.Movnum + 1
-        #res.Movnum += 1 if len(self.Moves) >= 2 and num // 3 != self.Moves[-1] // 3 and num // 3 != self.Moves[-2] // 3 else 0
-        #res.Movnum += 1 if len(self.Moves) < 2 and num // 3 == 1 else 0
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
@@ -69,18 +63,14 @@ class Cube:
             res += i
         return res
 
-
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 direction_arr = [21, 12, 15, 18, 2, 22, 20, 4, 8, 13, 23, 1, 6, 0, 3, 9, 11, 16, 14, 7, 5, 19, 17, 10]
 
-
 fac = [1]
 for i in range(1, 8):
     fac.append(fac[-1] * i)
-
-
 
 for idx, d in enumerate(direction_arr):
     set_parts_color = [set(i) for i in parts_color]
