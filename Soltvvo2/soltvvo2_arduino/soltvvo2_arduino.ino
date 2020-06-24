@@ -1,8 +1,8 @@
 #include <Servo.h>
 
 const long turn_steps = 400;
-const int step_dir[2] = {3, 7};
-const int step_pul[2] = {4, 8};
+const int step_dir[2] = {11, 9};
+const int step_pul[2] = {12, 10};
 
 char buf[30];
 int idx = 0;
@@ -18,21 +18,25 @@ void move_motor(long num, long deg, long spd) {
   long wait_time = 1000000 * 60 / turn_steps / spd;
   long steps = abs(deg) * turn_steps / 360;
   bool motor_hl = false;
+  //Serial.println("start");
   for (int i = 0; i < steps; i++) {
     motor_hl = !motor_hl;
     digitalWrite(step_pul[num], motor_hl);
     delayMicroseconds(wait_time);
   }
+  //Serial.println("fin");
 }
 
 void release_arm(int num) {
-  if (num == 0)servo0.write(120);
-  else servo1.write(120);
+  if (num == 0)servo0.write(130);
+  else servo1.write(130);
+  //Serial.println("release");
 }
 
 void grab_arm(int num) {
-  if (num == 0)servo0.write(60);
-  else servo1.write(60);
+  if (num == 0)servo0.write(85);
+  else servo1.write(85);
+  //Serial.println("grab");
 }
 
 void setup() {
@@ -41,8 +45,10 @@ void setup() {
     pinMode(step_dir[i], OUTPUT);
     pinMode(step_pul[i], OUTPUT);
   }
-  servo0.attach(5);
-  servo1.attach(6);
+  servo0.attach(7);
+  servo1.attach(8);
+  servo0.write(130);
+  servo1.write(130);
 }
 
 void loop() {

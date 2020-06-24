@@ -183,13 +183,19 @@ def move_actuator(num, arg1, arg2, arg3=None):
 def grab_p():
     for i in range(2):
         for j in range(2):
-            move_actuator(i, j, 1000)
+            move_actuator(j, i, 1000)
+        sleep(3)
 
 # キューブを離す
 def release_p():
     for i in range(2):
         for j in range(2):
             move_actuator(i, j, 2000)
+
+def calibration(num):
+    def x():
+        move_actuator(num // 2, num % 2, -5)
+    return x
 
 # ボックスに色を反映させる
 def confirm_p():
@@ -236,7 +242,7 @@ def detect():
     idx = 0
     while idx < 4:
         #color: g, b, r, o, y, w
-        color_low = [[50, 50, 50],   [90, 150, 50],   [160, 150, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
+        color_low = [[50, 50, 50],   [90, 100, 50],   [160, 128, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
         color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
@@ -251,8 +257,8 @@ def detect():
         center = [size_x // 2, size_y // 2]
         tmp_colors = [['' for _ in range(8)] for _ in range(6)]
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-        dx = [-1, 1, -1, 1]
-        dy = [1, 1, -1, -1]
+        dx = [-1, -1, 1, 1] #[-1, 1, -1, 1]
+        dy = [-1, 1, -1, 1] #[1, 1, -1, -1]
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
@@ -276,16 +282,13 @@ def detect():
             idx += 1
             confirm_p()
             if idx < 4:
-                for i in range(2):
-                    move_actuator(i, 0, 5)
-                    move_actuator(i, 0, (-1) ** i, 50)
-                    move_actuator(i, 1, 5)
-                    move_actuator((i + 1) % 2, 1, 5)
-                    move_actuator(i, 0, 6)
-                    move_actuator(i, 0, -(-1) ** i, 50)
-                    move_actuator(i, 0, 5)
-                    move_actuator(i, 1, 6)
-                    move_actuator((i + 1) % 2, 1, 6)
+                offset = -5
+                move_actuator(0, 0, -90 + offset, 100)
+                move_actuator(1, 0, -270 + offset, 100)
+                sleep(0.7)
+                move_actuator(0, 0, -offset, 100)
+                move_actuator(1, 0, -offset, 100)
+                sleep(0.7)
         cv2.destroyAllWindows()
 
 # インスペクション処理
@@ -295,50 +298,12 @@ def inspection_p():
     ans = []
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
-    colors[0] = ['', '', 'w', 'w', '', '', '', '']
-    colors[1] = ['', '', 'w', 'w', '', '', '', '']
-    colors[2] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
-    colors[3] = ['o', 'r', 'b', 'g', 'r', 'o', 'g', 'b']
-    colors[4] = ['', '', 'y', 'y', '', '', '', '']
-    colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
-    '''
-    colors[0] = ['', '', 'w', 'r', '', '', '', '']
-    colors[1] = ['', '', 'g', 'w', '', '', '', '']
-    colors[2] = ['b', 'r', 'w', 'b', 'o', 'g', 'y', 'r']
-    colors[3] = ['o', 'y', 'o', 'r', 'b', 'g', 'o', 'b']
-    colors[4] = ['', '', 'g', 'y', '', '', '', '']
-    colors[5] = ['', '', 'y', 'w', '', '', '', '']
-    '''
-    '''
-    colors[0] = ['', '', 'w', 'o', '', '', '', '']
-    colors[1] = ['', '', 'w', 'g', '', '', '', '']
-    colors[2] = ['b', 'o', 'g', 'y', 'r', 'w', 'b', 'r']
-    colors[3] = ['o', 'o', 'g', 'g', 'w', 'r', 'b', 'b']
-    colors[4] = ['', '', 'y', 'r', '', '', '', '']
-    colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
-    '''
-    colors[0] = ['', '', 'w', 'w', '', '', '', '']
-    colors[1] = ['', '', 'w', 'w', '', '', '', '']
-    colors[2] = ['b', 'o', 'g', 'g', 'r', 'b', 'o', 'r']
-    colors[3] = ['r', 'o', 'g', 'b', 'o', 'r', 'b', 'g']
-    colors[4] = ['', '', 'y', 'y', '', '', '', '']
-    colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
-    colors[0] = ['', '', 'w', 'w', '', '', '', '']
-    colors[1] = ['', '', 'r', 'y', '', '', '', '']
-    colors[2] = ['b', 'y', 'b', 'o', 'b', 'g', 'r', 'r']
-    colors[3] = ['r', 'g', 'y', 'o', 'b', 'o', 'w', 'g']
-    colors[4] = ['', '', 'o', 'w', '', '', '', '']
-    colors[5] = ['', '', 'y', 'g', '', '', '', '']
-    '''
-    grab_p()
+    for i in range(2):
+        move_actuator(i, 0, 1000)
     for i in range(2):
         move_actuator(i, 1, 2000)
     detect()
-    '''
+    
 
     strt = time()
     
@@ -477,28 +442,28 @@ def start_p():
     while i < len(rot):
         grab = rot[i][0] % 2
         for j in range(2):
-            move_actuator(j, grab, 5)
+            move_actuator(j, grab, 1000)
         sleep(0.5)
         for j in range(2):
-            move_actuator(j, (grab + 1) % 2, 6)
+            move_actuator(j, (grab + 1) % 2, 2000)
         sleep(0.5)
         ser_num = rot[i][0] // 2
-        rpm = 10
-        offset = -3
+        rpm = 100
+        offset = -5
         move_actuator(ser_num, rot[i][0] % 2, rot[i][1] * 90 + offset, rpm)
         max_turn = abs(rot[i][1])
         flag = i < len(rot) - 1 and rot[i + 1][0] % 2 == rot[i][0] % 2
         if flag:
             move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, rot[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(rot[i + 1][1]))
-        slptim = 60 / rpm * (max_turm * 90 + offset) / 360
+        slptim = 60 / rpm * (max_turn * 90 + offset) / 360 * 1.2
         sleep(slptim)
         move_actuator(ser_num, rot[i][0] % 2, -offset, rpm)
         if flag:
             move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, -offset, rpm)
             i += 1
         i += 1
-        slptim2 = abs(60 / rpm * offset / 360)
+        slptim2 = abs(60 / rpm * offset / 360) * 1.2
         sleep(slptim2)
         print('done', i, 'sleep:', slptim, slptim2)
     
@@ -524,20 +489,16 @@ for i in range(1, 8):
     fac.append(fac[-1] * i)
 
 ser_motor = [None, None]
-'''
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
 
 sleep(2)
-grab_p()
-sleep(1)
 release_p()
 sleep(1)
 for i in range(2):
     for j in range(2):
-        move_actuator(j, i, 1, 100)
-        move_actuator(j, i, -1, 100)
-'''
+        move_actuator(j, i, 90, 100)
+        move_actuator(j, i, -90, 100)
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
@@ -573,6 +534,11 @@ grab.place(x=0, y=120)
 
 release = tkinter.Button(root, text="release", command=release_p)
 release.place(x=120, y=120)
+
+calib = []
+for i in range(4):
+    calib.append(tkinter.Button(root, text=str(i), command=calibration(i)))
+    calib[i].place(x=180, y=i * 30)
 
 root.mainloop()
 
