@@ -46,6 +46,8 @@ import tkinter
 import cv2
 import numpy as np
 import serial
+from tkinter import messagebox
+import threading
 
 class Cube:
     def __init__(self):
@@ -443,10 +445,10 @@ def start_p():
         grab = rot[i][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
-        sleep(0.5)
+        sleep(0.4)
         for j in range(2):
             move_actuator(j, (grab + 1) % 2, 2000)
-        sleep(0.5)
+        sleep(0.4)
         ser_num = rot[i][0] // 2
         rpm = 100
         offset = -5
@@ -466,9 +468,8 @@ def start_p():
         slptim2 = abs(60 / rpm * offset / 360) * 1.2
         sleep(slptim2)
         print('done', i, 'sleep:', slptim, slptim2)
-    
     solv_time = time() - strt_solv
-    solvingtimevar.set(str(solv_time) + 's')
+    solvingtimevar.set(str(round(solv_time, 3)) + 's')
     print('solving time:', solv_time, 's')
 
 
@@ -538,8 +539,11 @@ release.place(x=120, y=120)
 calib = []
 for i in range(4):
     calib.append(tkinter.Button(root, text=str(i), command=calibration(i)))
-    calib[i].place(x=180, y=i * 30)
-
+    calib[i].place(x=230, y=i * 30)
+'''
+stop = tkinter.Button(root, text="STOP",command="break")
+stop.place(x=230, y=120)
+'''
 root.mainloop()
 
 for i in range(2):
