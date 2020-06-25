@@ -453,7 +453,7 @@ def start_p():
         sleep(0.4)
         for j in range(2):
             move_actuator(j, (grab + 1) % 2, 2000)
-        sleep(0.4)
+        sleep(0.1)
         ser_num = rot[i][0] // 2
         rpm = 100
         offset = -5
