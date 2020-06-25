@@ -285,11 +285,12 @@ def detect():
             confirm_p()
             if idx < 4:
                 offset = -5
-                move_actuator(0, 0, -90 + offset, 100)
-                move_actuator(1, 0, -270 + offset, 100)
+                rpm = 125
+                move_actuator(0, 0, -90 + offset, rpm)
+                move_actuator(1, 0, -270 + offset, rpm)
                 sleep(0.7)
-                move_actuator(0, 0, -offset, 100)
-                move_actuator(1, 0, -offset, 100)
+                move_actuator(0, 0, -offset, rpm)
+                move_actuator(1, 0, -offset, rpm)
                 sleep(0.7)
         cv2.destroyAllWindows()
 
@@ -450,7 +451,7 @@ def start_p():
             move_actuator(j, (grab + 1) % 2, 2000)
         sleep(0.4)
         ser_num = rot[i][0] // 2
-        rpm = 100
+        rpm = 125
         offset = -5
         move_actuator(ser_num, rot[i][0] % 2, rot[i][1] * 90 + offset, rpm)
         max_turn = abs(rot[i][1])
@@ -458,14 +459,14 @@ def start_p():
         if flag:
             move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, rot[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(rot[i + 1][1]))
-        slptim = 60 / rpm * (max_turn * 90 + offset) / 360 * 1.2
+        slptim = 60 / rpm * (max_turn * 90 + offset) / 360 * 1.1
         sleep(slptim)
         move_actuator(ser_num, rot[i][0] % 2, -offset, rpm)
         if flag:
             move_actuator(rot[i + 1][0] // 2, rot[i + 1][0] % 2, -offset, rpm)
             i += 1
         i += 1
-        slptim2 = abs(60 / rpm * offset / 360) * 1.2
+        slptim2 = abs(60 / rpm * offset / 360) * 1.1
         sleep(slptim2)
         print('done', i, 'sleep:', slptim, slptim2)
     solv_time = time() - strt_solv
