@@ -47,7 +47,7 @@ import cv2
 import numpy as np
 import serial
 from tkinter import messagebox
-import threading
+import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -285,7 +285,7 @@ def detect():
             confirm_p()
             if idx < 4:
                 offset = -5
-                rpm = 125
+                rpm = 100
                 move_actuator(0, 0, -90 + offset, rpm)
                 move_actuator(1, 0, -270 + offset, rpm)
                 sleep(0.7)
@@ -443,6 +443,10 @@ def start_p():
     strt_solv = time()
     i = 0
     while i < len(rot):
+        if GPIO.input(4) == GPIO.LOW:
+            solvingtimevar.set('emergency stop')
+            print('emergency stop')
+            return
         grab = rot[i][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
@@ -451,7 +455,7 @@ def start_p():
             move_actuator(j, (grab + 1) % 2, 2000)
         sleep(0.4)
         ser_num = rot[i][0] // 2
-        rpm = 125
+        rpm = 100
         offset = -5
         move_actuator(ser_num, rot[i][0] % 2, rot[i][1] * 90 + offset, rpm)
         max_turn = abs(rot[i][1])
@@ -501,6 +505,10 @@ for i in range(2):
     for j in range(2):
         move_actuator(j, i, 90, 100)
         move_actuator(j, i, -90, 100)
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(4,GPIO.IN)
+
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
