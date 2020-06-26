@@ -259,8 +259,8 @@ def detect():
         center = [size_x // 2, size_y // 2]
         tmp_colors = [['' for _ in range(8)] for _ in range(6)]
         hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-        dx = [-1, -1, 1, 1] #[-1, 1, -1, 1]
-        dy = [-1, 1, -1, 1] #[1, 1, -1, -1]
+        dx = [-1, -1, 1, 1]
+        dy = [-1, 1, -1, 1]
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
