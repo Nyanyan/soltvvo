@@ -148,8 +148,7 @@ def proc_motor(rot, num, direction):
     return rot_res, num_res, direction_res
 
 # ロボットの手順の最適化
-def rot_optimise():
-    global rot
+def rot_optimise(rot):
     i = 0
     tmp_arr = [0, -3, -2, -1]
     while i < len(rot):
@@ -170,6 +169,7 @@ def rot_optimise():
             else:
                 rot[i][1] = tmp
         i += 1
+    return rot
 
 # アクチュエータを動かすコマンドを送る
 def move_actuator(num, arg1, arg2, arg3=None):
@@ -242,15 +242,15 @@ def confirm_p():
 def detect():
     global idx, colors
     idx = 0
+    capture = cv2.VideoCapture(0)
     while idx < 4:
         #color: g, b, r, o, y, w
-        color_low = [[50, 50, 50],   [90, 100, 50],   [160, 128, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
+        color_low = [[50, 50, 50],   [90, 50, 50],   [160, 100, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
         color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
-        capture = cv2.VideoCapture(0)
-        ret, frame = capture.read()
-        capture.release()
+        for _ in range(10):
+            ret, frame = capture.read()
         size_x = 200
         size_y = 150
         frame = cv2.resize(frame, (size_x, size_y))
@@ -276,8 +276,7 @@ def detect():
                     cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
                     break
         cv2.imshow('title',show_frame)
-        key = cv2.waitKey(0)
-        if key == 32: #スペースキーが押されたとき
+        if cv2.waitKey(0) == 32: #スペースキーが押されたとき
             for i in range(4):
                 colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
             print(idx)
@@ -293,6 +292,7 @@ def detect():
                 move_actuator(1, 0, -offset, rpm)
                 sleep(0.7)
         cv2.destroyAllWindows()
+    capture.release()
 
 # インスペクション処理
 def inspection_p():
@@ -301,17 +301,26 @@ def inspection_p():
     ans = []
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
+
     for i in range(2):
         move_actuator(i, 0, 1000)
     for i in range(2):
         move_actuator(i, 1, 2000)
     detect()
-    
 
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
     confirm_p()
+    for i in j2color:
+        cnt = 0
+        for j in colors:
+            if i in j:
+                cnt += j.count(i)
+        if cnt != 4:
+            solutionvar.set('cannot solve!')
+            print('cannot solve!')
+            return
     puzzle = Cube()
     set_parts_color = [set(i) for i in parts_color]
     for i in range(7):
@@ -429,7 +438,7 @@ def inspection_p():
         rot, _, _ = proc_motor(rot, 0, 4)
         print('before:', len(rot))
         print(rot)
-        rot_optimise()
+        rot = rot_optimise(rot)
         print('after:', len(rot))
         print(rot)
         print('all', time() - strt, 's')
