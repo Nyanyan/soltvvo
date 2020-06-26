@@ -117,8 +117,8 @@ def proc_motor(rot, num, direction):
     turn_arr = [-3, -2, -1]
     r_arr = [[-1, 2, 4, -1, 5, 1], [5, -1, 0, 2, -1, 3], [1, 3, -1, 4, 0, -1], [-1, 5, 1, -1, 2, 4], [2, -1, 3, 5, -1, 0], [4, 0, -1, 1, 3, -1]]
     f_arr = [[1, 2, 4, 5], [3, 2, 0, 5], [3, 4, 0, 1], [4, 2, 1, 5], [3, 5, 0, 2], [3, 1, 0, 4]]
-    regrip_arr = [[21, 5, 9, 17, 20, 13, 10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2], [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]]
-    regrip_rot = [[[1, -3], [3, -1]], [[0, -3], [2, -1]]]
+    regrip_arr = [[21, 5, 9, 17, 20, 13,  10, 3, 4, 12, 18, 0, 23, 19, 11, 7, 8, 15, 22, 1, 16, 14, 6, 2], [4, 8, 16, 20, 12, 9, 2, 23, 15, 17, 3, 7, 18, 10, 6, 22, 14, 21, 0, 11, 13, 5, 1, 19]]
+    regrip_rot = [[[1, -1], [3, -3]], [[0, -3], [2, -1]]]
     u_face = direction // 4
     f_face = f_arr[u_face][direction % 4]
     r_face = r_arr[u_face][f_face]
@@ -129,13 +129,13 @@ def proc_motor(rot, num, direction):
     move_face = ans[num] // 3
     move_amount = turn_arr[ans[num] % 3]
     if move_face == u_face or move_face == d_face:
-        rot_tmp = [[i for i in rot] for _ in range(2)]
+        rot_tmp = [[], []]
         direction_tmp = [-1, -1]
-        num_tmp = [num, num]
+        num_tmp = [-1, -1]
         for j in range(2):
-            rot_tmp[j].extend(regrip_rot[j])
-            direction_tmp[j] = regrip_arr[j][direction]
-            rot_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(rot_tmp[j], num_tmp[j], direction_tmp[j])
+            tmp = [i for i in rot]
+            tmp.extend(regrip_rot[j])
+            rot_tmp[j], num_tmp[j], direction_tmp[j] = proc_motor(tmp, num, regrip_arr[j][direction])
         idx = 0 if len(rot_tmp[0]) < len(rot_tmp[1]) else 1
         rot_res = rot_tmp[idx]
         num_res = num_tmp[idx]
@@ -251,31 +251,35 @@ def detect():
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
         for _ in range(10):
             ret, frame = capture.read()
-        size_x = 200
-        size_y = 150
-        frame = cv2.resize(frame, (size_x, size_y))
-        show_frame = deepcopy(frame)
-        d = 50
+        d = 30
+        size_x = 130
+        size_y = 100
         center = [size_x // 2, size_y // 2]
         tmp_colors = [['' for _ in range(8)] for _ in range(6)]
-        hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
         dx = [-1, -1, 1, 1]
         dy = [-1, 1, -1, 1]
-        for i in range(4):
-            y = center[0] + dy[i] * d
-            x = center[1] + dx[i] * d
-            cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
-            val = hsv[x, y]
-            for j in range(6):
-                flag = True
-                for k in range(3):
-                    if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
-                        flag = False
-                if flag:
-                    tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
-                    cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
-                    cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
-                    break
+        loopflag = [1 for _ in range(4)]
+        while sum(loopflag):
+            ret, show_frame = capture.read()
+            show_frame = cv2.resize(show_frame, (size_x, size_y))
+            hsv = cv2.cvtColor(show_frame,cv2.COLOR_BGR2HSV)
+            for i in range(4):
+                y = center[0] + dy[i] * d
+                x = center[1] + dx[i] * d
+                cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
+                val = hsv[x, y]
+                for j in range(6):
+                    flag = True
+                    for k in range(3):
+                        if not ((color_low[j][k] < color_hgh[j][k] and color_low[j][k] <= val[k] <= color_hgh[j][k]) or (color_low[j][k] > color_hgh[j][k] and (color_low[j][k] <= val[k] or val[k] <= color_hgh[j][k]))):
+                            flag = False
+                    if flag:
+                        tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
+                        cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
+                        cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
+                        loopflag[i] = 0
+                        break
+                
         cv2.imshow('title',show_frame)
         if cv2.waitKey(0) == 32: #スペースキーが押されたとき
             for i in range(4):
