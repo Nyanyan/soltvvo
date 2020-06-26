@@ -274,6 +274,7 @@ def detect():
                 if flag:
                     tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[j]
                     cv2.circle(show_frame, (y, x), 15, circlecolor[j], thickness=3, lineType=cv2.LINE_8, shift=0)
+                    cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
                     break
         cv2.imshow('title',show_frame)
         if cv2.waitKey(0) == 32: #スペースキーが押されたとき
