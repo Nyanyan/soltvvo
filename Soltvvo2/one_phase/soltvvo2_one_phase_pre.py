@@ -70,7 +70,7 @@ co = [inf for _ in range(3 ** 8 + 1)]
 
 rot_cost = 5
 
-max_cost = 27
+max_num = 5
 neary_solved = []
 
 solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
@@ -110,21 +110,21 @@ for i in range(3):
     solved.Co = solved_co[i]
     que = deque([[solved, 0, [-10, -10]]])
     while que:
-        status, cost, l_mov = que.popleft()
+        status, num, l_mov = que.popleft()
         lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
         for mov in lst:
             if mov[0] == l_mov[0]:
                 continue
             n_status = status.move(mov)
-            if abs(mov[0] - l_mov[0]) == 2:
-                n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
-            else:
-                n_cost = cost + rot_cost + abs(mov[1])
+            #if abs(mov[0] - l_mov[0]) == 2:
+            #    n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
+            #else:
+            #    n_cost = cost + rot_cost + abs(mov[1])
             coidx = n_status.co2i()
-            if co[coidx] <= n_cost:
+            if co[coidx] <= num + 1:
                 continue
-            co[coidx] = n_cost
-            que.append([n_status, n_cost, mov])
+            co[coidx] = num + 1
+            que.append([n_status, num + 1, mov])
 print('co done')
 
 for i in range(24):
@@ -133,21 +133,23 @@ for i in range(24):
     cp[solved.cp2i()] = 0
     que = deque([[solved, 0, [-10, -10]]])
     while que:
-        status, cost, l_mov = que.popleft()
+        status, num, l_mov = que.popleft()
         lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
         for mov in lst:
             if mov[0] == l_mov[0]:
                 continue
             n_status = status.move(mov)
-            if abs(mov[0] - l_mov[0]) == 2:
-                n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
-            else:
-                n_cost = cost + rot_cost + abs(mov[1])
+            
+            #if abs(mov[0] - l_mov[0]) == 2:
+            #    n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
+            #else:
+            #    n_cost = cost + rot_cost + abs(mov[1])
+            
             cpidx = n_status.cp2i()
-            if cp[cpidx] <= n_cost:
+            if cp[cpidx] <= num + 1:
                 continue
-            cp[cpidx] = n_cost
-            que.append([n_status, n_cost, mov])
+            cp[cpidx] = num + 1
+            que.append([n_status, num + 1, mov])
 print('cp done')
 
 with open('co.csv', mode='x') as f:
@@ -159,8 +161,8 @@ with open('cp.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(cp)
 print('cp written')
-
 '''
+
 #にぶたん
 def search(cp_num, co_num):
     l = 0
@@ -191,29 +193,29 @@ for cp_s, co_s in zip(solved_cp, cp_co):
     puzzle.Co = co_s
     que = deque([[puzzle, 0, []]])
     while que:
-        status, cost, moves = que.popleft()
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
+        status, num, moves = que.popleft()
+        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -3], [3, -3]]
         for mov in lst:
             if len(moves) and moves[-1][0] == mov[0]:
                 continue
             if len(moves) >= 2 and abs(moves[-2][0] - moves[-1][0]) == 2 and mov[0] == moves[-2][0]:
                 continue
             n_status = status.move(mov)
-            if len(moves) and abs(mov[0] - moves[-1][0]) == 2:
-                n_cost = cost - abs(moves[-1][1]) + max(abs(moves[-1][1]), abs(mov[1]))
-            else:
-                n_cost = cost + rot_cost + abs(mov[1])
-            if n_cost <= max_cost:
+            #if len(moves) and abs(mov[0] - moves[-1][0]) == 2:
+            #    n_cost = cost - abs(moves[-1][1]) + max(abs(moves[-1][1]), abs(mov[1]))
+            #else:
+            #    n_cost = cost + rot_cost + abs(mov[1])
+            if num + 1 <= max_num:
                 n_moves = [[j for j in i] for i in moves]
                 n_moves.append(mov)
                 cp_idx = n_status.cp2i()
                 co_idx = n_status.co2i()
                 if not search(cp_idx, co_idx):
-                    neary_solved.append([cp_idx, co_idx, n_cost, n_moves])
+                    neary_solved.append([cp_idx, co_idx, num + 1, n_moves])
                     neary_solved.sort()
                     #print(len(neary_solved))
                     #print(neary_solved)
-                    que.append([n_status, n_cost, n_moves])
+                    que.append([n_status, num + 1, n_moves])
 print('neary solved done')
 
 with open('solved.csv', mode='x') as f:

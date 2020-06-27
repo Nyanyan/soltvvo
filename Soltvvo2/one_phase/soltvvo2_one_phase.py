@@ -237,7 +237,7 @@ def detect():
 # インスペクション処理
 cnt = 0
 def inspection_p():
-    global ans, total_cost, colors, cnt
+    global ans, ans_all, total_cost, colors, cnt
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
@@ -347,7 +347,7 @@ def inspection_p():
         for j in range(0, len(solved_solution[i]), 2):
             tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
         solved_solution[i] = tmp
-    
+    #neary_solved = [[0, 0], [11824, 5576], [23616, 0], [34560, 5576], [9680, 4264], [18290, 4264], [12316, 4264], [3706, 4264], [40319, 0], [28495, 5576], [16703, 0], [5759, 5576], [30639, 4264], [22029, 4264], [28003, 4264], [36613, 4264], [10210, 0], [16313, 5576], [30109, 0], [24006, 5576], [33826, 0], [39049, 5576], [6493, 0], [1270, 5576]]
     #にぶたん
     def search(cp_num, co_num):
         l = 0
@@ -372,65 +372,69 @@ def inspection_p():
         return -1
     
     # 深さ優先探索with枝刈り
-    def dfs(status, depth, cost, flag):
-        global ans, total_cost, cnt
-        cost_rot = 5
-        l_mov = ans[-1][0] if len(ans) else -10
-        l_rot = ans[-1][1] if len(ans) else 0
-        lst_all = [[[0, -1], [0, -2], [0, -3]], [[1, -1], [1, -2], [1, -3]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
+    def dfs(status, depth, num, flag):
+        global ans, total_cost, cnt, ans_all
+        flag = False
+        #cost_rot = 5
+        l_mov = ans[-1] if len(ans) else [-10, -10]
+        lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
         lst = []
         for i in range(4):
-            if i == l_mov:
+            if i == l_mov[0]:
                 continue
-            if flag and abs(l_mov - i) == 2:
+            if flag and abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
         lst.sort(key=lambda x:-x[1])
         for mov in lst:
             cnt += 1
             n_status = status.move(mov)
-            if abs(l_mov - mov[0]) == 2:
-                n_cost = cost + l_rot + max(-l_rot, -mov[1])
+            n_flag = False
+            if abs(l_mov[0] - mov[0]) == 2:
                 n_flag = True
-            else:
-                n_cost = cost + cost_rot - mov[1]
-                n_flag = False
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if n_cost + max(co[co_idx], cp[cp_idx]) > depth:
+            if len(ans) + max(co[co_idx], cp[cp_idx]) - 5 > depth:
                 continue
             ans.append(mov)
             tmp = search(cp_idx, co_idx)
             if tmp != -1:
-                print(ans)
-                ans.extend(reversed(solved_solution[tmp]))
-                cost += neary_solved[tmp][2]
-                total_cost = cost
-                return True
-            if dfs(n_status, depth, n_cost, n_flag):
-                return True
+                ans_tmp = [[j for j in i] for i in ans]
+                ans_tmp.extend(reversed(solved_solution[tmp]))
+                print(ans_tmp)
+                ans_all.append(ans_tmp)
+                flag = True
+            elif dfs(n_status, depth, num + 1, n_flag):
+                flag = True
             ans.pop()
-        return False
+        return flag
 
     # IDA*
-    co_idx = puzzle.co2i()
-    cp_idx = puzzle.cp2i()
-    tmp = search(cp_idx, co_idx)
-    if tmp != -1:
-        ans.extend(solved_solution[tmp])
-        total_cost = neary_solved[tmp][2]
-    else:
-        for depth in range(1, 200):
-            cnt = 0
-            ans = []
-            if dfs(puzzle, depth, 0, False):
-                print(depth, cnt)
-                break
+    for depth in range(1, 15):
+        cnt = 0
+        ans = []
+        if dfs(puzzle, depth, 0, False):
             print(depth, cnt)
-    
-    if ans:
-        print('answer:', ans)
-        solutionvar.set(str(len(ans)) + 'moves, ' + str(total_cost) + 'cost')
+            break
+        print(depth, cnt)
+    print(str(len(ans_all)) + ' answers found')
+    if ans_all:
+        min_cost = 1000
+        idx = -1
+        for ii, ans in enumerate(ans_all):
+            cost = 0
+            cost_rot = 5
+            for i in range(len(ans)):
+                if i > 0 and abs(ans[i - 1][0] - ans[i][0]) == 2:
+                    cost -= abs(ans[i - 1][1])
+                    cost += max(abs(ans[i - 1][1]), abs(ans[i][1]))
+                else:
+                    cost += cost_rot + abs(ans[i][1])
+            if min_cost > cost:
+                min_cost = cost
+                idx = ii
+        print('answer:', ans_all[idx])
+        solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
         print('all', time() - strt, 's')
     else:
         solutionvar.set('cannot solve!')
@@ -484,6 +488,7 @@ parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'
 
 colors = [['' for _ in range(8)] for _ in range(6)]
 
+ans_all = []
 ans = []
 total_cost = 0
 
