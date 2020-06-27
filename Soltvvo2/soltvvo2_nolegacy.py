@@ -263,13 +263,21 @@ def inspection_p():
     colors[3] = ['o', 'w', 'g', 'y', 'r', 'w', 'r', 'y']
     colors[4] = ['', '', 'o', 'b', '', '', '', '']
     colors[5] = ['', '', 'g', 'g', '', '', '', '']
-
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'w', 'w', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'r', 'b', 'g', 'r', 'b']
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'o', 'g', '', '', '', '']
+    colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
+    colors[3] = ['o', 'o', 'g', 'y', 'g', 'r', 'b', 'b']
+    colors[4] = ['', '', 'y', 'r', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    '''
     '''
     
     detect()
@@ -363,7 +371,7 @@ def inspection_p():
         elif solved[r][0] == cp_num and solved[r][1] == co_num:
             return True
         return False
-
+    '''
     s = time()
     cube = Cube()
     cube.Cp = [0, 1, 2, 3, 4, 5, 7, 6]
@@ -373,45 +381,45 @@ def inspection_p():
         #cube = cube.move([0, -1])
         #search(cube.cp2i(), cube.co2i())
     print(time() - s)
-
+    '''
     # 深さ優先探索with枝刈り
-    def dfs(status, depth, num):
+    def dfs(status, depth, num, flag):
         global ans, cnt
-        cnt += 1
         l_mov = ans[-1][0] if len(ans) else -10
         l_rot = ans[-1][1] if len(ans) else -10
-        ll_mov = ans[-2][0] if len(ans) > 1 else -10
-        lst = [[[1, -1], [2, -1], [3, -1], [1, -2], [1, -3], [2, -3], [3, -3]], [[0, -1], [2, -1], [3, -1], [0, -2], [0, -3], [2, -3], [3, -3]], [[0, -1], [1, -1], [3, -1], [1, -2], [0, -3], [1, -3], [3, -3]], [[0, -1], [1, -1], [2, -1], [0, -2], [0, -3], [1, -3], [2, -3]]]
-        n_lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
-        if l_mov != -10:
+        lst = [[[1, -1], [2, -1], [3, -1], [1, -2], [2, -3]], [[0, -1], [2, -1], [3, -1], [0, -2], [3, -3]], [[0, -1], [1, -1], [3, -1], [1, -2], [0, -3]], [[0, -1], [1, -1], [2, -1], [0, -2], [1, -3]]]
+        lst2 = [[[1, -1], [3, -1], [1, -2]], [[0, -1], [2, -1], [0, -2]], [[1, -1], [3, -1], [1, -2]], [[0, -1], [2, -1], [0, -2]]]
+        n_lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2]]
+        if l_mov != -10 and not flag:
             n_lst = lst[l_mov]
-        l_ll_mov = abs(l_mov - ll_mov)
+        elif l_mov != -10 and flag:
+            n_lst = lst2[l_mov]
         for mov in n_lst:
-            l_n_mov = abs(l_mov - mov[0])
-            if (l_ll_mov == 2 and mov[0] == ll_mov) or (mov[1] == -3 and not(l_n_mov == 2 and l_rot == -1)):
-                continue
+            cnt += 1
             n_status = status.move(mov)
             ans.append(mov)
-            if l_n_mov == 2:
+            if abs(l_mov - mov[0]) == 2:
                 n_num = num
+                n_flag = True
             else:
                 n_num = num + 1
+                n_flag = False
             cp_idx = n_status.cp2i()
             co_idx = n_status.co2i()
             if search(cp_idx, co_idx):
                 return True
-            if n_num + max(cp[cp_idx], co[co_idx]) <= depth and dfs(n_status, depth, n_num):
+            if n_num + max(cp[cp_idx], co[co_idx]) <= depth and dfs(n_status, depth, n_num, n_flag):
                 return True
             ans.pop()
         return False
 
     # IDA*
     moves = -1
-    for depth in range(1, 15):
+    for depth in range(1, 16):
         cnt = 0
         arr = []
         ans = []
-        if dfs(puzzle, depth, 0):
+        if dfs(puzzle, depth, 0, False):
             moves = depth
             print(depth, cnt)
             break
@@ -481,7 +489,6 @@ dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yell
 fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
-set_range = [set(range(i)) for i in range(8)]
 
 '''
 ser_motor = [None, None]

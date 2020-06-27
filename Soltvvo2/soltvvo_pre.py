@@ -61,18 +61,7 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-# cp配列から固有の番号を作成
-def cp2i(arr):
-    res = 0
-    for i in range(len(arr)):
-        cnt = 0
-        for j in arr[:i]:
-            if j < arr[i]:
-                cnt += 1
-        res += fac[7 - i] * (arr[i] - cnt)
-    return res
-
-cp2i_lst = [[0 for _ in range(fac[8])] for _ in range(8)]
+cp2i_lst = [[[0 for _ in range(8)] for _ in range(fac[8])] for _ in range(8)]
 def func(arr, num):
     if len(arr) == 8:
         return
@@ -84,15 +73,15 @@ def func(arr, num):
             if j < i:
                 cnt += 1
         #print(len(arr) - 1, num)
-        cp2i_lst[len(arr) - 1][num] = i - cnt
+        cp2i_lst[len(arr)][num][i] = i - cnt
         n_arr = deepcopy(arr)
         n_arr.append(i)
         res = num + fac[7 - len(arr)] * (i - cnt)
         func(n_arr, res)
 for i in range(8):
-    func([i], 0)
-print(set(cp2i_lst[2]))
-#print(cp2i_lst[0][fac[6]:])
+    cp2i_lst[0][0][i] = 7 - i
+    func([], 0)
+print(cp2i_lst[0][:100])
 
 change_direction1 = [[1, -1], [3, -3]] #6種類 横回転, 最後は2回回す
 change_direction2 = [[0, -1], [2, -3]] #4種類 縦回転
@@ -131,8 +120,8 @@ for i in range(6):
         for j in range(2):
             for k in change_direction1:
                 solved = solved.move(k)
-print(solved_cp)
-print(print_arr)
+#print(solved_cp)
+#print(print_arr)
 for i in range(3):
     solved = Cube()
     solved.Co = solved_co[i]
