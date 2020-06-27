@@ -130,7 +130,7 @@ for i in range(6):
 
 solved = Cube()
 solved.Co = solved_co
-que = deque([[solved, 0, [-1, -10]]])
+que = deque([[solved, 0, [-10, -10]]])
 while que:
     status, cost, l_mov = que.popleft()
     lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
@@ -155,7 +155,7 @@ for i in range(24):
     solved = Cube()
     solved.Cp = solved_cp[i]
     cp[solved.cp2i()] = 0
-    que = deque([[solved, 0, [-1, -10]]])
+    que = deque([[solved, 0, [-10, -10]]])
     while que:
         status, cost, l_mov = que.popleft()
         lst = [[0, -1], [0, -3], [1, -2], [2, -1], [2, -3]]
