@@ -47,7 +47,7 @@ import cv2
 import numpy as np
 import serial
 from tkinter import messagebox
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -236,13 +236,18 @@ def detect():
 
 # インスペクション処理
 cnt = 0
+solved_all = [[0, 0], [1270, 5576], [3706, 4264], [5759, 5576], [6493, 0], [9680, 4264], [10210, 0], [11824, 5576], [12316, 4264], [16313, 5576], [16703, 0], [18290, 4264], [22029, 4264], [23616, 0], [24006, 5576], [28003, 4264], [28495, 5576], [30109, 0], [30639, 4264], [33826, 0], [34560, 5576], [36613, 4264], [39049, 5576], [40319, 0]]
+solved = []
+for i in solved_all:
+    if i[1] == 4264:
+        solved.append(i[0])
 def inspection_p():
     global ans, colors, cnt
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
     
-    '''
+    
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
     colors[1] = ['', '', 'w', 'g', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'y', 'r', 'r', 'w', 'b']
@@ -256,7 +261,14 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'w', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-
+    
+    colors[0] = ['', '', 'b', 'b', '', '', '', '']
+    colors[1] = ['', '', 'w', 'y', '', '', '', '']
+    colors[2] = ['r', 'o', 'g', 'r', 'g', 'o', 'w', 'w']
+    colors[3] = ['o', 'o', 'g', 'r', 'g', 'r', 'b', 'b']
+    colors[4] = ['', '', 'y', 'w', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+    
     colors[0] = ['', '', 'b', 'r', '', '', '', '']
     colors[1] = ['', '', 'o', 'w', '', '', '', '']
     colors[2] = ['o', 'w', 'b', 'r', 'b', 'g', 'y', 'y']
@@ -270,18 +282,18 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
     colors[3] = ['o', 'o', 'g', 'y', 'g', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
+    
     
     
     detect()
-    
+    '''
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -348,27 +360,23 @@ def inspection_p():
         co = [int(i) for i in f.readline().replace('\n', '').split(',')]
 
     #にぶたん
-    def search(cp_num, co_num):
-        solved = [[0, 0], [1270, 5576], [3706, 4264], [5759, 5576], [6493, 0], [9680, 4264], [10210, 0], [11824, 5576], [12316, 4264], [16313, 5576], [16703, 0], [18290, 4264], [22029, 4264], [23616, 0], [24006, 5576], [28003, 4264], [28495, 5576], [30109, 0], [30639, 4264], [33826, 0], [34560, 5576], [36613, 4264], [39049, 5576], [40319, 0]]
-        co_lst = set([0, 4264, 5576])
+    def search(cp_num):
         l = 0
-        r = 23
-        if not co_num in co_lst:
-            return False
+        r = len(solved) - 1
         cnt = 0
         while r - l > 1:
             cnt += 1
             c = (r + l) // 2
-            if solved[c][0] > cp_num:
+            if solved[c] > cp_num:
                 r = c
-            elif solved[c][0] < cp_num:
+            elif solved[c] < cp_num:
                 l = c
             else:
                 r = c
                 l = c
-        if solved[l][0] == cp_num and solved[l][1] == co_num:
+        if solved[l] == cp_num:
             return True
-        elif solved[r][0] == cp_num and solved[r][1] == co_num:
+        elif solved[r] == cp_num:
             return True
         return False
     '''
@@ -382,7 +390,110 @@ def inspection_p():
         #search(cube.cp2i(), cube.co2i())
     print(time() - s)
     '''
-    # 深さ優先探索with枝刈り
+    # 深さ優先探索with枝刈り phase1
+    def dfs1(status, depth, cost, flag):
+        global ans, cnt
+        cost_rot = 5
+        l_mov = ans[-1][0] if len(ans) else -10
+        l_rot = ans[-1][1] if len(ans) else 0
+        lst_all = [[[0, -1], [0, -3]], [[1, -1], [1, -3]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
+        lst = []
+        for i in range(4):
+            if i == l_mov:
+                continue
+            if flag and abs(l_mov - i) == 2:
+                continue
+            lst.extend(lst_all[i])
+        for mov in lst:
+            cnt += 1
+            n_status = status.move(mov)
+            if abs(l_mov - mov[0]) == 2:
+                n_cost = cost + l_rot + max(-l_rot, -mov[1])
+                n_flag = True
+            else:
+                n_cost = cost + cost_rot - mov[1]
+                n_flag = False
+            co_idx = n_status.co2i()
+            if n_cost + co[co_idx] > depth:
+                continue
+            ans.append(mov)
+            if co_idx == 4264: #in [0, 4264, 5576]:
+                return True
+            if dfs1(n_status, depth, n_cost, n_flag):
+                return True
+            ans.pop()
+        return False
+    
+    #phase 2
+    def dfs2(status, depth, cost, flag):
+        global ans, cnt
+        cost_rot = 5
+        l_mov = ans[-1][0] if len(ans) else -10
+        ll_mov = ans[-2][0] if len(ans) > 2 else -10
+        l_rot = ans[-1][1] if len(ans) else 0
+        lst_all = [[[0, -1], [0, -3]], [[1, -2]], [[2, -1], [2, -3]]]
+        lst = []
+        for i in range(3):
+            if flag and i == ll_mov:
+                continue
+            if i == l_mov:
+                continue
+            lst.extend(lst_all[i])
+        for mov in lst:
+            cnt += 1
+            n_status = status.move(mov)
+            if abs(l_mov - mov[0]) == 2:
+                n_cost = cost + l_rot + max(-l_rot, -mov[1])
+                n_flag = True
+            else:
+                n_cost = cost + cost_rot - mov[1]
+                n_flag = False
+            cp_idx = n_status.cp2i()
+            if n_cost + cp[cp_idx] > depth:
+                continue
+            ans.append(mov)
+            if search(cp_idx):
+                return True
+            if dfs2(n_status, depth, n_cost, n_flag):
+                return True
+            ans.pop()
+        return False
+    '''
+    def dfs(status, depth, cost, flag):
+        global ans, cnt
+        cost_rot = 5
+        l_mov = ans[-1][0] if len(ans) else -10
+        l_rot = ans[-1][1] if len(ans) else 0
+        lst_all = [[[0, -1], [0, -2], [0, -3]], [[1, -1], [1, -2], [1, -3]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
+        lst = []
+        for i in range(4):
+            if i == l_mov:
+                continue
+            if flag and abs(l_mov - i) == 2:
+                continue
+            lst.extend(lst_all[i])
+        for mov in lst:
+            cnt += 1
+            n_status = status.move(mov)
+            if abs(l_mov - mov[0]) == 2:
+                n_cost = cost + l_rot + max(-l_rot, -mov[1])
+                n_flag = True
+            else:
+                n_cost = cost + cost_rot - mov[1]
+                n_flag = False
+            cp_idx = n_status.cp2i()
+            co_idx = n_status.co2i()
+            if n_cost + max(cp[cp_idx], co[co_idx]) > depth:
+                continue
+            ans.append(mov)
+            if search(cp_idx, co_idx):
+                return True
+            if dfs(n_status, depth, n_cost, n_flag):
+                return True
+            ans.pop()
+        return False
+    '''
+    '''
     def dfs(status, depth, num, flag):
         global ans, cnt
         l_mov = ans[-1][0] if len(ans) else -10
@@ -412,22 +523,35 @@ def inspection_p():
                 return True
             ans.pop()
         return False
-
+    '''
     # IDA*
-    moves = -1
-    for depth in range(1, 16):
+    cost = -1
+    co_num = -1
+    for depth in range(1, 100):
         cnt = 0
-        arr = []
         ans = []
-        if dfs(puzzle, depth, 0, False):
-            moves = depth
+        if dfs1(puzzle, depth, 0, False):
+            cost = depth
+            print(depth, cnt)
+            break
+        print(depth, cnt)
+    ans_co = [[j for j in i] for i in ans]
+    cost_co = cost
+    print('co done', ans_co, cost_co)
+    for mov in ans_co:
+        puzzle = puzzle.move(mov)
+    for depth in range(1, 100):
+        cnt = 0
+        ans = [[j for j in i] for i in ans_co]
+        if dfs2(puzzle, depth, 0, False):
+            cost = depth + cost_co
             print(depth, cnt)
             break
         print(depth, cnt)
     
     if ans:
         print('answer:', ans)
-        solutionvar.set(str(moves) + 'moves')
+        solutionvar.set(str(len(ans)) + 'moves, ' + str(cost) + 'cost')
         print('all', time() - strt, 's')
     else:
         solutionvar.set('cannot solve!')
@@ -490,7 +614,7 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-
+'''
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
@@ -505,7 +629,7 @@ for i in range(2):
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4,GPIO.IN)
-
+'''
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")

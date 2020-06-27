@@ -60,7 +60,7 @@ class Cube:
 fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
-
+'''
 cp2i_lst = [[[0 for _ in range(8)] for _ in range(fac[8])] for _ in range(8)]
 def func(arr, num):
     if len(arr) == 8:
@@ -82,30 +82,35 @@ for i in range(8):
     cp2i_lst[0][0][i] = 7 - i
     func([], 0)
 print(cp2i_lst[0][:100])
-
+'''
 change_direction1 = [[1, -1], [3, -3]] #6種類 横回転, 最後は2回回す
 change_direction2 = [[0, -1], [2, -3]] #4種類 縦回転
 
-inf = 100
+inf = 1000
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
 
-solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
+rot_cost = 5
+
+solved_co = [1, 2, 2, 1, 1, 2, 2, 1]
+co[4264] = 0
+'''
 for i in range(3):
     tmp = 0
     for j in range(8):
         tmp *= 3
         tmp += solved_co[i][j]
     co[tmp] = 0
-
+'''
 solved = Cube()
 solved_cp = []
-print_arr = []
+#print_arr = []
+cp_co = []
 for i in range(6):
     for j in range(4):
         solved_cp.append(deepcopy(solved.Cp))
-        print_arr.append(deepcopy(solved.Co))
-        cp[solved.cp2i()] = 0
+        #print_arr.append(deepcopy(solved.Co))
+        cp_co.append(solved.co2i())
         for k in change_direction2:
             solved = solved.move(k)
     if i < 3:
@@ -122,45 +127,53 @@ for i in range(6):
                 solved = solved.move(k)
 #print(solved_cp)
 #print(print_arr)
-for i in range(3):
-    solved = Cube()
-    solved.Co = solved_co[i]
-    que = deque([[solved, 0, -1]])
-    while que:
-        status, num, l_mov = que.popleft()
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -2], [3, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
-        for mov in lst:
-            if mov[0] == l_mov:
-                continue
-            n_status = status.move(mov)
-            n_num = num + 1
-            coidx = n_status.co2i()
-            if co[coidx] <= n_num:
-                continue
-            co[coidx] = n_num
-            que.append([n_status, n_num, mov[0]])
+
+solved = Cube()
+solved.Co = solved_co
+que = deque([[solved, 0, [-1, -10]]])
+while que:
+    status, cost, l_mov = que.popleft()
+    lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
+    for mov in lst:
+        if mov[0] == l_mov[0]:
+            continue
+        n_status = status.move(mov)
+        if abs(mov[0] - l_mov[0]) == 2:
+            n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
+        else:
+            n_cost = cost + rot_cost + abs(mov[1])
+        coidx = n_status.co2i()
+        if co[coidx] <= n_cost:
+            continue
+        co[coidx] = n_cost
+        que.append([n_status, n_cost, mov])
 print('co done')
 
 for i in range(24):
+    if cp_co[i] != 4264:
+        continue
     solved = Cube()
     solved.Cp = solved_cp[i]
-    que = deque([[solved, 0, -1]])
+    cp[solved.cp2i()] = 0
+    que = deque([[solved, 0, [-1, -10]]])
     while que:
-        status, num, l_mov = que.popleft()
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -2], [3, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
+        status, cost, l_mov = que.popleft()
+        lst = [[0, -1], [0, -3], [1, -2], [2, -1], [2, -3]]
         for mov in lst:
-            if mov[0] == l_mov:
+            if mov[0] == l_mov[0]:
                 continue
             n_status = status.move(mov)
-            n_num = num + 1
+            if abs(mov[0] - l_mov[0]) == 2:
+                n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
+            else:
+                n_cost = cost + rot_cost + abs(mov[1])
             cpidx = n_status.cp2i()
-            if cp[cpidx] <= n_num:
+            #print(n_cost)
+            if cp[cpidx] <= n_cost:
                 continue
-            cp[cpidx] = n_num
-            que.append([n_status, n_num, mov[0]])
-    break
+            cp[cpidx] = n_cost
+            que.append([n_status, n_cost, mov])
 print('cp done')
-print(cp[1619])
 
 with open('co.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
