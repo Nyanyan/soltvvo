@@ -47,7 +47,7 @@ import cv2
 import numpy as np
 import serial
 from tkinter import messagebox
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -242,7 +242,7 @@ def inspection_p():
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
     
-    
+    '''
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
     colors[1] = ['', '', 'w', 'g', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'y', 'r', 'r', 'w', 'b']
@@ -270,7 +270,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -278,10 +278,10 @@ def inspection_p():
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
     '''
-    '''
+    
     
     detect()
-    '''
+    
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -490,7 +490,7 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-'''
+
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
@@ -505,7 +505,7 @@ for i in range(2):
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4,GPIO.IN)
-'''
+
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
