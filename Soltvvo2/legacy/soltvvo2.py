@@ -307,12 +307,21 @@ def inspection_p():
     rot = []
     colors = [['' for _ in range(8)] for _ in range(6)]
 
+    '''
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'w', 'w', '', '', '', '']
+    colors[2] = ['o', 'o', 'g', 'r', 'b', 'g', 'r', 'b']
+    colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
+    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
+
+    '''
     for i in range(2):
         move_actuator(i, 0, 1000)
     for i in range(2):
         move_actuator(i, 1, 2000)
     detect()
-
+    
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -441,11 +450,11 @@ def inspection_p():
         print('answer:', num2moves(ans))
         solutionvar.set(num2moves(ans))
         rot, _, _ = proc_motor(rot, 0, 4)
-        print('before:', len(rot))
-        print(rot)
+        #print('before:', len(rot))
+        #print(rot)
         rot = rot_optimise(rot)
-        print('after:', len(rot))
-        print(rot)
+        #print('after:', len(rot))
+        #print(rot)
         print('all', time() - strt, 's')
     else:
         solutionvar.set('cannot solve!')

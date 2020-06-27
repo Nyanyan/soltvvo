@@ -1,58 +1,52 @@
 import csv
 from collections import deque
+from copy import deepcopy
+from itertools import permutations
 
 class Cube:
     def __init__(self):
-        self.Co = [0, 0, 0, 0, 0, 0, 0]
-        self.Cp = [0, 1, 2, 3, 4, 5, 6]
-        self.Moves = []
-        #self.Movnum = 0
+        self.Co = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.Cp = [0, 1, 2, 3, 4, 5, 6, 7]
 
     # 回転処理 CP
-    def move_cp(self, num):
-        surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+    def move_cp(self, arr):
+        surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
         replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
-        idx = num // 3
-        res = Cube()
-        res.Cp = [i for i in self.Cp]
-        for i, j in zip(surface[idx], replace[num % 3]):
-            res.Cp[i] = self.Cp[surface[idx][j]]
-        res.Moves = [i for i in self.Moves]
-        res.Moves.append(num)
+        res = [i for i in self.Cp]
+        for i, j in zip(surface[arr[0]], replace[-arr[1] - 1]):
+            res[i] = self.Cp[surface[arr[0]][j]]
         return res
 
     # 回転処理 CO
-    def move_co(self, num):
-        surface = [[0, 1, 2, 3], [2, 3, 4, 5], [3, 1, 5, 6]]
+    def move_co(self, arr):
+        surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
         replace = [[2, 0, 3, 1], [3, 2, 1, 0], [1, 3, 0, 2]]
         pls = [2, 1, 1, 2]
-        idx = num // 3
-        res = Cube()
-        res.Co = [i for i in self.Co]
-        for i, j in zip(surface[idx], replace[num % 3]):
-            res.Co[i] = self.Co[surface[idx][j]]
-        if num // 3 != 0 and num % 3 != 1:
+        res = [i for i in self.Co]
+        for i, j in zip(surface[arr[0]], replace[-arr[1] - 1]):
+            res[i] = self.Co[surface[arr[0]][j]]
+        if arr[1] != -2:
             for i in range(4):
-                res.Co[surface[idx][i]] += pls[i]
-                res.Co[surface[idx][i]] %= 3
-        res.Moves = [i for i in self.Moves]
-        res.Moves.append(num)
+                res[surface[arr[0]][i]] += pls[i]
+                res[surface[arr[0]][i]] %= 3
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
-    def move(self, num):
+    def move(self, arr):
         res = Cube()
-        res = self.move_co(num)
-        res.Cp = self.move_cp(num).Cp
+        res.Co = self.move_co(arr)
+        res.Cp = self.move_cp(arr)
         return res
 
     # cp配列から固有の番号を作成
     def cp2i(self):
         res = 0
-        marked = set([])
-        for i in range(7):
-            res += fac[6 - i] * len(set(range(self.Cp[i])) - marked)
-            marked.add(self.Cp[i])
+        for i in range(8):
+            cnt = 0
+            for j in self.Cp[:i]:
+                if j < self.Cp[i]:
+                    cnt += 1
+            res += fac[7 - i] * (self.Cp[i] - cnt)
         return res
     
     # co配列から固有の番号を作成
@@ -63,14 +57,132 @@ class Cube:
             res += i
         return res
 
-parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 3], [3, 5], [3, 6]], [[5, 2], [3, 7], [3, 0]]]
-parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'r', 'b'], ['y', 'b', 'o']]
-j2color = ['g', 'b', 'r', 'o', 'y', 'w']
-direction_arr = [21, 12, 15, 18, 2, 22, 20, 4, 8, 13, 23, 1, 6, 0, 3, 9, 11, 16, 14, 7, 5, 19, 17, 10]
-
 fac = [1]
-for i in range(1, 8):
+for i in range(1, 9):
     fac.append(fac[-1] * i)
+
+# cp配列から固有の番号を作成
+def cp2i(arr):
+    res = 0
+    for i in range(len(arr)):
+        cnt = 0
+        for j in arr[:i]:
+            if j < arr[i]:
+                cnt += 1
+        res += fac[7 - i] * (arr[i] - cnt)
+    return res
+
+cp2i_lst = [[0 for _ in range(fac[8])] for _ in range(8)]
+def func(arr, num):
+    if len(arr) == 8:
+        return
+    for i in range(8):
+        if i in arr:
+            continue
+        cnt = 0
+        for j in arr:
+            if j < i:
+                cnt += 1
+        #print(len(arr) - 1, num)
+        cp2i_lst[len(arr) - 1][num] = i - cnt
+        n_arr = deepcopy(arr)
+        n_arr.append(i)
+        res = num + fac[7 - len(arr)] * (i - cnt)
+        func(n_arr, res)
+for i in range(8):
+    func([i], 0)
+print(set(cp2i_lst[2]))
+#print(cp2i_lst[0][fac[6]:])
+
+change_direction1 = [[1, -1], [3, -3]] #6種類 横回転, 最後は2回回す
+change_direction2 = [[0, -1], [2, -3]] #4種類 縦回転
+
+inf = 100
+cp = [inf for _ in range(fac[8] + 1)]
+co = [inf for _ in range(3 ** 8 + 1)]
+
+solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
+for i in range(3):
+    tmp = 0
+    for j in range(8):
+        tmp *= 3
+        tmp += solved_co[i][j]
+    co[tmp] = 0
+
+solved = Cube()
+solved_cp = []
+print_arr = []
+for i in range(6):
+    for j in range(4):
+        solved_cp.append(deepcopy(solved.Cp))
+        print_arr.append(deepcopy(solved.Co))
+        cp[solved.cp2i()] = 0
+        for k in change_direction2:
+            solved = solved.move(k)
+    if i < 3:
+        for k in change_direction1:
+            solved = solved.move(k)
+    elif i == 3:
+        for k in change_direction2:
+            solved = solved.move(k)
+        for k in change_direction1:
+            solved = solved.move(k)
+    elif i == 4:
+        for j in range(2):
+            for k in change_direction1:
+                solved = solved.move(k)
+print(solved_cp)
+print(print_arr)
+for i in range(3):
+    solved = Cube()
+    solved.Co = solved_co[i]
+    que = deque([[solved, 0, -1]])
+    while que:
+        status, num, l_mov = que.popleft()
+        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -2], [3, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
+        for mov in lst:
+            if mov[0] == l_mov:
+                continue
+            n_status = status.move(mov)
+            n_num = num + 1
+            coidx = n_status.co2i()
+            if co[coidx] <= n_num:
+                continue
+            co[coidx] = n_num
+            que.append([n_status, n_num, mov[0]])
+print('co done')
+
+for i in range(24):
+    solved = Cube()
+    solved.Cp = solved_cp[i]
+    que = deque([[solved, 0, -1]])
+    while que:
+        status, num, l_mov = que.popleft()
+        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -2], [3, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
+        for mov in lst:
+            if mov[0] == l_mov:
+                continue
+            n_status = status.move(mov)
+            n_num = num + 1
+            cpidx = n_status.cp2i()
+            if cp[cpidx] <= n_num:
+                continue
+            cp[cpidx] = n_num
+            que.append([n_status, n_num, mov[0]])
+    break
+print('cp done')
+print(cp[1619])
+
+with open('co.csv', mode='x') as f:
+    writer = csv.writer(f, lineterminator='\n')
+    writer.writerow(co)
+print('co written')
+
+with open('cp.csv', mode='x') as f:
+    writer = csv.writer(f, lineterminator='\n')
+    writer.writerow(cp)
+print('cp written')
+'''
 
 for idx, d in enumerate(direction_arr):
     set_parts_color = [set(i) for i in parts_color]
@@ -164,3 +276,4 @@ for idx, d in enumerate(direction_arr):
     with open('co' + str(idx) + '.csv', mode='x') as f:
             writer = csv.writer(f, lineterminator='\n')
             writer.writerow(co)
+'''
