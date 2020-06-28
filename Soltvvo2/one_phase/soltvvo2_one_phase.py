@@ -336,7 +336,6 @@ def inspection_p():
         for line in map(str.strip, f):
             neary_solved.append([int(i) for i in line.replace('\n', '').split(',')])
     neary_solved = dict(neary_solved)
-    #print(neary_solved)
     with open('solved_solution.csv', mode='r') as f:
         for line in map(str.strip, f):
             solved_solution.append(line.replace('\n', '').split(','))
@@ -350,30 +349,7 @@ def inspection_p():
         for j in range(0, len(solved_solution[i]), 2):
             tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
         solved_solution[i] = tmp
-    #neary_solved = [[0, 0], [11824, 5576], [23616, 0], [34560, 5576], [9680, 4264], [18290, 4264], [12316, 4264], [3706, 4264], [40319, 0], [28495, 5576], [16703, 0], [5759, 5576], [30639, 4264], [22029, 4264], [28003, 4264], [36613, 4264], [10210, 0], [16313, 5576], [30109, 0], [24006, 5576], [33826, 0], [39049, 5576], [6493, 0], [1270, 5576]]
-    #にぶたん
-    def search(cp_num, co_num):
-        l = 0
-        r = len(neary_solved) - 1
-        cnt = 0
-        while True:
-            cnt += 1
-            pre_r = r
-            pre_l = l
-            c = (r + l) // 2
-            if neary_solved[c][0] > cp_num:
-                r = c
-            elif neary_solved[c][0] < cp_num:
-                l = c
-            else:
-                r = c
-            if pre_r == r and pre_l == l:
-                break
-        for i in range(l, r + 1):
-            if neary_solved[i][0] == cp_num and neary_solved[i][1] == co_num:
-                return i
-        return -1
-    
+
     # 深さ優先探索with枝刈り
     def dfs(status, depth, num, flag):
         global ans, total_cost, cnt, ans_all
@@ -423,10 +399,9 @@ def inspection_p():
         cnt = 0
         ans = []
         if dfs(puzzle, depth, 0, False):
-            print(depth, cnt)
             break
-        print(depth, cnt)
     print(str(len(ans_all)) + ' answers found')
+
     if ans_all:
         min_cost = 1000
         idx = -1
