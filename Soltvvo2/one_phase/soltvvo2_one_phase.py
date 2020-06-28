@@ -224,7 +224,7 @@ def detect():
             idx += 1
             confirm_p()
             offset = -5
-            rpm = 250
+            rpm = 225
             move_actuator(0, 0, -90 + offset, rpm)
             move_actuator(1, 0, -270 + offset, rpm)
             sleep(0.6)
@@ -411,6 +411,8 @@ def inspection_p():
                     ans_candidate = rot_join(ans_tmp, pls)
                     f.write(str(ans_candidate) + '\n\n')
                 ans_all.append(ans_candidate)
+                if len(ans_all) == 10:
+                    return True
                 #print(ans_candidate)
                 flag = True
             elif dfs(n_status, depth, num + 1, n_flag):
@@ -484,7 +486,7 @@ def start_p():
                 move_actuator(j, (grab + 1) % 2, 2000)
             sleep(0.1)
         ser_num = ans[i][0] // 2
-        rpm = 250
+        rpm = 225
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
