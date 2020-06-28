@@ -379,7 +379,6 @@ def inspection_p():
     def dfs(status, depth, num, flag):
         global ans, total_cost, cnt, ans_all
         flag = False
-        #cost_rot = 5
         l_mov = ans[-1] if len(ans) else [-10, -10]
         lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
         lst = []
@@ -400,7 +399,6 @@ def inspection_p():
             if len(ans) + max(co[co_idx], cp[cp_idx]) - 5 > depth:
                 continue
             ans.append(mov)
-            #tmp = search(cp_idx, co_idx)
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
             if tmp != None:
                 ans_tmp = [[j for j in i] for i in ans]
@@ -413,7 +411,6 @@ def inspection_p():
                 ans_all.append(ans_candidate)
                 if len(ans_all) == 10:
                     return True
-                #print(ans_candidate)
                 flag = True
             elif dfs(n_status, depth, num + 1, n_flag):
                 flag = True
