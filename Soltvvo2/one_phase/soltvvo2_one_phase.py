@@ -46,8 +46,9 @@ import tkinter
 import cv2
 import numpy as np
 import serial
-from tkinter import messagebox
-import RPi.GPIO as GPIO
+#from tkinter import messagebox
+import csv
+#import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -241,7 +242,7 @@ def inspection_p():
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
+    
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
     colors[1] = ['', '', 'w', 'g', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'y', 'r', 'r', 'w', 'b']
@@ -276,16 +277,16 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
     colors[3] = ['o', 'o', 'g', 'y', 'g', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
-    detect()
     
+    detect()
+    '''
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -334,6 +335,8 @@ def inspection_p():
     with open('solved.csv', mode='r') as f:
         for line in map(str.strip, f):
             neary_solved.append([int(i) for i in line.replace('\n', '').split(',')])
+    neary_solved = dict(neary_solved)
+    #print(neary_solved)
     with open('solved_solution.csv', mode='r') as f:
         for line in map(str.strip, f):
             solved_solution.append(line.replace('\n', '').split(','))
@@ -397,10 +400,16 @@ def inspection_p():
             if len(ans) + max(co[co_idx], cp[cp_idx]) - 5 > depth:
                 continue
             ans.append(mov)
-            tmp = search(cp_idx, co_idx)
-            if tmp != -1:
+            #tmp = search(cp_idx, co_idx)
+            tmp = neary_solved.get(cp_idx * 10000 + co_idx)
+            if tmp != None:
                 ans_tmp = [[j for j in i] for i in ans]
-                ans_tmp.extend(reversed(solved_solution[tmp]))
+                pls = list(reversed(solved_solution[tmp]))
+                if ans_tmp[-1][0] == pls[0][0]:
+                    tmp_last = ans_tmp.pop()
+                    rot_new = -(-(pls[0][1] + tmp_last[1]) % 4)
+                    pls[0][1] = rot_new
+                ans_tmp.extend(pls)
                 print(ans_tmp)
                 ans_all.append(ans_tmp)
                 flag = True
@@ -499,7 +508,7 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-
+'''
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
@@ -514,7 +523,7 @@ for i in range(2):
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4,GPIO.IN)
-
+'''
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")
@@ -539,7 +548,7 @@ start.place(x=0, y=40)
 
 solutionvar = tkinter.StringVar(master=root, value='')
 solution = tkinter.Label(textvariable=solutionvar)
-solution.place(x=70, y=0)
+solution.place(x=100, y=0)
 
 solvingtimevar = tkinter.StringVar(master=root, value='')
 solvingtime = tkinter.Label(textvariable=solvingtimevar)

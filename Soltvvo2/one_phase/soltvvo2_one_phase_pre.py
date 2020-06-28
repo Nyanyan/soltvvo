@@ -68,7 +68,7 @@ inf = 1000
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
 
-rot_cost = 5
+#rot_cost = 5
 
 max_num = 5
 neary_solved = []
@@ -88,7 +88,7 @@ for i in range(6):
     for j in range(4):
         solved_cp.append(deepcopy(solved.Cp))
         cp_co.append(deepcopy(solved.Co))
-        neary_solved.append([solved.cp2i(), solved.co2i(), 0, []])
+        neary_solved.append([solved.cp2i() * 10000 + solved.co2i(), 0, []])
         for k in change_direction2:
             solved = solved.move(k)
     if i < 3:
@@ -173,16 +173,16 @@ def search(cp_num, co_num):
         pre_r = r
         pre_l = l
         c = (r + l) // 2
-        if neary_solved[c][0] > cp_num:
+        if neary_solved[c][0] > cp_num * 10000 + co_num:
             r = c
-        elif neary_solved[c][0] < cp_num:
+        elif neary_solved[c][0] < cp_num * 10000 + co_num:
             l = c
         else:
             r = c
         if pre_r == r and pre_l == l:
             break
     for i in range(l, r + 1):
-        if neary_solved[i][0] == cp_num and neary_solved[i][1] == co_num:
+        if neary_solved[i][0] == cp_num * 10000 + co_num:
             return True
     return False
 
@@ -211,7 +211,7 @@ for cp_s, co_s in zip(solved_cp, cp_co):
                 cp_idx = n_status.cp2i()
                 co_idx = n_status.co2i()
                 if not search(cp_idx, co_idx):
-                    neary_solved.append([cp_idx, co_idx, num + 1, n_moves])
+                    neary_solved.append([cp_idx * 10000 + co_idx, num + 1, n_moves])
                     neary_solved.sort()
                     #print(len(neary_solved))
                     #print(neary_solved)
@@ -221,12 +221,19 @@ print('neary solved done')
 with open('solved.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     for i in neary_solved:
-        writer.writerow(i[:3])
+        writer.writerow(i[:2])
+    '''
+    for i in range(2):
+        row = []
+        for j in neary_solved:
+            row.append(j[i])
+        writer.writerow(row)
+    '''
 with open('solved_solution.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     for i in neary_solved:
         row = []
-        for j in i[3]:
+        for j in i[2]:
             row.extend(j)
         writer.writerow(row)
 print('neary solved written')
