@@ -359,6 +359,7 @@ def inspection_p():
             tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
         solved_solution[i] = tmp
     
+    # 回転記号をくっつける
     def rot_join(arr1, arr2):
         if len(arr1) >= 2 and arr1[-2][0] == arr2[0][0] and abs(arr1[-1][0] - arr1[-2][0]) == 2:
             arr1[-1], arr1[-2] = arr1[-2], arr1[-1]
@@ -430,6 +431,7 @@ def inspection_p():
         ans_all.append(solved_solution[tmp])
     print(str(len(ans_all)) + ' answers found')
 
+    # 解の選定
     if ans_all:
         min_cost = 1000
         idx = -1
