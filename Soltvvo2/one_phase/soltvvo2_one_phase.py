@@ -46,9 +46,8 @@ import tkinter
 import cv2
 import numpy as np
 import serial
-#from tkinter import messagebox
 import csv
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -112,7 +111,7 @@ def move_actuator(num, arg1, arg2, arg3=None):
         com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
     ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
-    print('num:', num, 'command:', com)
+    #print('num:', num, 'command:', com)
 
 # キューブを掴む
 def grab_p():
@@ -129,7 +128,7 @@ def release_p():
 
 def calibration(num):
     def x():
-        move_actuator(num // 2, num % 2, -5)
+        move_actuator(num // 2, num % 2, -5, 200)
     return x
 
 # ボックスに色を反映させる
@@ -182,7 +181,7 @@ def detect():
     capture = cv2.VideoCapture(0)
     while idx < 4:
         #color: g, b, r, o, y, w
-        color_low = [[50, 50, 50],   [90, 50, 50],   [160, 100, 50], [170, 50, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
+        color_low = [[50, 50, 50],   [90, 50, 50],   [160, 70, 50], [170, 20, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
         color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
@@ -225,7 +224,7 @@ def detect():
             idx += 1
             confirm_p()
             offset = -5
-            rpm = 100
+            rpm = 250
             move_actuator(0, 0, -90 + offset, rpm)
             move_actuator(1, 0, -270 + offset, rpm)
             sleep(0.6)
@@ -236,20 +235,19 @@ def detect():
     capture.release()
 
 # インスペクション処理
-cnt = 0
 def inspection_p():
     global ans, ans_all, total_cost, colors, cnt
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    
+    '''
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
-    colors[1] = ['', '', 'w', 'g', '', '', '', '']
-    colors[2] = ['o', 'o', 'g', 'y', 'r', 'r', 'w', 'b']
-    colors[3] = ['o', 'o', 'g', 'y', 'r', 'r', 'w', 'b']
-    colors[4] = ['', '', 'y', 'b', '', '', '', '']
+    colors[1] = ['', '', 'o', 'o', '', '', '', '']
+    colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
+    colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
+    colors[4] = ['', '', 'r', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'b', '', '', '', '']
-    
+
     colors[0] = ['', '', 'w', 'o', '', '', '', '']
     colors[1] = ['', '', 'w', 'g', '', '', '', '']
     colors[2] = ['b', 'o', 'g', 'y', 'r', 'w', 'b', 'r']
@@ -277,16 +275,27 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
     colors[3] = ['o', 'o', 'g', 'y', 'g', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
-    detect()
+
+    colors[0] = ['', '', 'g', 'w', '', '', '', '']
+    colors[1] = ['', '', 'g', 'w', '', '', '', '']
+    colors[2] = ['r', 'r', 'w', 'b', 'o', 'o', 'g', 'y']
+    colors[3] = ['g', 'w', 'b', 'b', 'o', 'b', 'y', 'o']
+    colors[4] = ['', '', 'r', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'r', '', '', '', '']
     '''
+    detect()
+    #colors = [['', '', 'y', 'w', '', '', '', ''], ['', '', 'w', 'b', '', '', '', ''], ['b', 'o', 'g', 'r', 'y', 'r', 'b', 'o'], ['o', 'r', 'g', 'o', 'g', 'y', 'g', 'w'], ['', '', 'w', 'y', '', '', '', ''], ['', '', 'b', 'r', '', '', '', '']]
+
+    with open('log.txt', mode='w') as f:
+        f.write(str(colors) + '\n')
+    
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
@@ -349,6 +358,22 @@ def inspection_p():
         for j in range(0, len(solved_solution[i]), 2):
             tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
         solved_solution[i] = tmp
+    
+    def rot_join(arr1, arr2):
+        if len(arr1) >= 2 and arr1[-2][0] == arr2[0][0] and abs(arr1[-1][0] - arr1[-2][0]) == 2:
+            arr1[-1], arr1[-2] = arr1[-2], arr1[-1]
+        if len(arr2) >= 2 and arr2[1][0] == arr1[-1][0] and abs(arr2[0][0] - arr2[1][0]) == 2:
+            arr2[0], arr2[1] = arr2[1], arr2[0]
+        if arr1[-1][0] != arr2[0][0]:
+            arr1.extend(arr2)
+            return arr1
+        tmp = arr1.pop()
+        rot_new = -((-tmp[1] - arr2[0][1]) % 4)
+        if rot_new == 0:
+            arr2 = [[j for j in i] for i in arr2[1:]]
+        else:
+            arr2[0][1] = rot_new
+        return rot_join(arr1, arr2)
 
     # 深さ優先探索with枝刈り
     def dfs(status, depth, num, flag):
@@ -366,7 +391,6 @@ def inspection_p():
             lst.extend(lst_all[i])
         lst.sort(key=lambda x:-x[1])
         for mov in lst:
-            cnt += 1
             n_status = status.move(mov)
             n_flag = False
             if abs(l_mov[0] - mov[0]) == 2:
@@ -380,14 +404,14 @@ def inspection_p():
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
             if tmp != None:
                 ans_tmp = [[j for j in i] for i in ans]
-                pls = list(reversed(solved_solution[tmp]))
-                if ans_tmp[-1][0] == pls[0][0]:
-                    tmp_last = ans_tmp.pop()
-                    rot_new = -(-(pls[0][1] + tmp_last[1]) % 4)
-                    pls[0][1] = rot_new
-                ans_tmp.extend(pls)
-                print(ans_tmp)
-                ans_all.append(ans_tmp)
+                pls = [[j for j in i] for i in solved_solution[tmp]]
+                with open('log.txt', mode='a') as f:
+                    f.write(str(ans_tmp) + '\n')
+                    f.write(str(pls) + '\n')
+                    ans_candidate = rot_join(ans_tmp, pls)
+                    f.write(str(ans_candidate) + '\n\n')
+                ans_all.append(ans_candidate)
+                #print(ans_candidate)
                 flag = True
             elif dfs(n_status, depth, num + 1, n_flag):
                 flag = True
@@ -395,19 +419,24 @@ def inspection_p():
         return flag
 
     # IDA*
-    for depth in range(1, 15):
-        cnt = 0
-        ans = []
-        if dfs(puzzle, depth, 0, False):
-            break
+    ans_all = []
+    tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
+    if tmp == None:
+        for depth in range(1, 15):
+            ans = []
+            if dfs(puzzle, depth, 0, False):
+                break
+    else:
+        print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
+        ans_all.append(solved_solution[tmp])
     print(str(len(ans_all)) + ' answers found')
 
     if ans_all:
         min_cost = 1000
         idx = -1
+        cost_rot = 3 #アーム回転90度で0.2秒、アームの変更0.6秒
         for ii, ans in enumerate(ans_all):
             cost = 0
-            cost_rot = 5
             for i in range(len(ans)):
                 if i > 0 and abs(ans[i - 1][0] - ans[i][0]) == 2:
                     cost -= abs(ans[i - 1][1])
@@ -417,8 +446,19 @@ def inspection_p():
             if min_cost > cost:
                 min_cost = cost
                 idx = ii
-        print('answer:', ans_all[idx])
+        ans = ans_all[idx]
+        with open('log.txt', mode='a') as f:
+            f.write('answer\n')
+            f.write(str(ans) + '\n')
+            f.write(str(idx) + '\n')
+        print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
+        grab = ans[0][0] % 2
+        for j in range(2):
+            move_actuator(j, grab, 1000)
+        sleep(0.4)
+        for j in range(2):
+            move_actuator(j, (grab + 1) % 2, 2000)
         print('all', time() - strt, 's')
     else:
         solutionvar.set('cannot solve!')
@@ -431,19 +471,20 @@ def start_p():
     strt_solv = time()
     i = 0
     while i < len(ans):
-        if GPIO.input(4) == GPIO.LOW:
+        if GPIO.input(21) == GPIO.LOW:
             solvingtimevar.set('emergency stop')
             print('emergency stop')
             return
-        grab = ans[i][0] % 2
-        for j in range(2):
-            move_actuator(j, grab, 1000)
-        sleep(0.4)
-        for j in range(2):
-            move_actuator(j, (grab + 1) % 2, 2000)
-        sleep(0.1)
+        if i != 0:
+            grab = ans[i][0] % 2
+            for j in range(2):
+                move_actuator(j, grab, 1000)
+            sleep(0.4)
+            for j in range(2):
+                move_actuator(j, (grab + 1) % 2, 2000)
+            sleep(0.1)
         ser_num = ans[i][0] // 2
-        rpm = 100
+        rpm = 250
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
@@ -451,16 +492,16 @@ def start_p():
         if flag:
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, ans[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(ans[i + 1][1]))
-        slptim = 60 / rpm * (max_turn * 90 + offset) / 360 * 1.1
+        slptim = 2 * 60 / rpm * (max_turn * 90 + offset) / 360 * 1.1
         sleep(slptim)
         move_actuator(ser_num, ans[i][0] % 2, -offset, rpm)
         if flag:
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, -offset, rpm)
             i += 1
         i += 1
-        slptim2 = abs(60 / rpm * offset / 360) * 1.1
+        slptim2 = abs(2 * 60 / rpm * offset / 360) * 1.1
         sleep(slptim2)
-        print('done', i, 'sleep:', slptim, slptim2)
+        #print('done', i, 'sleep:', slptim, slptim2)
     solv_time = time() - strt_solv
     solvingtimevar.set(str(round(solv_time, 3)) + 's')
     print('solving time:', solv_time, 's')
@@ -483,7 +524,6 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-'''
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
@@ -493,12 +533,12 @@ release_p()
 sleep(1)
 for i in range(2):
     for j in range(2):
-        move_actuator(j, i, 90, 100)
-        move_actuator(j, i, -90, 100)
+        move_actuator(j, i, 90, 250)
+        move_actuator(j, i, -90, 250)
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(4,GPIO.IN)
-'''
+GPIO.setup(21,GPIO.IN)
+
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("300x150")

@@ -68,7 +68,7 @@ inf = 1000
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
 
-#rot_cost = 5
+rot_cost = 3
 
 max_num = 5
 neary_solved = []
@@ -88,7 +88,7 @@ for i in range(6):
     for j in range(4):
         solved_cp.append(deepcopy(solved.Cp))
         cp_co.append(deepcopy(solved.Co))
-        neary_solved.append([solved.cp2i() * 10000 + solved.co2i(), 0, []])
+        neary_solved.append([solved.cp2i() * 10000 + solved.co2i(), [], 0])
         for k in change_direction2:
             solved = solved.move(k)
     if i < 3:
@@ -183,17 +183,17 @@ def search(cp_num, co_num):
             break
     for i in range(l, r + 1):
         if neary_solved[i][0] == cp_num * 10000 + co_num:
-            return True
-    return False
+            return i
+    return -1
 
 neary_solved.sort()
 for cp_s, co_s in zip(solved_cp, cp_co):
     puzzle = Cube()
     puzzle.Cp = cp_s
     puzzle.Co = co_s
-    que = deque([[puzzle, 0, []]])
+    que = deque([[puzzle, 0, [], 0]])
     while que:
-        status, num, moves = que.popleft()
+        status, num, moves, cost = que.popleft()
         lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -3], [3, -3]]
         for mov in lst:
             if len(moves) and moves[-1][0] == mov[0]:
@@ -201,27 +201,31 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             if len(moves) >= 2 and abs(moves[-2][0] - moves[-1][0]) == 2 and mov[0] == moves[-2][0]:
                 continue
             n_status = status.move(mov)
-            #if len(moves) and abs(mov[0] - moves[-1][0]) == 2:
-            #    n_cost = cost - abs(moves[-1][1]) + max(abs(moves[-1][1]), abs(mov[1]))
-            #else:
-            #    n_cost = cost + rot_cost + abs(mov[1])
+            if len(moves) and abs(mov[0] - moves[-1][0]) == 2:
+                n_cost = cost - abs(moves[-1][1]) + max(abs(moves[-1][1]), abs(mov[1]))
+            else:
+                n_cost = cost + rot_cost + abs(mov[1])
             if num + 1 <= max_num:
                 n_moves = [[j for j in i] for i in moves]
                 n_moves.append(mov)
                 cp_idx = n_status.cp2i()
                 co_idx = n_status.co2i()
-                if not search(cp_idx, co_idx):
-                    neary_solved.append([cp_idx * 10000 + co_idx, num + 1, n_moves])
+                tmp = search(cp_idx, co_idx)
+                if tmp == -1:
+                    neary_solved.append([cp_idx * 10000 + co_idx, list(reversed(n_moves)), n_cost])
                     neary_solved.sort()
-                    #print(len(neary_solved))
-                    #print(neary_solved)
-                    que.append([n_status, num + 1, n_moves])
+                    que.append([n_status, num + 1, n_moves, n_cost])
+                elif neary_solved[tmp][2] > n_cost:
+                    neary_solved[tmp] = [cp_idx * 10000 + co_idx, list(reversed(n_moves)), n_cost]
+                    que.append([n_status, num + 1, n_moves, n_cost])
 print('neary solved done')
 
 with open('solved.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
-    for i in neary_solved:
-        writer.writerow(i[:2])
+    for i, j in enumerate(neary_solved):
+        row = [j[0]]
+        row.append(i)
+        writer.writerow(row)
     '''
     for i in range(2):
         row = []
@@ -233,7 +237,7 @@ with open('solved_solution.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     for i in neary_solved:
         row = []
-        for j in i[2]:
+        for j in i[1]:
             row.extend(j)
         writer.writerow(row)
 print('neary solved written')
