@@ -228,21 +228,20 @@ def detect():
                         loopflag[i] = 0
                         break
                 
-        cv2.imshow('title',show_frame)
-        if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
-            for i in range(4):
-                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-            print(idx)
-            idx += 1
-            confirm_p()
-            offset = -5
-            rpm = 225
-            move_actuator(0, 0, -90 + offset, rpm)
-            move_actuator(1, 0, -270 + offset, rpm)
-            sleep(0.6)
-            move_actuator(0, 0, -offset, rpm)
-            move_actuator(1, 0, -offset, rpm)
-            sleep(0.6)
+        #cv2.imshow('title',show_frame)
+        #if True or cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
+        for i in range(4):
+            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+        idx += 1
+        confirm_p()
+        offset = -5
+        rpm = 230
+        move_actuator(0, 0, -90 + offset, rpm)
+        move_actuator(1, 0, -270 + offset, rpm)
+        sleep(0.6)
+        move_actuator(0, 0, -offset, rpm)
+        move_actuator(1, 0, -offset, rpm)
+        sleep(0.6)
         cv2.destroyAllWindows()
     capture.release()
 
@@ -393,7 +392,7 @@ def inspection_p():
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, flag, mode):
+    def dfs(status, depth, num, flag, mode, former_mode):
         global ans, total_cost, cnt, ans_all
         flag = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
@@ -424,10 +423,10 @@ def inspection_p():
                     ans_candidate = rot_join(ans_tmp, pls)
                     f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
                 ans_all.append([ans_candidate, mode])
-                if len(ans_all) == 10:
+                if len(ans_all) - former_mode == 7:
                     return True
                 flag = True
-            elif dfs(n_status, depth, num + 1, n_flag, mode):
+            elif dfs(n_status, depth, num + 1, n_flag, mode, former_mode):
                 flag = True
             ans.pop()
         return flag
@@ -436,15 +435,16 @@ def inspection_p():
     ans_all = []
     for i in range(2):
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
+        former_mode = len(ans_all)
         if tmp == None:
             for depth in range(1, 15):
                 ans = []
-                if dfs(puzzle, depth, 0, False, i):
+                if dfs(puzzle, depth, 0, False, i, former_mode):
                     break
         else:
             print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
             ans_all.append(solved_solution[tmp])
-        print(str(len(ans_all)) + ' answers found')
+        print(str(len(ans_all) - former_mode) + ' answers found')
 
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
@@ -457,10 +457,12 @@ def inspection_p():
         cost_rot = 3 #アーム回転90度で0.2秒、アームの変更0.6秒 0.2 second for 90 degrees turn, 0.6 second for changing arms
         for ii, ans in enumerate(ans_all):
             cost = 0
-            for i in range(len(ans)):
+            for i in range(len(ans[0])):
                 if i > 0 and abs(ans[0][i - 1][0] - ans[0][i][0]) == 2:
                     cost -= abs(ans[0][i - 1][1])
                     cost += max(abs(ans[0][i - 1][1]), abs(ans[0][i][1]))
+                elif i == 0:
+                    cost += abs(ans[0][i][1])
                 else:
                     cost += cost_rot + abs(ans[0][i][1])
             if min_cost > cost:
@@ -469,13 +471,14 @@ def inspection_p():
         ans = ans_all[idx][0]
         with open('log.txt', mode='a') as f:
             f.write('answer\n')
-            f.write(str(aans_all[idx][1]) + ' ' + str(idx) + '\n')
+            f.write(str(ans_all[idx][1]) + ' ' + str(idx) + '\n')
             f.write(str(ans) + '\n')
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
+        solvingtimevar.set('expect:' + str(round(min_cost * 0.18, 2)) + 's')
         if ans_all[idx][1]:
-            move_actuator(0, 0, -95)
-            move_actuator(1, 0, -275)
+            move_actuator(0, 0, -95, 230)
+            move_actuator(1, 0, -275, 230)
             sleep(0.8)
             for j in range(2):
                 move_actuator(j, 0, 5)
@@ -511,7 +514,7 @@ def start_p():
                 move_actuator(j, (grab + 1) % 2, 2000)
             sleep(0.1)
         ser_num = ans[i][0] // 2
-        rpm = 225
+        rpm = 230
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
