@@ -1,6 +1,12 @@
 # coding:utf-8
 '''
-arr[その位置にあるパーツの番号][ステッカーの向き]
+Code for Soltvvo2
+Written by Nyanyan
+Copyright 2020 Nyanyan
+
+
+Cube.Cp[その位置にあるパーツの番号]
+Cube.Co[ステッカーの向き]
 U面
         B
 L [0, 0] [1, 0] R
@@ -13,30 +19,23 @@ L [6, 0] [7, 0] R
         B
 
 向きは揃っている方向(白黄ステッカー)から時計回りに1, 2となる
-'''
-'''
-direction
-UFについて、
-0: UF
-1: UR
-2: UB
-3: UL
-4: FD
-8: RD
-12: DB
-16: BD
-20: LD
-'''
-'''
-move_num
-["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'", "D", "D2", "D'", "B", "B2", "B'", "L", "L2", "L'"]
-面番号
-U: 0
-F: 1
-R: 2
-D: 3
-B: 4
-L: 5
+
+Cube.Cp[part number]
+Cube.Co[direction of white or yellow sticker]
+U face
+        B
+L [0, 0] [1, 0] R
+L [2, 0] [3, 0] R
+        F
+D face
+        F
+L [4, 0] [5, 0] R
+L [6, 0] [7, 0] R
+        B
+the direction of white or yellow sticker is 
+0 if the sticker is on U or D face, 
+1 if it is 120 degrees clockwise rotated from U or D face,
+2 if it is 240 degrees clockwise rotated from U or D face.
 '''
 
 from copy import deepcopy
@@ -55,6 +54,7 @@ class Cube:
         self.Cp = [0, 1, 2, 3, 4, 5, 6, 7]
 
     # 回転処理 CP
+    # Rotate CP
     def move_cp(self, arr):
         surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
         replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
@@ -64,6 +64,7 @@ class Cube:
         return res
 
     # 回転処理 CO
+    # Rotate CO
     def move_co(self, arr):
         surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
         replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
@@ -78,6 +79,7 @@ class Cube:
         return res
 
     # 回転番号に則って実際にパズルの状態配列を変化させる
+    # Rotate CP and CO
     def move(self, arr):
         res = Cube()
         res.Co = self.move_co(arr)
@@ -85,6 +87,7 @@ class Cube:
         return res
 
     # cp配列から固有の番号を作成
+    # Return the number of CP
     def cp2i(self):
         res = 0
         for i in range(8):
@@ -96,6 +99,7 @@ class Cube:
         return res
     
     # co配列から固有の番号を作成
+    # Return the number of CO
     def co2i(self):
         res = 0
         for i in self.Co:
@@ -104,6 +108,7 @@ class Cube:
         return res
 
 # アクチュエータを動かすコマンドを送る
+# Send commands to move actuators
 def move_actuator(num, arg1, arg2, arg3=None):
     if arg3 == None:
         com = str(arg1) + ' ' + str(arg2)
@@ -111,9 +116,9 @@ def move_actuator(num, arg1, arg2, arg3=None):
         com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
     ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
-    #print('num:', num, 'command:', com)
 
 # キューブを掴む
+# Grab arms
 def grab_p():
     for i in range(2):
         for j in range(2):
@@ -121,17 +126,21 @@ def grab_p():
         sleep(3)
 
 # キューブを離す
+# Release arms
 def release_p():
     for i in range(2):
         for j in range(2):
             move_actuator(i, j, 2000)
 
+# アームのキャリブレーション
+# Calibration arms
 def calibration(num):
     def x():
         move_actuator(num // 2, num % 2, -5, 200)
     return x
 
 # ボックスに色を反映させる
+# Color the boxes
 def confirm_p():
     global colors
     for i in range(6):
@@ -139,6 +148,7 @@ def confirm_p():
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] in j2color:
                 entry[i][j]['bg'] = dic[colors[i][j]]
     # 埋まっていないところで色が確定するところを埋める
+    # Fill boxes if the color can be decided
     for i in range(6):
         for j in range(8):
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
@@ -165,12 +175,14 @@ def confirm_p():
                         break
     
     # 埋まっていないところの背景色をgrayに
+    # Fill boxes gray if the color is not decided
     for i in range(6):
         for j in range(8):
             if (1 < i < 4 or 1 < j < 4) and colors[i][j] == '':
                 entry[i][j]['bg'] = 'gray'
 
 # パズルの状態の取得
+# Get colors of stickers
 def detect():
     global idx, colors
     for i in range(2):
@@ -217,7 +229,7 @@ def detect():
                         break
                 
         cv2.imshow('title',show_frame)
-        if cv2.waitKey(0) == 32: #スペースキーが押されたとき
+        if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
             for i in range(4):
                 colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
             print(idx)
@@ -235,6 +247,7 @@ def detect():
     capture.release()
 
 # インスペクション処理
+# Inspection
 def inspection_p():
     global ans, ans_all, total_cost, colors, cnt
 
@@ -291,7 +304,6 @@ def inspection_p():
     colors[5] = ['', '', 'y', 'r', '', '', '', '']
     '''
     detect()
-    #colors = [['', '', 'y', 'w', '', '', '', ''], ['', '', 'w', 'b', '', '', '', ''], ['b', 'o', 'g', 'r', 'y', 'r', 'b', 'o'], ['o', 'r', 'g', 'o', 'g', 'y', 'g', 'w'], ['', '', 'w', 'y', '', '', '', ''], ['', '', 'b', 'r', '', '', '', '']]
 
     with open('log.txt', mode='w') as f:
         f.write(str(colors) + '\n')
@@ -299,6 +311,7 @@ def inspection_p():
     strt = time()
     
     # 色の情報からパズルの状態配列を作る
+    # Make CO and CP array from the colors of stickers
     confirm_p()
     for i in j2color:
         cnt = 0
@@ -335,6 +348,7 @@ def inspection_p():
     print(puzzle.Co)
 
     # 前計算
+    # Read data from csv
     with open('cp.csv', mode='r') as f:
         cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
     with open('co.csv', mode='r') as f:
@@ -360,6 +374,7 @@ def inspection_p():
         solved_solution[i] = tmp
     
     # 回転記号をくっつける
+    # Join rotation arrays
     def rot_join(arr1, arr2):
         if len(arr1) >= 2 and arr1[-2][0] == arr2[0][0] and abs(arr1[-1][0] - arr1[-2][0]) == 2:
             arr1[-1], arr1[-2] = arr1[-2], arr1[-1]
@@ -377,6 +392,7 @@ def inspection_p():
         return rot_join(arr1, arr2)
 
     # 深さ優先探索with枝刈り
+    # DFS with pruning
     def dfs(status, depth, num, flag):
         global ans, total_cost, cnt, ans_all
         flag = False
@@ -432,10 +448,11 @@ def inspection_p():
     print(str(len(ans_all)) + ' answers found')
 
     # 解の選定
+    # Select answer
     if ans_all:
         min_cost = 1000
         idx = -1
-        cost_rot = 3 #アーム回転90度で0.2秒、アームの変更0.6秒
+        cost_rot = 3 #アーム回転90度で0.2秒、アームの変更0.6秒 0.2 second for 90 degrees turn, 0.6 second for changing arms
         for ii, ans in enumerate(ans_all):
             cost = 0
             for i in range(len(ans)):
@@ -467,6 +484,7 @@ def inspection_p():
         print('all', time() - strt, 's')
 
 # 実際にロボットを動かす
+# Move robot
 def start_p():
     print('start!')
     strt_solv = time()
