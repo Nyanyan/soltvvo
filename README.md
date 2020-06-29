@@ -10,7 +10,11 @@ Soltvvos are robots that solve 2x2x2 rubik’s cubes. I’ll introduce only Solt
 
 Click the image please.
 
-```
+Promotion Video: 
+
 [![Soltvvo PV](http://img.youtube.com/vi/76N6BOrEjSo/0.jpg)](http://www.youtube.com/watch?v=76N6BOrEjSo)
-```
+
+Demonstration:
+
+[![Soltvvo PV](http://img.youtube.com/vi/76N6BOrEjSo/0.jpg)](http://www.youtube.com/watch?v=76N6BOrEjSo)
 
