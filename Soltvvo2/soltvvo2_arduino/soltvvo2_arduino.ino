@@ -17,18 +17,31 @@ void move_motor(long num, long deg, long spd) {
   digitalWrite(step_dir[num], hl);
   long steps = abs(deg) * turn_steps / 360;
   long avg_time = 1000000 * 60 / turn_steps / spd;
+  long max_time = 2000;
+  long slope = 100;
   bool motor_hl = false;
+  long accel = min(steps, max(0, (max_time - avg_time) / slope));
   /*
   long wait_time[steps * 2];
   for (int i = 0; i < steps * 2; i++) {
     wait_time[i] = avg_time * cos(3.1416 / steps * i) * 0.5 + avg_time;
   }
   */
-  for (int i = 0; i < steps * 2; i++) {
+  for (int i = 0; i < accel; i++) {
+    motor_hl = !motor_hl;
+    digitalWrite(step_pul[num], motor_hl);
+    delayMicroseconds(max_time - slope * i);
+  }
+  for (int i = 0; i < steps * 2 - accel * 2; i++) {
     motor_hl = !motor_hl;
     digitalWrite(step_pul[num], motor_hl);
     //delayMicroseconds(wait_time[i]);
     delayMicroseconds(avg_time);
+  }
+  for (int i = 0; i < accel; i++) {
+    motor_hl = !motor_hl;
+    digitalWrite(step_pul[num], motor_hl);
+    delayMicroseconds(max_time - slope * accel + accel * (i + 1));
   }
 }
 
