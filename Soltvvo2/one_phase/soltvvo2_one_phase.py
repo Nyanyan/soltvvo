@@ -304,7 +304,7 @@ def inspection_p():
     colors[5] = ['', '', 'y', 'r', '', '', '', '']
     '''
     detect()
-
+    
     with open('log.txt', mode='w') as f:
         f.write(str(colors) + '\n')
     
@@ -393,7 +393,7 @@ def inspection_p():
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, flag):
+    def dfs(status, depth, num, flag, mode):
         global ans, total_cost, cnt, ans_all
         flag = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
@@ -421,31 +421,33 @@ def inspection_p():
                 ans_tmp = [[j for j in i] for i in ans]
                 pls = [[j for j in i] for i in solved_solution[tmp]]
                 with open('log.txt', mode='a') as f:
-                    f.write(str(ans_tmp) + '\n')
-                    f.write(str(pls) + '\n')
                     ans_candidate = rot_join(ans_tmp, pls)
-                    f.write(str(ans_candidate) + '\n\n')
-                ans_all.append(ans_candidate)
+                    f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
+                ans_all.append([ans_candidate, mode])
                 if len(ans_all) == 10:
                     return True
                 flag = True
-            elif dfs(n_status, depth, num + 1, n_flag):
+            elif dfs(n_status, depth, num + 1, n_flag, mode):
                 flag = True
             ans.pop()
         return flag
 
     # IDA*
     ans_all = []
-    tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
-    if tmp == None:
-        for depth in range(1, 15):
-            ans = []
-            if dfs(puzzle, depth, 0, False):
-                break
-    else:
-        print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
-        ans_all.append(solved_solution[tmp])
-    print(str(len(ans_all)) + ' answers found')
+    for i in range(2):
+        tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
+        if tmp == None:
+            for depth in range(1, 15):
+                ans = []
+                if dfs(puzzle, depth, 0, False, i):
+                    break
+        else:
+            print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
+            ans_all.append(solved_solution[tmp])
+        print(str(len(ans_all)) + ' answers found')
+
+        puzzle = puzzle.move([0, -1])
+        puzzle = puzzle.move([2, -3])
 
     # 解の選定
     # Select answer
@@ -456,21 +458,27 @@ def inspection_p():
         for ii, ans in enumerate(ans_all):
             cost = 0
             for i in range(len(ans)):
-                if i > 0 and abs(ans[i - 1][0] - ans[i][0]) == 2:
-                    cost -= abs(ans[i - 1][1])
-                    cost += max(abs(ans[i - 1][1]), abs(ans[i][1]))
+                if i > 0 and abs(ans[0][i - 1][0] - ans[0][i][0]) == 2:
+                    cost -= abs(ans[0][i - 1][1])
+                    cost += max(abs(ans[0][i - 1][1]), abs(ans[0][i][1]))
                 else:
-                    cost += cost_rot + abs(ans[i][1])
+                    cost += cost_rot + abs(ans[0][i][1])
             if min_cost > cost:
                 min_cost = cost
                 idx = ii
-        ans = ans_all[idx]
+        ans = ans_all[idx][0]
         with open('log.txt', mode='a') as f:
             f.write('answer\n')
+            f.write(str(aans_all[idx][1]) + ' ' + str(idx) + '\n')
             f.write(str(ans) + '\n')
-            f.write(str(idx) + '\n')
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
+        if ans_all[idx][1]:
+            move_actuator(0, 0, -95)
+            move_actuator(1, 0, -275)
+            sleep(0.8)
+            for j in range(2):
+                move_actuator(j, 0, 5)
         grab = ans[0][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
