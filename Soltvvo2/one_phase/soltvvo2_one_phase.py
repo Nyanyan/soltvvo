@@ -395,7 +395,7 @@ def inspection_p():
         global ans, total_cost, cnt, ans_all
         flag = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
-        lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
+        lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -2], [2, -3]], [[3, -1], [3, -2], [3, -3]]]
         lst = []
         for i in range(4):
             if i == l_mov[0]:
@@ -443,7 +443,6 @@ def inspection_p():
             print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
             ans_all.append(solved_solution[tmp])
         print(str(len(ans_all) - former_mode) + ' answers found')
-
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
 
