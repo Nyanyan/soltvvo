@@ -195,8 +195,6 @@ for cp_s, co_s in zip(solved_cp, cp_co):
     while que:
         status, num, moves, cost = que.popleft()
         lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -3], [3, -3]]
-        if moves == 0:
-            lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2]]
         for mov in lst:
             if len(moves) and moves[-1][0] == mov[0]:
                 continue
@@ -210,15 +208,19 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             if num + 1 <= max_num:
                 n_moves = [[j for j in i] for i in moves]
                 n_moves.append(mov)
+                ans = list(reversed(n_moves))
+                if ans[-1][1] == -3:
+                    ans[-1][1] = -2
+                    ans.append([(ans[-1][0] + 2) % 4, -1])
                 cp_idx = n_status.cp2i()
                 co_idx = n_status.co2i()
                 tmp = search(cp_idx, co_idx)
                 if tmp == -1:
-                    neary_solved.append([cp_idx * 10000 + co_idx, list(reversed(n_moves)), n_cost])
+                    neary_solved.append([cp_idx * 10000 + co_idx, ans, n_cost])
                     neary_solved.sort()
                     que.append([n_status, num + 1, n_moves, n_cost])
                 elif neary_solved[tmp][2] > n_cost:
-                    neary_solved[tmp] = [cp_idx * 10000 + co_idx, list(reversed(n_moves)), n_cost]
+                    neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, n_cost]
                     que.append([n_status, num + 1, n_moves, n_cost])
 print('neary solved done')
 
@@ -228,13 +230,6 @@ with open('solved.csv', mode='x') as f:
         row = [j[0]]
         row.append(i)
         writer.writerow(row)
-    '''
-    for i in range(2):
-        row = []
-        for j in neary_solved:
-            row.append(j[i])
-        writer.writerow(row)
-    '''
 with open('solved_solution.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     for i in neary_solved:

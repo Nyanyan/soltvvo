@@ -235,14 +235,13 @@ def detect():
         idx += 1
         confirm_p()
         offset = -5
-        rpm = 250
+        rpm = 100
         move_actuator(0, 0, -90 + offset, rpm)
-        move_actuator(1, 0, -270 + offset, rpm)
-        sleep(0.6)
+        move_actuator(1, 0, 90 - offset, rpm)
+        sleep(0.5)
         move_actuator(0, 0, -offset, rpm)
-        move_actuator(1, 0, -offset, rpm)
-        sleep(0.6)
-        cv2.destroyAllWindows()
+        move_actuator(1, 0, offset, rpm)
+        #cv2.destroyAllWindows()
     capture.release()
 
 # インスペクション処理
@@ -392,10 +391,10 @@ def inspection_p():
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, flag, mode, former_mode, cost):
-        global ans_writing, total_cost, cnt, ans
+    def dfs(status, depth, num, flag, mode, former_mode):
+        global ans, total_cost, cnt, ans_all
         flag = False
-        l_mov = ans_writing[-1] if len(ans_writing) else [-10, -10]
+        l_mov = ans[-1] if len(ans) else [-10, -10]
         lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
         lst = []
         for i in range(4):
@@ -404,7 +403,6 @@ def inspection_p():
             if flag and abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
-        lst.sort(key=lambda x:-x[1])
         for mov in lst:
             n_status = status.move(mov)
             n_flag = False
@@ -477,11 +475,11 @@ def inspection_p():
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
         solvingtimevar.set('expect:' + str(round(min_cost * 0.18, 2)) + 's')
         if ans_all[idx][1]:
-            move_actuator(0, 0, -95, 230)
-            move_actuator(1, 0, -275, 230)
-            sleep(0.8)
-            for j in range(2):
-                move_actuator(j, 0, 5)
+            move_actuator(0, 0, -95, 100)
+            move_actuator(1, 0, 95, 100)
+            sleep(1)
+            move_actuator(0, 0, 5)
+            move_actuator(1, 0, 5)
         grab = ans[0][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
@@ -529,8 +527,8 @@ def start_p():
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, -offset, rpm)
             i += 1
         i += 1
-        slptim2 = abs(2 * 60 / rpm * offset / 360) * 1.1
-        sleep(slptim2)
+        #slptim2 = abs(2 * 60 / rpm * offset / 360)
+        #sleep(slptim2)
         #print('done', i, 'sleep:', slptim, slptim2)
     solv_time = time() - strt_solv
     solvingtimevar.set(str(round(solv_time, 3)) + 's')
