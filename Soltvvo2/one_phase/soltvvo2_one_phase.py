@@ -134,9 +134,9 @@ def release_p():
 
 # アームのキャリブレーション
 # Calibration arms
-def calibration(num):
+def calibration(num, deg):
     def x():
-        move_actuator(num // 2, num % 2, -5, 200)
+        move_actuator(num // 2, num % 2, deg, 200)
     return x
 
 # ボックスに色を反映させる
@@ -392,10 +392,10 @@ def inspection_p():
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, flag, mode, former_mode):
-        global ans, total_cost, cnt, ans_all
+    def dfs(status, depth, num, flag, mode, former_mode, cost):
+        global ans_writing, total_cost, cnt, ans
         flag = False
-        l_mov = ans[-1] if len(ans) else [-10, -10]
+        l_mov = ans_writing[-1] if len(ans_writing) else [-10, -10]
         lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -3]], [[3, -1], [3, -3]]]
         lst = []
         for i in range(4):
@@ -571,10 +571,10 @@ GPIO.setup(21,GPIO.IN)
 
 root = tkinter.Tk()
 root.title("2x2x2solver")
-root.geometry("300x150")
+root.geometry("400x250")
 
 grid = 20
-offset = 30
+offset = 50
 
 entry = [[None for _ in range(8)] for _ in range(6)]
 
@@ -593,22 +593,28 @@ start.place(x=0, y=40)
 
 solutionvar = tkinter.StringVar(master=root, value='')
 solution = tkinter.Label(textvariable=solutionvar)
-solution.place(x=100, y=0)
+solution.place(x=120, y=0)
 
 solvingtimevar = tkinter.StringVar(master=root, value='')
 solvingtime = tkinter.Label(textvariable=solvingtimevar)
 solvingtime.place(x=120, y=20)
 
 grab = tkinter.Button(root, text="grab", command=grab_p)
-grab.place(x=0, y=120)
+grab.place(x=0, y=150)
 
 release = tkinter.Button(root, text="release", command=release_p)
-release.place(x=120, y=120)
+release.place(x=150, y=150)
 
-calib = []
+calib_small = []
 for i in range(4):
-    calib.append(tkinter.Button(root, text=str(i), command=calibration(i)))
-    calib[i].place(x=230, y=i * 30)
+    calib_small.append(tkinter.Button(root, text=str(i), command=calibration(i, -3)))
+    calib_small[i].place(x=275, y=i * 30)
+
+calib_big = []
+for i in range(4):
+    calib_big.append(tkinter.Button(root, text=str(i), command=calibration(i, -10)))
+    calib_big[i].place(x=325, y=i * 30)
+
 
 root.mainloop()
 

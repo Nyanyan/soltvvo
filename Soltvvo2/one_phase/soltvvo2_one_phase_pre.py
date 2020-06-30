@@ -195,6 +195,8 @@ for cp_s, co_s in zip(solved_cp, cp_co):
     while que:
         status, num, moves, cost = que.popleft()
         lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -3], [3, -3]]
+        if moves == 0:
+            lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2]]
         for mov in lst:
             if len(moves) and moves[-1][0] == mov[0]:
                 continue
