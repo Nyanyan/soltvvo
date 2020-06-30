@@ -234,13 +234,10 @@ def detect():
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
         idx += 1
         confirm_p()
-        offset = -5
         rpm = 100
-        move_actuator(0, 0, -90 + offset, rpm)
-        move_actuator(1, 0, 90 - offset, rpm)
-        sleep(0.5)
-        move_actuator(0, 0, -offset, rpm)
-        move_actuator(1, 0, offset, rpm)
+        move_actuator(0, 0, -90, rpm)
+        move_actuator(1, 0, 90, rpm)
+        sleep(0.3)
         #cv2.destroyAllWindows()
     capture.release()
 
@@ -374,6 +371,10 @@ def inspection_p():
     # 回転記号をくっつける
     # Join rotation arrays
     def rot_join(arr1, arr2):
+        if len(arr1) == 0:
+            return arr2
+        elif len(arr2) == 0:
+            return arr1
         if len(arr1) >= 2 and arr1[-2][0] == arr2[0][0] and abs(arr1[-1][0] - arr1[-2][0]) == 2:
             arr1[-1], arr1[-2] = arr1[-2], arr1[-1]
         if len(arr2) >= 2 and arr2[1][0] == arr1[-1][0] and abs(arr2[0][0] - arr2[1][0]) == 2:
@@ -393,9 +394,9 @@ def inspection_p():
     # DFS with pruning
     def dfs(status, depth, num, flag, mode, former_mode):
         global ans, total_cost, cnt, ans_all
-        flag = False
+        return_val = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
-        lst_all = [[[0, -1], [0, -2]], [[1, -1], [1, -2]], [[2, -1], [2, -2], [2, -3]], [[3, -1], [3, -2], [3, -3]]]
+        lst_all = [[[0, -1], [0, -2], [0, -3]], [[1, -1], [1, -2], [1, -3]], [[2, -1], [2, -2], [2, -3]], [[3, -1], [3, -2], [3, -3]]]
         lst = []
         for i in range(4):
             if i == l_mov[0]:
@@ -403,6 +404,7 @@ def inspection_p():
             if flag and abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
+        lst.sort(key=lambda x:x[1],reverse=True)
         for mov in lst:
             n_status = status.move(mov)
             n_flag = False
@@ -421,13 +423,13 @@ def inspection_p():
                     ans_candidate = rot_join(ans_tmp, pls)
                     f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
                 ans_all.append([ans_candidate, mode])
-                if len(ans_all) - former_mode == 7:
+                if len(ans_all) - former_mode == 10:
                     return True
-                flag = True
+                return_val = True
             elif dfs(n_status, depth, num + 1, n_flag, mode, former_mode):
-                flag = True
+                return_val = True
             ans.pop()
-        return flag
+        return return_val
 
     # IDA*
     ans_all = []
@@ -440,12 +442,10 @@ def inspection_p():
                 if dfs(puzzle, depth, 0, False, i, former_mode):
                     break
         else:
-            print(tmp, puzzle.cp2i() * 10000 + puzzle.co2i())
-            ans_all.append(solved_solution[tmp])
+            ans_all.append([solved_solution[tmp], i])
         print(str(len(ans_all) - former_mode) + ' answers found')
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
-
     # 解の選定
     # Select answer
     if ans_all:
@@ -474,11 +474,9 @@ def inspection_p():
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
         solvingtimevar.set('expect:' + str(round(min_cost * 0.18, 2)) + 's')
         if ans_all[idx][1]:
-            move_actuator(0, 0, -95, 100)
-            move_actuator(1, 0, 95, 100)
-            sleep(1)
-            move_actuator(0, 0, 5)
-            move_actuator(1, 0, 5)
+            move_actuator(0, 0, -90, 100)
+            move_actuator(1, 0, 90, 100)
+            sleep(0.3)
         grab = ans[0][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
