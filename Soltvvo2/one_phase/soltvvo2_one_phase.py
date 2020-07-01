@@ -423,8 +423,10 @@ def inspection_p():
                     ans_candidate = rot_join(ans_tmp, pls)
                     f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
                 ans_all.append([ans_candidate, mode])
+                '''
                 if len(ans_all) - former_mode == 10:
                     return True
+                '''
                 return_val = True
             elif dfs(n_status, depth, num + 1, n_flag, mode, former_mode):
                 return_val = True
@@ -446,6 +448,7 @@ def inspection_p():
         print(str(len(ans_all) - former_mode) + ' answers found')
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
+
     # 解の選定
     # Select answer
     if ans_all:
