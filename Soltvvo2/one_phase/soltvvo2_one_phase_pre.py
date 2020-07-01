@@ -68,7 +68,7 @@ inf = 1000
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
 
-rot_cost = 3
+rot_cost = 2
 
 max_num = 5
 neary_solved = []

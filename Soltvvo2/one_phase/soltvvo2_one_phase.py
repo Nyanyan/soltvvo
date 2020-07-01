@@ -439,7 +439,7 @@ def inspection_p():
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
         former_mode = len(ans_all)
         if tmp == None:
-            for depth in range(1, 15):
+            for depth in range(1, 10):
                 ans = []
                 if dfs(puzzle, depth, 0, False, i, former_mode):
                     break
@@ -454,7 +454,7 @@ def inspection_p():
     if ans_all:
         min_cost = 1000
         idx = -1
-        cost_rot = 3 #アーム回転90度で0.2秒、アームの変更0.6秒 0.2 second for 90 degrees turn, 0.6 second for changing arms
+        cost_rot = 2 #アーム回転90度で0.2秒、アームの変更0.6秒 0.2 second for 90 degrees turn, 0.6 second for changing arms
         for ii, ans in enumerate(ans_all):
             cost = 0
             for i in range(len(ans[0])):
@@ -475,7 +475,7 @@ def inspection_p():
             f.write(str(ans) + '\n')
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
-        solvingtimevar.set('expect:' + str(round(min_cost * 0.18, 2)) + 's')
+        solvingtimevar.set('expect:' + str(round(min_cost * 0.14, 2)) + 's')
         if ans_all[idx][1]:
             move_actuator(0, 0, -90, 100)
             move_actuator(1, 0, 90, 100)
@@ -507,12 +507,12 @@ def start_p():
             grab = ans[i][0] % 2
             for j in range(2):
                 move_actuator(j, grab, 1000)
-            sleep(0.4)
+            sleep(0.1)
             for j in range(2):
                 move_actuator(j, (grab + 1) % 2, 2000)
             sleep(0.1)
         ser_num = ans[i][0] // 2
-        rpm = 250
+        rpm = 270
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
