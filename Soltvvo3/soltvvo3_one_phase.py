@@ -543,8 +543,8 @@ def start_p():
         #slptim2 = abs(2 * 60 / rpm * offset / 360)
         #sleep(slptim2)
         #print('done', i, 'sleep:', slptim, slptim2)
-    solv_time = time() - strt_solv
-    solvingtimevar.set(str(round(solv_time, 3)) + 's')
+    solv_time = str(int((time() - strt_solv) * 1000) / 1000)
+    solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
 
 
