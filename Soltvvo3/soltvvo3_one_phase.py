@@ -46,7 +46,7 @@ import cv2
 import numpy as np
 import serial
 import csv
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 class Cube:
     def __init__(self):
@@ -244,11 +244,11 @@ def detect():
 # インスペクション処理
 # Inspection
 def inspection_p():
-    global ans, ans_all, total_cost, colors, cnt
+    global ans, ans_all, total_cost, colors
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
+    
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
     colors[1] = ['', '', 'o', 'o', '', '', '', '']
     colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
@@ -276,7 +276,7 @@ def inspection_p():
     colors[3] = ['o', 'w', 'g', 'y', 'r', 'w', 'r', 'y']
     colors[4] = ['', '', 'o', 'b', '', '', '', '']
     colors[5] = ['', '', 'g', 'g', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'w', 'w', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'r', 'b', 'g', 'r', 'b']
@@ -290,16 +290,16 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'y', 'g', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-
+    
     colors[0] = ['', '', 'g', 'w', '', '', '', '']
     colors[1] = ['', '', 'g', 'w', '', '', '', '']
     colors[2] = ['r', 'r', 'w', 'b', 'o', 'o', 'g', 'y']
     colors[3] = ['g', 'w', 'b', 'b', 'o', 'b', 'y', 'o']
     colors[4] = ['', '', 'r', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'r', '', '', '', '']
-    '''
-    detect()
     
+    #detect()
+    '''
     with open('log.txt', mode='w') as f:
         f.write(str(colors) + '\n')
     
@@ -393,10 +393,12 @@ def inspection_p():
     # 深さ優先探索with枝刈り
     # DFS with pruning
     def dfs(status, depth, num, flag, mode, former_mode):
-        global ans, total_cost, cnt, ans_all
+        global ans, total_cost, ans_all
         return_val = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
-        lst_all = [[[0, -1], [0, -2], [0, -3]], [[1, -1], [1, -2], [1, -3]], [[2, -1], [2, -2], [2, -3]], [[3, -1], [3, -2], [3, -3]]]
+        #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
+        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_addition = [[[1, -1], [3, -2]], [[1, -2], [3, -1]], [[0, -1], [2, -2]], [[0, -2], [2, -1]]]
         lst = []
         for i in range(4):
             if i == l_mov[0]:
@@ -404,17 +406,27 @@ def inspection_p():
             if flag and abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
-        lst.sort(key=lambda x:x[1],reverse=True)
-        for mov in lst:
-            n_status = status.move(mov)
-            n_flag = False
-            if abs(l_mov[0] - mov[0]) == 2:
-                n_flag = True
+        if l_mov[0] == -10:
+            lst.extend(lst_addition)
+        else:
+            l_mov_s = (l_mov[0] // 2) * 2
+            for i in range(2):
+                lst.append(lst_addition[i + l_mov_s])
+        lst.sort(key=lambda x:x[0][1],reverse=True)
+        for movs in lst:
+            n_status = Cube()
+            n_status.Cp = [i for i in status.Cp]
+            n_status.Co = [i for i in status.Co]
+            for mov in movs:
+                n_status = n_status.move(mov)
+                n_flag = False
+                if abs(l_mov[0] - mov[0]) == 2:
+                    n_flag = True
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
             if len(ans) + max(co[co_idx], cp[cp_idx]) - 5 > depth:
                 continue
-            ans.append(mov)
+            ans.extend(movs)
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
             if tmp != None:
                 ans_tmp = [[j for j in i] for i in ans]
@@ -430,7 +442,8 @@ def inspection_p():
                 return_val = True
             elif dfs(n_status, depth, num + 1, n_flag, mode, former_mode):
                 return_val = True
-            ans.pop()
+            for _ in range(len(movs)):
+                ans.pop()
         return return_val
 
     # IDA*
@@ -551,7 +564,7 @@ dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yell
 fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
-
+'''
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
@@ -566,7 +579,7 @@ for i in range(2):
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(21,GPIO.IN)
-
+'''
 root = tkinter.Tk()
 root.title("2x2x2solver")
 root.geometry("400x250")

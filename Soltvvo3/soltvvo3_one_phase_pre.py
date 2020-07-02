@@ -235,9 +235,11 @@ for cp_s, co_s in zip(solved_cp, cp_co):
                 neary_solved.append([cp_idx * 10000 + co_idx, ans, n_cost])
                 neary_solved.sort()
                 que.append([n_status, num + 1, n_moves, n_cost])
+                que.append([n_status, num + 1, ans, n_cost])
             elif neary_solved[tmp][2] > n_cost:
                 neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, n_cost]
                 que.append([n_status, num + 1, n_moves, n_cost])
+                que.append([n_status, num + 1, ans, n_cost])
 print('neary solved done')
 
 with open('solved.csv', mode='x') as f:
