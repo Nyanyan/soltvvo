@@ -283,7 +283,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -304,7 +304,7 @@ def inspection_p():
     colors[3] = ['o', 'b', 'o', 'w', 'g', 'o', 'b', 'y']
     colors[4] = ['', '', 'y', 'o', '', '', '', '']
     colors[5] = ['', '', 'g', 'w', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'b', '', '', '', '']
     colors[1] = ['', '', 'w', 'b', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
@@ -355,33 +355,8 @@ def inspection_p():
         print(colors[i])
     print(puzzle.Cp)
     print(puzzle.Co)
-
-    # 前計算
-    # Read data from csv
-    with open('cp.csv', mode='r') as f:
-        cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
-    with open('co.csv', mode='r') as f:
-        co = [int(i) for i in f.readline().replace('\n', '').split(',')]
-    neary_solved = []
-    solved_solution = []
-    with open('solved.csv', mode='r') as f:
-        for line in map(str.strip, f):
-            neary_solved.append([int(i) for i in line.replace('\n', '').split(',')])
-    neary_solved = dict(neary_solved)
-    with open('solved_solution.csv', mode='r') as f:
-        for line in map(str.strip, f):
-            solved_solution.append(line.replace('\n', '').split(','))
-    for i in range(len(solved_solution)):
-        tmp = []
-        if solved_solution[i] == ['']:
-            solved_solution[i] = []
-            continue
-        else:
-            solved_solution[i] = [int(j) for j in solved_solution[i]]
-        for j in range(0, len(solved_solution[i]), 2):
-            tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
-        solved_solution[i] = tmp
     
+    '''
     # 回転記号をくっつける
     # Join rotation arrays
     def rot_join(arr1, arr2):
@@ -403,7 +378,8 @@ def inspection_p():
         else:
             arr2[0][1] = rot_new
         return rot_join(arr1, arr2)
-    
+    '''
+
     #コスト計算
     # calculate cost
     change_cost = 2
@@ -448,24 +424,23 @@ def inspection_p():
                 max_rot_cost = max(max_rot_cost, abs(mov[1]))
                 n_status = n_status.move(mov)
             cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
-            if ans_cost + cost_pls >= ans_adopt[1]:
-                continue
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4 or ans_cost + cost_pls + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
                 continue
             ans_cost += cost_pls
             ans.extend(movs)
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
             if tmp != None:
-                ans_tmp = [[j for j in i] for i in ans]
+                ans_candidate = [[j for j in i] for i in ans]
                 pls = [[j for j in i] for i in solved_solution[tmp]]
-                ans_candidate = rot_join(ans_tmp, pls)
+                #ans_candidate = rot_join(ans_tmp, pls)
+                ans_candidate.extend(pls)
                 joined_cost = calc_cost(ans_candidate)
                 if joined_cost >= ans_adopt[1]:
                     continue
                 with open('log.txt', mode='a') as f:
-                    f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
+                    f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
                 ans_adopt = [ans_candidate, joined_cost, mode]
                 print(depth, ans_adopt, tmp)
                 return_val = True
@@ -478,14 +453,17 @@ def inspection_p():
 
     # IDA*
     ans_adopt = [[], 1000, -1]
+    former_depth = 10
     for i in range(2):
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
         if tmp == None:
-            for depth in range(1, 10):
+            for depth in range(1, former_depth + 1):
                 ans = []
                 ans_cost = 0
                 if dfs(puzzle, depth, 0, i):
+                    former_depth = depth
                     break
+                print(depth)
         else:
             cost = 0
             ans = solved_solution[tmp]
@@ -507,7 +485,8 @@ def inspection_p():
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
         solvingtimevar.set('expect:' + str(round(min_cost * 0.14, 2)) + 's')
-        if ans_adopt[idx][2]:
+        print('all', time() - strt, 's')
+        if ans_adopt[2]:
             move_actuator(0, 0, -90, 100)
             move_actuator(1, 0, 90, 100)
             sleep(0.3)
@@ -582,6 +561,37 @@ dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yell
 fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
+
+# 前計算
+# Read data from csv
+with open('cp.csv', mode='r') as f:
+    cp = [int(i) for i in f.readline().replace('\n', '').split(',')]
+with open('co.csv', mode='r') as f:
+    co = [int(i) for i in f.readline().replace('\n', '').split(',')]
+with open('cp_cost.csv', mode='r') as f:
+    cp_cost = [int(i) for i in f.readline().replace('\n', '').split(',')]
+with open('co_cost.csv', mode='r') as f:
+    co_cost = [int(i) for i in f.readline().replace('\n', '').split(',')]
+neary_solved = []
+solved_solution = []
+with open('solved.csv', mode='r') as f:
+    for line in map(str.strip, f):
+        neary_solved.append([int(i) for i in line.replace('\n', '').split(',')])
+neary_solved = dict(neary_solved)
+with open('solved_solution.csv', mode='r') as f:
+    for line in map(str.strip, f):
+        solved_solution.append(line.replace('\n', '').split(','))
+for i in range(len(solved_solution)):
+    tmp = []
+    if solved_solution[i] == ['']:
+        solved_solution[i] = []
+        continue
+    else:
+        solved_solution[i] = [int(j) for j in solved_solution[i]]
+    for j in range(0, len(solved_solution[i]), 2):
+        tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
+    solved_solution[i] = tmp
+
 '''
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)

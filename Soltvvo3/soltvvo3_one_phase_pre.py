@@ -67,8 +67,21 @@ change_direction2 = [[0, -1], [2, -3]] #4種類 縦回転
 inf = 1000
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
+cp_cost = [inf for _ in range(fac[8] + 1)]
+co_cost = [inf for _ in range(3 ** 8 + 1)]
 
 change_cost = 2
+def calc_cost(arr):
+    res = 0
+    for j in range(len(arr)):
+        if j > 0 and abs(arr[j - 1][0] - arr[j][0]) == 2:
+            res -= abs(arr[j - 1][1])
+            res += max(abs(arr[j - 1][1]), abs(arr[j][1]))
+        elif j == 0:
+            res += abs(arr[j][1])
+        else:
+            res += change_cost + abs(arr[j][1])
+    return res
 
 max_num = 4
 neary_solved = []
@@ -104,13 +117,12 @@ for i in range(6):
             for k in change_direction1:
                 solved = solved.move(k)
 
-'''
 for i in range(3):
     solved = Cube()
     solved.Co = solved_co[i]
-    que = deque([[solved, 0, [-10, -10]]])
+    que = deque([[solved, 0, [-10, -10], 0]])
     while que:
-        status, num, l_mov = que.popleft()
+        status, num, l_mov, cost = que.popleft()
         lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
@@ -128,22 +140,26 @@ for i in range(3):
             n_status = Cube()
             n_status.Cp = [i for i in status.Cp]
             n_status.Co = [i for i in status.Co]
+            max_rot_cost = 0
             for mov in movs:
+                max_rot_cost = max(max_rot_cost, abs(mov[1]))
                 n_status = n_status.move(mov)
+            n_cost = cost + change_cost + max_rot_cost
             coidx = n_status.co2i()
-            if co[coidx] <= num + 1:
+            if co[coidx] <= num + 1 or co_cost[coidx] <= n_cost:
                 continue
             co[coidx] = num + 1
-            que.append([n_status, num + 1, mov])
+            co_cost[coidx] = n_cost
+            que.append([n_status, num + 1, mov, n_cost])
 print('co done')
 
 for i in range(24):
     solved = Cube()
     solved.Cp = solved_cp[i]
     cp[solved.cp2i()] = 0
-    que = deque([[solved, 0, [-10, -10]]])
+    que = deque([[solved, 0, [-10, -10], 0]])
     while que:
-        status, num, l_mov = que.popleft()
+        status, num, l_mov, cost = que.popleft()
         lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
@@ -161,26 +177,36 @@ for i in range(24):
             n_status = Cube()
             n_status.Cp = [i for i in status.Cp]
             n_status.Co = [i for i in status.Co]
+            max_rot_cost = 0
             for mov in movs:
+                max_rot_cost = max(max_rot_cost, abs(mov[1]))
                 n_status = n_status.move(mov)
+            n_cost = cost + change_cost + max_rot_cost
             cpidx = n_status.cp2i()
-            if cp[cpidx] <= num + 1:
+            if cp[cpidx] <= num + 1 or cp_cost[cpidx] <= n_cost:
                 continue
             cp[cpidx] = num + 1
-            que.append([n_status, num + 1, mov])
+            cp_cost[cpidx] = n_cost
+            que.append([n_status, num + 1, mov, n_cost])
 print('cp done')
 
 with open('co.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(co)
-print('co written')
+
+with open('co_cost.csv', mode='x') as f:
+    writer = csv.writer(f, lineterminator='\n')
+    writer.writerow(co_cost)
 
 with open('cp.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(cp)
-print('cp written')
 
-'''
+with open('cp_cost.csv', mode='x') as f:
+    writer = csv.writer(f, lineterminator='\n')
+    writer.writerow(cp_cost)
+print('co cp written')
+
 #にぶたん
 def search(cp_num, co_num):
     l = 0
