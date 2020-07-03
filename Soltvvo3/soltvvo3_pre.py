@@ -7,7 +7,7 @@ import csv
 from collections import deque
 from copy import deepcopy
 from itertools import permutations
-
+from time import time
 class Cube:
     def __init__(self):
         self.Co = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -88,7 +88,7 @@ def calc_cost(arr):
             res += change_cost + abs(arr[j][1])
     return res
 
-max_num = 4
+max_num = 5
 neary_solved = []
 
 solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
@@ -125,7 +125,7 @@ for i in range(3):
     que = deque([[solved, 0, [-10, -10], 0]])
     while que:
         status, num, l_mov, cost = que.popleft()
-        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
         for i in range(4):
@@ -164,7 +164,7 @@ for i in range(24):
     que = deque([[solved, 0, [-10, -10], 0]])
     while que:
         status, num, l_mov, cost = que.popleft()
-        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
         for i in range(4):
@@ -215,27 +215,32 @@ print('co cp written')
 def search(cp_num, co_num):
     l = 0
     r = len(neary_solved) - 1
+    cocp = cp_num * 10000 + co_num
     cnt = 0
     while True:
         cnt += 1
         pre_r = r
         pre_l = l
         c = (r + l) // 2
-        if neary_solved[c][0] > cp_num * 10000 + co_num:
+        if neary_solved[c][0] > cocp:
             r = c
-        elif neary_solved[c][0] < cp_num * 10000 + co_num:
+        elif neary_solved[c][0] < cocp:
             l = c
         else:
             r = c
         if pre_r == r and pre_l == l:
             break
+    return_value = 0
     for i in range(l, r + 1):
-        if neary_solved[i][0] == cp_num * 10000 + co_num:
-            return i
-    return -1
+        if neary_solved[i][0] == cocp:
+            return [True, i]
+        elif neary_solved[i][0] < cocp:
+            return_value = i
+    return [False, return_value + 1]
 
 neary_solved.sort()
 for cp_s, co_s in zip(solved_cp, cp_co):
+    strt = time()
     puzzle = Cube()
     puzzle.Cp = cp_s
     puzzle.Co = co_s
@@ -245,7 +250,7 @@ for cp_s, co_s in zip(solved_cp, cp_co):
         if num == max_num:
             continue
         #lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
-        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
         l_mov = [-10, -10] if len(moves) == 0 else [i for i in moves[-1]]
@@ -275,14 +280,13 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             cp_idx = n_status.cp2i()
             co_idx = n_status.co2i()
             tmp = search(cp_idx, co_idx)
-            if tmp == -1:
-                neary_solved.append([cp_idx * 10000 + co_idx, ans, n_cost])
-                neary_solved.sort()
+            if tmp[0] == False:
+                neary_solved.insert(tmp[1], [cp_idx * 10000 + co_idx, ans, n_cost])
                 que.append([n_status, num + 1, n_moves, n_cost])
-            elif neary_solved[tmp][2] > n_cost:
-                neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, n_cost]
+            elif neary_solved[tmp[1]][2] > n_cost:
+                neary_solved[tmp[1]] = [cp_idx * 10000 + co_idx, ans, n_cost]
                 que.append([n_status, num + 1, n_moves, n_cost])
-    print('a')
+    print(len(neary_solved), time() - strt)
 print('neary solved done')
 
 with open('solved.csv', mode='x') as f:

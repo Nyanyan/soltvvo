@@ -283,7 +283,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -304,7 +304,7 @@ def inspection_p():
     colors[3] = ['o', 'b', 'o', 'w', 'g', 'o', 'b', 'y']
     colors[4] = ['', '', 'y', 'o', '', '', '', '']
     colors[5] = ['', '', 'g', 'w', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'b', '', '', '', '']
     colors[1] = ['', '', 'w', 'b', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
@@ -402,7 +402,8 @@ def inspection_p():
         return_val = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
         #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
-        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
         lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
         for i in range(4):
@@ -426,7 +427,7 @@ def inspection_p():
             cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4 or ans_cost + cost_pls + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 5 or ans_cost + cost_pls + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
                 continue
             ans_cost += cost_pls
             ans.extend(movs)
@@ -493,7 +494,7 @@ def inspection_p():
         grab = ans[0][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
-        sleep(0.4)
+        sleep(0.2)
         for j in range(2):
             move_actuator(j, (grab + 1) % 2, 2000)
         print('all', time() - strt, 's')
