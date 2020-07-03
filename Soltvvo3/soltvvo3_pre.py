@@ -1,3 +1,8 @@
+'''
+Code for Soltvvo2
+Written by Nyanyan
+Copyright 2020 Nyanyan
+'''
 import csv
 from collections import deque
 from copy import deepcopy
