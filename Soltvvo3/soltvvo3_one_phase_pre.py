@@ -70,7 +70,7 @@ co = [inf for _ in range(3 ** 8 + 1)]
 
 rot_cost = 2
 
-max_num = 5
+max_num = 4
 neary_solved = []
 
 solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
@@ -111,15 +111,25 @@ for i in range(3):
     que = deque([[solved, 0, [-10, -10]]])
     while que:
         status, num, l_mov = que.popleft()
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
-        for mov in lst:
-            if mov[0] == l_mov[0]:
+        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
+        lst = []
+        for i in range(4):
+            if i == l_mov[0] or abs(l_mov[0] - i) == 2:
                 continue
-            n_status = status.move(mov)
-            #if abs(mov[0] - l_mov[0]) == 2:
-            #    n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
-            #else:
-            #    n_cost = cost + rot_cost + abs(mov[1])
+            lst.extend(lst_all[i])
+        if l_mov[0] == -10:
+            lst.extend(lst_addition)
+        else:
+            l_mov_s = (l_mov[0] % 2) * 4
+            for i in range(4):
+                lst.append(lst_addition[i + l_mov_s])
+        for movs in lst:
+            n_status = Cube()
+            n_status.Cp = [i for i in status.Cp]
+            n_status.Co = [i for i in status.Co]
+            for mov in movs:
+                n_status = n_status.move(mov)
             coidx = n_status.co2i()
             if co[coidx] <= num + 1:
                 continue
@@ -134,17 +144,25 @@ for i in range(24):
     que = deque([[solved, 0, [-10, -10]]])
     while que:
         status, num, l_mov = que.popleft()
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
-        for mov in lst:
-            if mov[0] == l_mov[0]:
+        lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
+        lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
+        lst = []
+        for i in range(4):
+            if i == l_mov[0] or abs(l_mov[0] - i) == 2:
                 continue
-            n_status = status.move(mov)
-            
-            #if abs(mov[0] - l_mov[0]) == 2:
-            #    n_cost = cost - abs(l_mov[1]) + max(abs(l_mov[1]), abs(mov[1]))
-            #else:
-            #    n_cost = cost + rot_cost + abs(mov[1])
-            
+            lst.extend(lst_all[i])
+        if l_mov[0] == -10:
+            lst.extend(lst_addition)
+        else:
+            l_mov_s = (l_mov[0] % 2) * 4
+            for i in range(4):
+                lst.append(lst_addition[i + l_mov_s])
+        for movs in lst:
+            n_status = Cube()
+            n_status.Cp = [i for i in status.Cp]
+            n_status.Co = [i for i in status.Co]
+            for mov in movs:
+                n_status = n_status.move(mov)
             cpidx = n_status.cp2i()
             if cp[cpidx] <= num + 1:
                 continue
@@ -161,8 +179,8 @@ with open('cp.csv', mode='x') as f:
     writer = csv.writer(f, lineterminator='\n')
     writer.writerow(cp)
 print('cp written')
-'''
 
+'''
 #にぶたん
 def search(cp_num, co_num):
     l = 0
@@ -194,9 +212,9 @@ for cp_s, co_s in zip(solved_cp, cp_co):
     que = deque([[puzzle, 0, [], 0]])
     while que:
         status, num, moves, cost = que.popleft()
-        if num + 1 > max_num:
+        if num == max_num:
             continue
-        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [2, -3], [3, -3]]
+        lst = [[0, -1], [1, -1], [2, -1], [3, -1], [0, -2], [1, -2], [0, -3], [1, -3], [2, -3], [3, -3]]
         for mov in lst:
             if len(moves) and moves[-1][0] == mov[0]:
                 continue
@@ -211,6 +229,10 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             n_moves.append(mov)
             #print(n_moves)
             ans = list(reversed([[j for j in i] for i in n_moves]))
+            ans_cost = n_cost
+            ans_status = Cube()
+            ans_status.Cp = [i for i in n_status.Cp]
+            ans_status.Co = [i for i in n_status.Co]
             #print(ans)
             if ans[-1][1] == -2:
                 pair = (ans[-1][0] + 2) % 4
@@ -218,28 +240,32 @@ for cp_s, co_s in zip(solved_cp, cp_co):
                     pass
                 else:
                     ans[-1][1] = -1
+                    ans_status = ans_status.move([ans[-1][0], -3])
                     ans.append([pair, -1])
-                    n_cost -= 1
+                    ans_status = ans_status.move([pair, -1])
+                    ans_cost -= 1
             elif ans[-1][1] == -3:
                 pair = (ans[-1][0] + 2) % 4
                 if len(ans) >= 2 and ans[-2][0] == pair:
                     pass
                 else:
                     ans[-1][1] = -2
-                    ans.append([(ans[-1][0] + 2) % 4, -1])
-                    n_cost -= 1
+                    ans_status = ans_status.move([ans[-1][0], -3])
+                    ans.append([pair, -1])
+                    ans_status = ans_status.move([pair, -1])
+                    ans_cost -= 1
             cp_idx = n_status.cp2i()
             co_idx = n_status.co2i()
             tmp = search(cp_idx, co_idx)
             if tmp == -1:
-                neary_solved.append([cp_idx * 10000 + co_idx, ans, n_cost])
+                neary_solved.append([cp_idx * 10000 + co_idx, ans, ans_cost])
                 neary_solved.sort()
                 que.append([n_status, num + 1, n_moves, n_cost])
-                que.append([n_status, num + 1, ans, n_cost])
-            elif neary_solved[tmp][2] > n_cost:
-                neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, n_cost]
+                que.append([n_status, num + 1, ans, ans_cost])
+            elif neary_solved[tmp][2] > ans_cost:
+                neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, ans_cost]
                 que.append([n_status, num + 1, n_moves, n_cost])
-                que.append([n_status, num + 1, ans, n_cost])
+                que.append([n_status, num + 1, ans, ans_cost])
 print('neary solved done')
 
 with open('solved.csv', mode='x') as f:

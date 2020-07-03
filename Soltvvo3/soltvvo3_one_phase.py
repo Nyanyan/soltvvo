@@ -304,7 +304,14 @@ def inspection_p():
     colors[3] = ['o', 'b', 'o', 'w', 'g', 'o', 'b', 'y']
     colors[4] = ['', '', 'y', 'o', '', '', '', '']
     colors[5] = ['', '', 'g', 'w', '', '', '', '']
-
+    '''
+    colors[0] = ['', '', 'w', 'b', '', '', '', '']
+    colors[1] = ['', '', 'w', 'b', '', '', '', '']
+    colors[2] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
+    colors[3] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
+    colors[4] = ['', '', 'y', 'g', '', '', '', '']
+    colors[5] = ['', '', 'y', 'g', '', '', '', '']
+    '''
     #detect()
     
     with open('log.txt', mode='w') as f:
@@ -399,39 +406,34 @@ def inspection_p():
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, flag, mode, former_mode):
+    def dfs(status, depth, num, mode, former_mode):
         global ans, total_cost, ans_all
         return_val = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
         #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
         lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
-        lst_addition = [[[1, -1], [3, -2]], [[1, -2], [3, -1]], [[0, -1], [2, -2]], [[0, -2], [2, -1]]]
+        lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         lst = []
         for i in range(4):
-            if i == l_mov[0]:
-                continue
-            if flag and abs(l_mov[0] - i) == 2:
+            if i == l_mov[0] or abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
         if l_mov[0] == -10:
             lst.extend(lst_addition)
         else:
-            l_mov_s = (l_mov[0] // 2) * 2
-            for i in range(2):
+            l_mov_s = (l_mov[0] % 2) * 4
+            for i in range(4):
                 lst.append(lst_addition[i + l_mov_s])
-        lst.sort(key=lambda x:x[0][1],reverse=True)
+        #lst.sort(key=lambda x:x[0][1],reverse=True)
         for movs in lst:
             n_status = Cube()
             n_status.Cp = [i for i in status.Cp]
             n_status.Co = [i for i in status.Co]
             for mov in movs:
                 n_status = n_status.move(mov)
-                n_flag = False
-                if abs(l_mov[0] - mov[0]) == 2:
-                    n_flag = True
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if len(ans) + max(co[co_idx], cp[cp_idx]) - 5 > depth:
+            if num + max(co[co_idx], cp[cp_idx]) > depth + 4:
                 continue
             ans.extend(movs)
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
@@ -447,7 +449,7 @@ def inspection_p():
                     return True
                 '''
                 return_val = True
-            elif dfs(n_status, depth, num + 1, n_flag, mode, former_mode):
+            elif dfs(n_status, depth, num + 1, mode, former_mode):
                 return_val = True
             for _ in range(len(movs)):
                 ans.pop()
@@ -461,7 +463,7 @@ def inspection_p():
         if tmp == None:
             for depth in range(1, 10):
                 ans = []
-                if dfs(puzzle, depth, 0, False, i, former_mode):
+                if dfs(puzzle, depth, 0, i, former_mode):
                     break
         else:
             ans_all.append([solved_solution[tmp], i])
