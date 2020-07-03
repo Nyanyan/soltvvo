@@ -244,7 +244,7 @@ def detect():
 # インスペクション処理
 # Inspection
 def inspection_p():
-    global ans, ans_all, total_cost, colors
+    global ans, ans_adopt, ans_cost, colors
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
@@ -403,11 +403,26 @@ def inspection_p():
         else:
             arr2[0][1] = rot_new
         return rot_join(arr1, arr2)
+    
+    #コスト計算
+    # calculate cost
+    change_cost = 2
+    def calc_cost(arr):
+        res = 0
+        for j in range(len(arr)):
+            if j > 0 and abs(arr[j - 1][0] - arr[j][0]) == 2:
+                res -= abs(arr[j - 1][1])
+                res += max(abs(arr[j - 1][1]), abs(arr[j][1]))
+            elif j == 0:
+                res += abs(arr[j][1])
+            else:
+                res += change_cost + abs(arr[j][1])
+        return res
 
     # 深さ優先探索with枝刈り
     # DFS with pruning
-    def dfs(status, depth, num, mode, former_mode):
-        global ans, total_cost, ans_all
+    def dfs(status, depth, num, mode):
+        global ans, ans_adopt, ans_cost
         return_val = False
         l_mov = ans[-1] if len(ans) else [-10, -10]
         #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
@@ -424,81 +439,75 @@ def inspection_p():
             l_mov_s = (l_mov[0] % 2) * 4
             for i in range(4):
                 lst.append(lst_addition[i + l_mov_s])
-        #lst.sort(key=lambda x:x[0][1],reverse=True)
         for movs in lst:
             n_status = Cube()
             n_status.Cp = [i for i in status.Cp]
             n_status.Co = [i for i in status.Co]
+            max_rot_cost = 0
             for mov in movs:
+                max_rot_cost = max(max_rot_cost, abs(mov[1]))
                 n_status = n_status.move(mov)
+            cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
+            if ans_cost + cost_pls >= ans_adopt[1]:
+                continue
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + max(co[co_idx], cp[cp_idx]) > depth + 4:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4:
                 continue
+            ans_cost += cost_pls
             ans.extend(movs)
             tmp = neary_solved.get(cp_idx * 10000 + co_idx)
             if tmp != None:
                 ans_tmp = [[j for j in i] for i in ans]
                 pls = [[j for j in i] for i in solved_solution[tmp]]
+                ans_candidate = rot_join(ans_tmp, pls)
+                joined_cost = calc_cost(ans_candidate)
+                if joined_cost >= ans_adopt[1]:
+                    continue
                 with open('log.txt', mode='a') as f:
-                    ans_candidate = rot_join(ans_tmp, pls)
                     f.write(str(mode) + ' ' + str(ans_candidate) + '\n')
-                ans_all.append([ans_candidate, mode])
-                '''
-                if len(ans_all) - former_mode == 10:
-                    return True
-                '''
+                ans_adopt = [ans_candidate, joined_cost, mode]
+                print(depth, ans_adopt, tmp)
                 return_val = True
-            elif dfs(n_status, depth, num + 1, mode, former_mode):
+            elif dfs(n_status, depth, num + 1, mode):
                 return_val = True
             for _ in range(len(movs)):
                 ans.pop()
+            ans_cost -= cost_pls
         return return_val
 
     # IDA*
-    ans_all = []
+    ans_adopt = [[], 1000, -1]
     for i in range(2):
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
-        former_mode = len(ans_all)
         if tmp == None:
             for depth in range(1, 10):
                 ans = []
-                if dfs(puzzle, depth, 0, i, former_mode):
+                ans_cost = 0
+                if dfs(puzzle, depth, 0, i):
                     break
         else:
-            ans_all.append([solved_solution[tmp], i])
-        print(str(len(ans_all) - former_mode) + ' answers found')
+            cost = 0
+            ans = solved_solution[tmp]
+            cost = calc_cost(ans)
+            if ans_adopt[1] > cost:
+                ans_adopt = [ans, cost, i]
+        print(i, 'finished')
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
-
-    # 解の選定
-    # Select answer
-    if ans_all:
-        min_cost = 1000
-        idx = -1
-        cost_rot = 2 #アーム回転90度で0.2秒、アームの変更0.6秒 0.2 second for 90 degrees turn, 0.6 second for changing arms
-        for ii, ans in enumerate(ans_all):
-            cost = 0
-            for i in range(len(ans[0])):
-                if i > 0 and abs(ans[0][i - 1][0] - ans[0][i][0]) == 2:
-                    cost -= abs(ans[0][i - 1][1])
-                    cost += max(abs(ans[0][i - 1][1]), abs(ans[0][i][1]))
-                elif i == 0:
-                    cost += abs(ans[0][i][1])
-                else:
-                    cost += cost_rot + abs(ans[0][i][1])
-            if min_cost > cost:
-                min_cost = cost
-                idx = ii
-        ans = ans_all[idx][0]
+    
+    # 解の表示と持ち替え
+    # Show the solution and regrip
+    if ans_adopt[1] < 1000:
+        ans = ans_adopt[0]
+        min_cost = ans_adopt[1]
         with open('log.txt', mode='a') as f:
             f.write('answer\n')
-            f.write(str(ans_all[idx][1]) + ' ' + str(idx) + '\n')
-            f.write(str(ans) + '\n')
+            f.write(str(min_cost) + ' ' + str(ans))
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
         solvingtimevar.set('expect:' + str(round(min_cost * 0.14, 2)) + 's')
-        if ans_all[idx][1]:
+        if ans_adopt[idx][2]:
             move_actuator(0, 0, -90, 100)
             move_actuator(1, 0, 90, 100)
             sleep(0.3)
@@ -563,9 +572,9 @@ parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'
 
 colors = [['' for _ in range(8)] for _ in range(6)]
 
-ans_all = []
+ans_adopt = [[], 1000, -1]
 ans = []
-total_cost = 0
+ans_cost = 0
 
 j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
