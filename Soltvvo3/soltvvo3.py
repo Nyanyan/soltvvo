@@ -197,7 +197,7 @@ def detect():
         color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
-        for _ in range(10):
+        for _ in range(5):
             ret, frame = capture.read()
         d = 30
         size_x = 130
@@ -237,7 +237,7 @@ def detect():
         rpm = 100
         move_actuator(0, 0, -90, rpm)
         move_actuator(1, 0, 90, rpm)
-        sleep(0.3)
+        sleep(0.2)
         #cv2.destroyAllWindows()
     capture.release()
 
@@ -283,7 +283,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -304,7 +304,7 @@ def inspection_p():
     colors[3] = ['o', 'b', 'o', 'w', 'g', 'o', 'b', 'y']
     colors[4] = ['', '', 'y', 'o', '', '', '', '']
     colors[5] = ['', '', 'g', 'w', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'b', '', '', '', '']
     colors[1] = ['', '', 'w', 'b', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
@@ -442,7 +442,7 @@ def inspection_p():
                 with open('log.txt', mode='a') as f:
                     f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
                 ans_adopt = [ans_candidate, joined_cost, mode]
-                print(depth, ans_adopt, tmp)
+                print(ans_adopt)
                 return_val = True
             elif dfs(n_status, depth, num + 1, mode):
                 return_val = True
@@ -452,7 +452,7 @@ def inspection_p():
         return return_val
 
     # IDA*
-    ans_adopt = [[], 1000, -1]
+    ans_adopt = [[], 100, -1]
     former_depth = 10
     for i in range(2):
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
