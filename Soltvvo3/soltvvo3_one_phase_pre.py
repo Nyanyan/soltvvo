@@ -278,59 +278,6 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             elif neary_solved[tmp][2] > n_cost:
                 neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, n_cost]
                 que.append([n_status, num + 1, n_moves, n_cost])
-        '''
-        for movs in lst:
-            if len(moves) and moves[-1][0] == mov[0]:
-                continue
-            if len(moves) >= 2 and abs(moves[-2][0] - moves[-1][0]) == 2 and mov[0] == moves[-2][0]:
-                continue
-            n_status = status.move(mov)
-            if len(moves) and abs(mov[0] - moves[-1][0]) == 2:
-                n_cost = cost - abs(moves[-1][1]) + max(abs(moves[-1][1]), abs(mov[1]))
-            else:
-                n_cost = cost + rot_cost + abs(mov[1])
-            n_moves = [[j for j in i] for i in moves]
-            n_moves.append(mov)
-            #print(n_moves)
-            ans = list(reversed([[j for j in i] for i in n_moves]))
-            ans_cost = n_cost
-            ans_status = Cube()
-            ans_status.Cp = [i for i in n_status.Cp]
-            ans_status.Co = [i for i in n_status.Co]
-            #print(ans)
-            if ans[-1][1] == -2:
-                pair = (ans[-1][0] + 2) % 4
-                if len(ans) >= 2 and ans[-2][0] == pair:
-                    pass
-                else:
-                    ans[-1][1] = -1
-                    ans_status = ans_status.move([ans[-1][0], -3])
-                    ans.append([pair, -1])
-                    ans_status = ans_status.move([pair, -1])
-                    ans_cost -= 1
-            elif ans[-1][1] == -3:
-                pair = (ans[-1][0] + 2) % 4
-                if len(ans) >= 2 and ans[-2][0] == pair:
-                    pass
-                else:
-                    ans[-1][1] = -2
-                    ans_status = ans_status.move([ans[-1][0], -3])
-                    ans.append([pair, -1])
-                    ans_status = ans_status.move([pair, -1])
-                    ans_cost -= 1
-            cp_idx = n_status.cp2i()
-            co_idx = n_status.co2i()
-            tmp = search(cp_idx, co_idx)
-            if tmp == -1:
-                neary_solved.append([cp_idx * 10000 + co_idx, ans, ans_cost])
-                neary_solved.sort()
-                que.append([n_status, num + 1, n_moves, n_cost])
-                que.append([n_status, num + 1, ans, ans_cost])
-            elif neary_solved[tmp][2] > ans_cost:
-                neary_solved[tmp] = [cp_idx * 10000 + co_idx, ans, ans_cost]
-                que.append([n_status, num + 1, n_moves, n_cost])
-                que.append([n_status, num + 1, ans, ans_cost])
-        '''
     print('a')
 print('neary solved done')
 
