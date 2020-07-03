@@ -69,7 +69,7 @@ for i in range(1, 9):
 change_direction1 = [[1, -1], [3, -3]] #6種類 横回転, 最後は2回回す
 change_direction2 = [[0, -1], [2, -3]] #4種類 縦回転
 
-inf = 1000
+inf = 100
 cp = [inf for _ in range(fac[8] + 1)]
 co = [inf for _ in range(3 ** 8 + 1)]
 cp_cost = [inf for _ in range(fac[8] + 1)]
@@ -92,12 +92,6 @@ max_num = 4
 neary_solved = []
 
 solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [1, 2, 2, 1, 1, 2, 2, 1], [2, 1, 1, 2, 2, 1, 1, 2]]
-for i in range(3):
-    tmp = 0
-    for j in range(8):
-        tmp *= 3
-        tmp += solved_co[i][j]
-    co[tmp] = 0
 
 solved = Cube()
 solved_cp = []
@@ -125,6 +119,9 @@ for i in range(6):
 for i in range(3):
     solved = Cube()
     solved.Co = solved_co[i]
+    coidx = solved.co2i()
+    co[coidx] = 0
+    co_cost[coidx] = 0
     que = deque([[solved, 0, [-10, -10], 0]])
     while que:
         status, num, l_mov, cost = que.popleft()
@@ -161,7 +158,9 @@ print('co done')
 for i in range(24):
     solved = Cube()
     solved.Cp = solved_cp[i]
-    cp[solved.cp2i()] = 0
+    cpidx = solved.cp2i()
+    cp[cpidx] = 0
+    cp_cost[cpidx] = 0
     que = deque([[solved, 0, [-10, -10], 0]])
     while que:
         status, num, l_mov, cost = que.popleft()
