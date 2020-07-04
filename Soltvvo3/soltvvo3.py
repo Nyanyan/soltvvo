@@ -445,13 +445,12 @@ def inspection_p():
                 #ans_candidate = rot_join(ans_tmp, pls)
                 ans_candidate.extend(pls)
                 joined_cost = calc_cost(ans_candidate)
-                if joined_cost >= ans_adopt[1]:
-                    continue
-                with open('log.txt', mode='a') as f:
-                    f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
-                ans_adopt = [ans_candidate, joined_cost, mode]
-                print(ans_adopt)
-                return_val = True
+                if joined_cost < ans_adopt[1]:
+                    with open('log.txt', mode='a') as f:
+                        f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
+                    ans_adopt = [ans_candidate, joined_cost, mode]
+                    print(ans_adopt)
+                    return_val = True
             elif dfs(n_status, depth, num + 1, mode):
                 return_val = True
             for _ in range(len(movs)):
