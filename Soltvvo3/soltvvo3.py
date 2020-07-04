@@ -248,6 +248,13 @@ def inspection_p():
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
+
+    colors[0] = ['', '', 'w', 'w', '', '', '', '']
+    colors[1] = ['', '', 'w', 'w', '', '', '', '']
+    colors[2] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
+    colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
+    colors[4] = ['', '', 'y', 'y', '', '', '', '']
+    colors[5] = ['', '', 'y', 'y', '', '', '', '']
     
     colors[0] = ['', '', 'w', 'g', '', '', '', '']
     colors[1] = ['', '', 'o', 'o', '', '', '', '']
@@ -427,7 +434,7 @@ def inspection_p():
             cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 5 or ans_cost + cost_pls + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 5 or ans_cost + cost_pls + change_cost + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
                 continue
             ans_cost += cost_pls
             ans.extend(movs)
@@ -464,14 +471,12 @@ def inspection_p():
                 if dfs(puzzle, depth, 0, i):
                     former_depth = depth
                     break
-                print(depth)
         else:
             cost = 0
             ans = solved_solution[tmp]
             cost = calc_cost(ans)
             if ans_adopt[1] > cost:
                 ans_adopt = [ans, cost, i]
-        print(i, 'finished')
         puzzle = puzzle.move([0, -1])
         puzzle = puzzle.move([2, -3])
     
