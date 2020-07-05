@@ -90,11 +90,17 @@ class Cube:
     # Return the number of CP
     def cp2i(self):
         res = 0
-        for i in range(8):
+        for i in range(4):
             cnt = 0
             for j in self.Cp[:i]:
                 if j < self.Cp[i]:
                     cnt += 1
+            res += fac[7 - i] * (self.Cp[i] - cnt)
+        for i in range(4, 8):
+            cnt = self.Cp[i]
+            for j in self.Cp[i + 1:]:
+                if j < self.Cp[i]:
+                    cnt -= 1
             res += fac[7 - i] * (self.Cp[i] - cnt)
         return res
     
@@ -409,30 +415,27 @@ def inspection_p():
         #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
         #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
         lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
-        lst_addition = [[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
+        lst_addition = [[[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]]], [[[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]]
         lst = []
         for i in range(4):
             if i == l_mov[0] or abs(l_mov[0] - i) == 2:
                 continue
             lst.extend(lst_all[i])
         if l_mov[0] == -10:
-            lst.extend(lst_addition)
+            for i in range(2):
+                lst.extend(lst_addition[i])
         else:
-            l_mov_s = (l_mov[0] % 2) * 4
-            for i in range(4):
-                lst.append(lst_addition[i + l_mov_s])
+            lst.extend(lst_addition[l_mov[0] % 2])
         for movs in lst:
-            n_status = Cube()
-            n_status.Cp = [i for i in status.Cp]
-            n_status.Co = [i for i in status.Co]
-            max_rot_cost = 0
-            for mov in movs:
-                max_rot_cost = max(max_rot_cost, abs(mov[1]))
-                n_status = n_status.move(mov)
+            n_status = status.move(movs[0])
+            max_rot_cost = -movs[0][1]
+            if len(movs) == 2:
+                max_rot_cost = max(max_rot_cost, -movs[1][1])
+                n_status = n_status.move(movs[1])
             cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 5 or ans_cost + cost_pls + change_cost + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4 or ans_cost + cost_pls + change_cost + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
                 continue
             ans_cost += cost_pls
             ans.extend(movs)

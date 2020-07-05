@@ -272,7 +272,7 @@ for cp_s, co_s in zip(solved_cp, cp_co):
             for mov in movs:
                 max_rot_cost = max(max_rot_cost, abs(mov[1]))
                 n_status = n_status.move(mov)
-            cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
+            cost_pls = change_cost + max_rot_cost
             n_moves = [[j for j in i] for i in moves]
             n_moves.extend(movs)
             ans = list(reversed([[j for j in i] for i in n_moves]))
