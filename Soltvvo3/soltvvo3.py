@@ -413,8 +413,8 @@ def inspection_p():
         return_val = False
         lst_all = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
         if num == 0:
-            lst = [[[k for k in j] for j in i] for i in lst_all]
-            lst.extend([[[j[0] + 1, j[1]] for j in i] for i in lst_all])
+            lst = [[[k for k in j] for j in i] for i in lst_all[:6]]
+            lst.extend([[[j[0] + 1, j[1]] for j in i] for i in lst_all[:6]])
         else:
             ad = (ans[-1][0] + 1) % 2
             lst = [[[j[0] + ad, j[1]] for j in i] for i in lst_all]
@@ -427,23 +427,24 @@ def inspection_p():
             cost_pls = change_cost + max_rot_cost if num != 0 else max_rot_cost
             co_idx = n_status.co2i()
             cp_idx = n_status.cp2i()
-            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4 or ans_cost + cost_pls + change_cost + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
+            if num + 1 + max(co[co_idx], cp[cp_idx]) > depth + 4 or ans_cost + cost_pls + max(co_cost[co_idx], cp_cost[cp_idx]) >= ans_adopt[1]:
                 continue
             ans_cost += cost_pls
             ans.extend(movs)
-            tmp = neary_solved.get(cp_idx * 10000 + co_idx)
-            if tmp != None:
-                ans_candidate = [[j for j in i] for i in ans]
-                pls = [[j for j in i] for i in solved_solution[tmp]]
-                #ans_candidate = rot_join(ans_tmp, pls)
-                ans_candidate.extend(pls)
-                joined_cost = calc_cost(ans_candidate)
-                if joined_cost < ans_adopt[1]:
-                    with open('log.txt', mode='a') as f:
-                        f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
-                    ans_adopt = [ans_candidate, joined_cost, mode]
-                    print(ans_adopt)
-                    return_val = True
+            if num + 1 == depth:
+                tmp = neary_solved.get(cp_idx * 10000 + co_idx)
+                if tmp != None:
+                    ans_candidate = [[j for j in i] for i in ans]
+                    pls = [[j for j in i] for i in solved_solution[tmp]]
+                    #ans_candidate = rot_join(ans_tmp, pls)
+                    ans_candidate.extend(pls)
+                    joined_cost = calc_cost(ans_candidate)
+                    if joined_cost < ans_adopt[1]:
+                        with open('log.txt', mode='a') as f:
+                            f.write(str(mode) + ' ' + str(joined_cost) + ' ' + str(ans_candidate) + '\n')
+                        ans_adopt = [ans_candidate, joined_cost, mode]
+                        print(ans_adopt)
+                        return_val = True
             elif dfs(n_status, depth, num + 1, mode):
                 return_val = True
             for _ in range(len(movs)):
@@ -453,11 +454,12 @@ def inspection_p():
 
     # IDA*
     ans_adopt = [[], 100, -1]
-    former_depth = 10
+    former_depth = 6
     for i in range(2):
         tmp = neary_solved.get(puzzle.cp2i() * 10000 + puzzle.co2i())
         if tmp == None:
-            for depth in range(1, former_depth + 1):
+            min_depth = 1 if i == 0 else former_depth - 2
+            for depth in range(min_depth, former_depth + 1):
                 ans = []
                 ans_cost = 0
                 if dfs(puzzle, depth, 0, i):
