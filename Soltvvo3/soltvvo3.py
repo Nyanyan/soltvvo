@@ -6,7 +6,7 @@ Copyright 2020 Nyanyan
 
 
 Cube.Cp[その位置にあるパーツの番号]
-Cube.Co[ステッカーの向き]
+Cube.Co[白または黄ステッカーの向き]
 U面
         B
 L [0, 0] [1, 0] R
@@ -189,9 +189,8 @@ def detect():
         move_actuator(i, 0, 1000)
     for i in range(2):
         move_actuator(i, 1, 2000)
-    idx = 0
     capture = cv2.VideoCapture(0)
-    while idx < 4:
+    for idx in range(4):
         #color: g, b, r, o, y, w
         color_low = [[50, 50, 50],   [90, 50, 50],   [160, 70, 50], [170, 20, 50],  [20, 50, 50],   [0, 0, 50]] #for PC
         color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
@@ -232,7 +231,6 @@ def detect():
         #if True or cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
         for i in range(4):
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-        idx += 1
         confirm_p()
         rpm = 100
         move_actuator(0, 0, -90, rpm)
