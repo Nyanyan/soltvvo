@@ -411,21 +411,13 @@ def inspection_p():
     def dfs(status, depth, num, mode):
         global ans, ans_adopt, ans_cost
         return_val = False
-        l_mov = ans[-1] if len(ans) else [-10, -10]
-        #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -2]], [[2, -3]]], [[[3, -1]], [[3, -2]], [[3, -3]]]]
-        #lst_all = [[[[0, -1]], [[0, -2]], [[0, -3]]], [[[1, -1]], [[1, -2]], [[1, -3]]], [[[2, -1]], [[2, -3]]], [[[3, -1]], [[3, -3]]]]
-        lst_all = [[[[0, -1]], [[0, -2]]], [[[1, -1]], [[1, -2]]], [[[2, -1]]], [[[3, -1]]]]
-        lst_addition = [[[[1, -1], [3, -1]], [[1, -2], [3, -1]], [[3, -2], [1, -1]], [[3, -3], [1, -1]]], [[[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]]
-        lst = []
-        for i in range(4):
-            if i == l_mov[0] or abs(l_mov[0] - i) == 2:
-                continue
-            lst.extend(lst_all[i])
-        if l_mov[0] == -10:
-            for i in range(2):
-                lst.extend(lst_addition[i])
+        lst_all = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[2, -2], [0, -1]], [[2, -1], [0, -3]]]
+        if num == 0:
+            lst = [[[k for k in j] for j in i] for i in lst_all]
+            lst.extend([[[j[0] + 1, j[1]] for j in i] for i in lst_all])
         else:
-            lst.extend(lst_addition[l_mov[0] % 2])
+            ad = (ans[-1][0] + 1) % 2
+            lst = [[[j[0] + ad, j[1]] for j in i] for i in lst_all]
         for movs in lst:
             n_status = status.move(movs[0])
             max_rot_cost = -movs[0][1]
