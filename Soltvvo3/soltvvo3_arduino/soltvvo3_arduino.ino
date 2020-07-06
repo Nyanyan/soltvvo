@@ -17,7 +17,7 @@ void move_motor(long num, long deg, long spd) {
   digitalWrite(step_dir[num], hl);
   long steps = abs(deg) * turn_steps / 360;
   long avg_time = 1000000 * 60 / turn_steps / spd;
-  long max_time = 3000;
+  long max_time = 1000;
   long slope = 100;
   bool motor_hl = false;
   long accel = min(steps, max(0, (max_time - avg_time) / slope));

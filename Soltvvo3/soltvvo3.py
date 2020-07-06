@@ -195,6 +195,9 @@ def detect():
         move_actuator(i, 0, 1000)
     for i in range(2):
         move_actuator(i, 1, 2000)
+    sleep(0.3)
+    rpm = 200
+    move_actuator(1, 0, 45, rpm)
     capture = cv2.VideoCapture(0)
     for idx in range(4):
         #color: g, b, r, o, y, w
@@ -238,12 +241,12 @@ def detect():
         for i in range(4):
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
         confirm_p()
-        rpm = 100
         move_actuator(0, 0, -90, rpm)
         move_actuator(1, 0, 90, rpm)
         sleep(0.2)
         #cv2.destroyAllWindows()
     capture.release()
+    move_actuator(1, 0, -45, rpm)
 
 # インスペクション処理
 # Inspection
@@ -487,9 +490,11 @@ def inspection_p():
         solvingtimevar.set('expect:' + str(round(min_cost * 0.14, 2)) + 's')
         print('all', time() - strt, 's')
         if ans_adopt[2]:
-            move_actuator(0, 0, -90, 100)
-            move_actuator(1, 0, 90, 100)
+            move_actuator(0, 0, -90, 200)
+            move_actuator(1, 0, 135, 200)
             sleep(0.3)
+            move_actuator(1, 0, -45, 200)
+            sleep(0.2)
         grab = ans[0][0] % 2
         for j in range(2):
             move_actuator(j, grab, 1000)
