@@ -39,15 +39,13 @@ void move_motor(long num, long deg, long spd) {
 }
 
 void release_arm(int num) {
-  if (num == 0)servo0.write(130);
-  else servo1.write(100);
-  //Serial.println("release");
+  if (num == 0)servo0.write(95);
+  else servo1.write(95);
 }
 
 void grab_arm(int num) {
   if (num == 0)servo0.write(85);
-  else servo1.write(80);
-  //Serial.println("grab");
+  else servo1.write(85);
 }
 
 void setup() {
@@ -58,8 +56,8 @@ void setup() {
   }
   servo0.attach(7);
   servo1.attach(8);
-  servo0.write(130);
-  servo1.write(130);
+  servo0.write(95);
+  servo1.write(95);
 }
 
 void loop() {

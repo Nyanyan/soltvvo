@@ -490,8 +490,10 @@ def inspection_p():
         solvingtimevar.set('expect:' + str(round(min_cost * 0.14, 2)) + 's')
         print('all', time() - strt, 's')
         if ans_adopt[2]:
+            move_actuator(1, 0, 45, 200)
+            sleep(0.3)
             move_actuator(0, 0, -90, 200)
-            move_actuator(1, 0, 135, 200)
+            move_actuator(1, 0, 90, 200)
             sleep(0.3)
             move_actuator(1, 0, -45, 200)
             sleep(0.2)
