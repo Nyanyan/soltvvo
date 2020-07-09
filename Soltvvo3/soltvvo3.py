@@ -142,7 +142,7 @@ def release_p():
 # Calibration arms
 def calibration(num, deg):
     def x():
-        move_actuator(num // 2, num % 2, deg, 200)
+        move_actuator(num // 2, num % 2, deg, 100)
     return x
 
 # ボックスに色を反映させる
@@ -222,6 +222,7 @@ def detect():
         while sum(loopflag):
             ret, show_frame = capture.read()
             show_frame = cv2.resize(show_frame, (size_x, size_y))
+            #cv2.imshow('title',show_frame)
             hsv = cv2.cvtColor(show_frame,cv2.COLOR_BGR2HSV)
             for i in range(4):
                 y = center[0] + dy[i] * d
@@ -261,7 +262,7 @@ def inspection_p():
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'w', 'w', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
@@ -303,7 +304,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -332,7 +333,7 @@ def inspection_p():
     colors[4] = ['', '', 'y', 'g', '', '', '', '']
     colors[5] = ['', '', 'y', 'g', '', '', '', '']
     '''
-    detect()
+    #detect()
     
     with open('log.txt', mode='w') as f:
         f.write(str(colors) + '\n')
@@ -526,12 +527,12 @@ def start_p():
             grab = ans[i][0] % 2
             for j in range(2):
                 move_actuator(j, grab, 1000)
-            sleep(0.1)
+            sleep(0.07)
             for j in range(2):
                 move_actuator(j, (grab + 1) % 2, 2000)
-            sleep(0.05)
+            sleep(0.07)
         ser_num = ans[i][0] // 2
-        rpm = 500
+        rpm = 400
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
@@ -540,7 +541,7 @@ def start_p():
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, ans[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(ans[i + 1][1]))
         slptim = 2 * 60 / rpm * (max_turn * 90 - offset) / 360
-        sleep(max(0, slptim + 0.1))
+        sleep(slptim)
         move_actuator(ser_num, ans[i][0] % 2, -offset, rpm)
         if flag:
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, -offset, rpm)
@@ -552,7 +553,7 @@ def start_p():
         #slptim2 = abs(2 * 60 / rpm * offset / 360)
         #sleep(slptim2)
         #print('done', i, 'sleep:', slptim, slptim2)
-    solv_time = str(int((time() - strt_solv) * 1000) / 1000)
+    solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
     solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
 

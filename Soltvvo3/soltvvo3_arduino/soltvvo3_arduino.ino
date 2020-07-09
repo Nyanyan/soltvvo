@@ -3,10 +3,10 @@
 const long turn_steps = 400;
 const int step_dir[2] = {11, 9};
 const int step_pul[2] = {12, 10};
-const int grab_deg[2] = {79, 75};
-const int release_deg[2] = {101, 97};
-//const int grab_deg[2] = {74, 74};
-//const int release_deg[2] = {96, 96};
+//const int grab_deg[2] = {79, 75};
+//const int release_deg[2] = {101, 97};
+const int grab_deg[2] = {74, 74};
+const int release_deg[2] = {96, 96};
 const int offset = 3;
 
 char buf[30];
@@ -22,7 +22,7 @@ void move_motor(long num, long deg, long spd) {
   digitalWrite(step_dir[num], hl);
   long steps = abs(deg) * turn_steps / 360;
   long avg_time = 1000000 * 60 / turn_steps / spd;
-  long max_time = 2000;
+  long max_time = 1000;
   long slope = 100;
   bool motor_hl = false;
   long accel = min(steps / 2, max(0, (max_time - avg_time) / slope));
@@ -46,15 +46,17 @@ void move_motor(long num, long deg, long spd) {
 void release_arm(int num) {
   if (num == 0)servo0.write(release_deg[num] + offset);
   else servo1.write(release_deg[num] + offset);
-  delay(100);
+  /*
+  delay(70);
   if (num == 0)servo0.write(release_deg[num]);
   else servo1.write(release_deg[num]);
+  */
 }
 
 void grab_arm(int num) {
   if (num == 0)servo0.write(grab_deg[num] - offset);
   else servo1.write(grab_deg[num] - offset);
-  delay(100);
+  delay(70);
   if (num == 0)servo0.write(grab_deg[num]);
   else servo1.write(grab_deg[num]);
 }
@@ -69,7 +71,7 @@ void setup() {
   servo1.attach(8);
   servo0.write(release_deg[0] + 5);
   servo1.write(release_deg[1] + 5);
-  delay(100);
+  delay(70);
   servo0.write(release_deg[0]);
   servo1.write(release_deg[1]);
 }
