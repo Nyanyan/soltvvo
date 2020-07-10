@@ -3,9 +3,10 @@
 const long turn_steps = 400;
 const int step_dir[2] = {11, 9};
 const int step_pul[2] = {12, 10};
-//const int grab_deg[2] = {79, 75};
-//const int release_deg[2] = {101, 97};
-const int grab_deg[2] = {74, 74};
+const int sensor[2] = [14, 15]
+                      //const int grab_deg[2] = {79, 75};
+                      //const int release_deg[2] = {101, 97};
+                      const int grab_deg[2] = {74, 74};
 const int release_deg[2] = {96, 96};
 const int offset = 3;
 
@@ -43,13 +44,18 @@ void move_motor(long num, long deg, long spd) {
   }
 }
 
+void calibration(long num) {
+  while (analogRead(sensor[num]) < 1000)
+    move_motor(num, 2, 300);
+}
+
 void release_arm(int num) {
   if (num == 0)servo0.write(release_deg[num] + offset);
   else servo1.write(release_deg[num] + offset);
   /*
-  delay(70);
-  if (num == 0)servo0.write(release_deg[num]);
-  else servo1.write(release_deg[num]);
+    delay(70);
+    if (num == 0)servo0.write(release_deg[num]);
+    else servo1.write(release_deg[num]);
   */
 }
 
@@ -66,6 +72,7 @@ void setup() {
   for (int i = 0; i < 2; i++) {
     pinMode(step_dir[i], OUTPUT);
     pinMode(step_pul[i], OUTPUT);
+    pinMode(sensor[i], INPUT);
   }
   servo0.attach(7);
   servo1.attach(8);
