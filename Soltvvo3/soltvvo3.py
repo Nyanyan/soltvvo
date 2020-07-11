@@ -140,10 +140,12 @@ def release_p():
 
 # アームのキャリブレーション
 # Calibration arms
-def calibration(num, deg):
-    def x():
-        move_actuator(num // 2, num % 2, deg, 100)
-    return x
+def calibration():
+    release_p()
+    sleep(0.1)
+    for i in range(2):
+        for j in range(2):
+            move_actuator(j, i, -90, 500)
 
 # ボックスに色を反映させる
 # Color the boxes
@@ -527,12 +529,12 @@ def start_p():
             grab = ans[i][0] % 2
             for j in range(2):
                 move_actuator(j, grab, 1000)
-            sleep(0.07)
+            sleep(0.06)
             for j in range(2):
                 move_actuator(j, (grab + 1) % 2, 2000)
-            sleep(0.07)
+            sleep(0.05)
         ser_num = ans[i][0] // 2
-        rpm = 400
+        rpm = 525
         offset = -5
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
@@ -610,13 +612,7 @@ ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
 
-sleep(2)
-release_p()
-sleep(1)
-for i in range(2):
-    for j in range(2):
-        move_actuator(j, i, 90, 250)
-        move_actuator(j, i, -90, 250)
+calibration()
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(21,GPIO.IN)
@@ -657,15 +653,8 @@ grab.place(x=0, y=150)
 release = tkinter.Button(root, text="release", command=release_p)
 release.place(x=150, y=150)
 
-calib_small = []
-for i in range(4):
-    calib_small.append(tkinter.Button(root, text=str(i), command=calibration(i, -3)))
-    calib_small[i].place(x=275, y=i * 30)
-
-calib_big = []
-for i in range(4):
-    calib_big.append(tkinter.Button(root, text=str(i), command=calibration(i, -10)))
-    calib_big[i].place(x=325, y=i * 30)
+calib = tkinter.Button(root, text='calibration', command=calibration)
+calib.place(x=325, y=0)
 
 
 root.mainloop()

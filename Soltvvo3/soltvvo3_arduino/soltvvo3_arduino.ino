@@ -1,12 +1,13 @@
 #include <Servo.h>
 
+const int magnet_threshold = 30;
 const long turn_steps = 400;
 const int step_dir[2] = {11, 9};
 const int step_pul[2] = {12, 10};
-const int sensor[2] = [14, 15]
-                      //const int grab_deg[2] = {79, 75};
-                      //const int release_deg[2] = {101, 97};
-                      const int grab_deg[2] = {74, 74};
+const int sensor[2] = {14, 15};
+//const int grab_deg[2] = {79, 75};
+//const int release_deg[2] = {101, 97};
+const int grab_deg[2] = {74, 74};
 const int release_deg[2] = {96, 96};
 const int offset = 3;
 
@@ -28,25 +29,26 @@ void move_motor(long num, long deg, long spd) {
   bool motor_hl = false;
   long accel = min(steps / 2, max(0, (max_time - avg_time) / slope));
   int num1 = (num + 1) % 2;
+  digitalWrite(step_dir[num1], LOW);
   for (int i = 0; i < accel; i++) {
     motor_hl = !motor_hl;
     digitalWrite(step_pul[num], motor_hl);
-    if (analogRead(sensor[num1]) < 1000)
-      digitalWrite(step_pul[num1], hl);
+    if (analogRead(sensor[num1]) > magnet_threshold)
+      digitalWrite(step_pul[num1], motor_hl);
     delayMicroseconds(max_time - slope * i);
   }
   for (int i = 0; i < steps * 2 - accel * 2; i++) {
     motor_hl = !motor_hl;
     digitalWrite(step_pul[num], motor_hl);
-    if (analogRead(sensor[num1]) < 1000)
-      digitalWrite(step_pul[num1], hl);
+    if (analogRead(sensor[num1]) > magnet_threshold)
+      digitalWrite(step_pul[num1], motor_hl);
     delayMicroseconds(avg_time);
   }
   for (int i = 0; i < accel; i++) {
     motor_hl = !motor_hl;
     digitalWrite(step_pul[num], motor_hl);
-    if (analogRead(sensor[num1]) < 1000)
-      digitalWrite(step_pul[num1], hl);
+    if (analogRead(sensor[num1]) > magnet_threshold)
+      digitalWrite(step_pul[num1], motor_hl);
     delayMicroseconds(max_time - slope * accel + accel * (i + 1));
   }
 }
@@ -87,8 +89,7 @@ void setup() {
 }
 
 void loop() {
-  /*
-  if (Serial.available()) {
+    if (Serial.available()) {
     buf[idx] = Serial.read();
     if (buf[idx] == '\n') {
       buf[idx] = '\0';
@@ -103,9 +104,5 @@ void loop() {
     else {
       idx++;
     }
-  }
-  */
-  Serial.print(analogRead(sensor[0]));
-  Serial.print("\t");
-  Serial.println(analogRead(sensor[1]));
+    }
 }
