@@ -48,6 +48,7 @@ import serial
 import csv
 import RPi.GPIO as GPIO
 import bluetooth
+import subprocess
 
 class Cube:
     def __init__(self):
@@ -529,16 +530,28 @@ def inspection_p():
 def start_slow_p():
     start_p(0.1, 0.1, 400, 1.0)
 
-# 最速運転
+# 通常運転
+# Medium
+def start_medium_p():
+    start_p(0.07, 0.08, 500, 0.65)
+
+# 速運転
 # Fast
 def start_fast_p():
     start_p(0.06, 0.07, 550, 0.65)
+
+# 爆速運転
+# Super Fast
+def start_superfast_p():
+    start_p(0.06, 0.06, 550, 0.6)
 
 # 実際にロボットを動かす
 # Move robot
 def start_p(slp1, slp2, rpm, ratio):
     print('start!')
-    client_socket.send('start\n')
+    if bluetoothmode:
+        client_socket.send('start\n')
+    sleep(0.3)
     strt_solv = time()
     i = 0
     while i < len(ans):
@@ -601,7 +614,8 @@ def start_p(slp1, slp2, rpm, ratio):
         #slptim2 = abs(2 * 60 / rpm * offset / 360)
         #sleep(slptim2)
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
-    client_socket.send(solv_time + '\n')
+    if bluetoothmode:
+        client_socket.send(solv_time + '\n')
     solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
 
@@ -623,13 +637,16 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-PORT = 1
-server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-print("connect...")
-server_socket.bind( ("",PORT ))
-server_socket.listen(1)
-client_socket,address = server_socket.accept()
-print("connection success!!")
+bluetoothmode = False
+if bluetoothmode:
+    subprocess.call(['sh', 'bluetooth_script.sh'])
+    PORT = 1
+    server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+    print("connect...")
+    server_socket.bind( ("",PORT ))
+    server_socket.listen(1)
+    client_socket,address = server_socket.accept()
+    print("connection success!!")
 
 ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, timeout=0.01, write_timeout=0)
@@ -705,11 +722,17 @@ release.place(x=150, y=150)
 calib = tkinter.Button(root, text='calibration', command=calibration)
 calib.place(x=300, y=0)
 
-start_slow = tkinter.Button(root, text="start slow", command=start_slow_p)
+start_slow = tkinter.Button(root, text="slow", command=start_slow_p)
 start_slow.place(x=300, y=50)
 
-start_fast = tkinter.Button(root, text="start fast", command=start_fast_p)
-start_fast.place(x=300, y=90)
+start_medium = tkinter.Button(root, text="medium", command=start_medium_p)
+start_medium.place(x=300, y=90)
+
+start_fast = tkinter.Button(root, text="fast", command=start_fast_p)
+start_fast.place(x=300, y=130)
+
+start_superfast = tkinter.Button(root, text="super fast", command=start_superfast_p)
+start_superfast.place(x=300, y=170)
 
 root.mainloop()
 
