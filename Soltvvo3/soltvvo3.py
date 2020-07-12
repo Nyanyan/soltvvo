@@ -246,15 +246,15 @@ def detect():
                         cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
                         loopflag[i] = 0
                         break
-        #cv2.imshow('title',show_frame)
-        #if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
-        for i in range(4):
-            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-        confirm_p()
-        move_actuator(0, 0, -90, rpm)
-        move_actuator(1, 0, 90, rpm)
-        sleep(0.2)
-        #cv2.destroyAllWindows()
+        cv2.imshow('title',show_frame)
+        if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
+            for i in range(4):
+                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+            confirm_p()
+            move_actuator(0, 0, -90, rpm)
+            move_actuator(1, 0, 90, rpm)
+            sleep(0.2)
+        cv2.destroyAllWindows()
     capture.release()
     '''
     for i in range(2):
