@@ -47,6 +47,7 @@ import numpy as np
 import serial
 import csv
 import RPi.GPIO as GPIO
+import bluetooth
 
 class Cube:
     def __init__(self):
@@ -537,6 +538,7 @@ def start_fast_p():
 # Move robot
 def start_p(slp1, slp2, rpm, ratio):
     print('start!')
+    client_socket.send('start\n')
     strt_solv = time()
     i = 0
     while i < len(ans):
@@ -599,6 +601,7 @@ def start_p(slp1, slp2, rpm, ratio):
         #slptim2 = abs(2 * 60 / rpm * offset / 360)
         #sleep(slptim2)
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
+    client_socket.send(solv_time + '\n')
     solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
 
@@ -619,6 +622,18 @@ dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yell
 fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
+
+PORT = 1
+server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+print("connect...")
+server_socket.bind( ("",PORT ))
+server_socket.listen(1)
+client_socket,address = server_socket.accept()
+print("connection success!!")
+
+ser_motor = [None, None]
+ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, timeout=0.01, write_timeout=0)
+ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, timeout=0.01, write_timeout=0)
 
 # 前計算
 # Read data from csv
@@ -649,11 +664,6 @@ for i in range(len(solved_solution)):
     for j in range(0, len(solved_solution[i]), 2):
         tmp.append([solved_solution[i][j], solved_solution[i][j + 1]])
     solved_solution[i] = tmp
-
-
-ser_motor = [None, None]
-ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, timeout=0.01, write_timeout=0)
-ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, timeout=0.01, write_timeout=0)
 
 calibration()
 

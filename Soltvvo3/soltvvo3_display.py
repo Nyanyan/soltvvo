@@ -1,5 +1,8 @@
-import paramiko
+import serial
 
-client = paramiko.SSHClient()
-client.set_missing_host_key_policy(paramiko.WarningPolicy())
-client.connect('10.1.2.3', username='foo', password='bar')
+ser_display = serial.Serial('COM16', 9600, timeout=0.01, write_timeout=0)
+
+while True:
+    tmp = ser_display.readline().decode('utf-8','ignore')
+    if len(tmp):
+        print(tmp)
