@@ -671,7 +671,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(21,GPIO.IN)
 
 root = tkinter.Tk()
-root.title("2x2x2solver")
+root.title("Soltvvo")
 root.geometry("400x250")
 
 grid = 20
