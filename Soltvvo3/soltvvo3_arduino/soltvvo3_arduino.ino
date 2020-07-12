@@ -1,6 +1,6 @@
 #include <Servo.h>
 
-const int magnet_threshold = 30;
+const int magnet_threshold = 50;
 const long turn_steps = 400;
 const int step_dir[2] = {11, 9};
 const int step_pul[2] = {12, 10};
@@ -24,7 +24,7 @@ void move_motor(long num, long deg, long spd) {
   digitalWrite(step_dir[num], hl);
   long steps = abs(deg) * turn_steps / 360;
   long avg_time = 1000000 * 60 / turn_steps / spd;
-  long max_time = 1000;
+  long max_time = 500;
   long slope = 100;
   bool motor_hl = false;
   long accel = min(steps / 2, max(0, (max_time - avg_time) / slope));
@@ -51,6 +51,17 @@ void move_motor(long num, long deg, long spd) {
       digitalWrite(step_pul[num1], motor_hl);
     delayMicroseconds(max_time - slope * accel + accel * (i + 1));
   }
+  /*
+  while (analogRead(sensor[num]) > magnet_threshold) {
+    motor_hl = !motor_hl;
+    digitalWrite(step_pul[num], motor_hl);
+    if (analogRead(sensor[num1]) > magnet_threshold)
+      digitalWrite(step_pul[num1], motor_hl);
+    if (Serial.available()) break;
+    delayMicroseconds(max_time);
+  }
+  Serial.println('y');
+  */
 }
 
 
@@ -89,7 +100,7 @@ void setup() {
 }
 
 void loop() {
-    if (Serial.available()) {
+  if (Serial.available()) {
     buf[idx] = Serial.read();
     if (buf[idx] == '\n') {
       buf[idx] = '\0';
@@ -104,5 +115,5 @@ void loop() {
     else {
       idx++;
     }
-    }
+  }
 }

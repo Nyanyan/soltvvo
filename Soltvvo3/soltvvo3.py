@@ -120,6 +120,8 @@ def move_actuator(num, arg1, arg2, arg3=None):
         com = str(arg1) + ' ' + str(arg2)
     else:
         com = str(arg1) + ' ' + str(arg2) + ' ' + str(arg3)
+    if ser_motor[num].in_waiting:
+        ser_motor[num].reset_output_buffer()
     ser_motor[num].write((com + '\n').encode())
     ser_motor[num].flush()
 
@@ -334,6 +336,13 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'w', 'r', 'r', 'y', 'b']
     colors[4] = ['', '', 'y', 'g', '', '', '', '']
     colors[5] = ['', '', 'y', 'g', '', '', '', '']
+    
+    colors[0] = ['', '', 'y', 'y', '', '', '', '']
+    colors[1] = ['', '', 'o', 'g', '', '', '', '']
+    colors[2] = ['r', 'w', 'b', 'r', 'w', 'r', 'g', 'b']
+    colors[3] = ['w', 'b', 'o', 'b', 'r', 'y', 'o', 'o']
+    colors[4] = ['', '', 'y', 'w', '', '', '', '']
+    colors[5] = ['', '', 'g', 'g', '', '', '', '']
     '''
     #detect()
     
@@ -496,7 +505,7 @@ def inspection_p():
             f.write(str(min_cost) + ' ' + str(ans))
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
-        solvingtimevar.set('expect:' + str(round(min_cost * 0.1, 2)) + 's')
+        solvingtimevar.set('fast:' + str(round(min_cost * 0.084, 2)) + 's slow:' + str(round(min_cost * 0.12, 2)) + 's')
         print('all', time() - strt, 's')
         if ans_adopt[2]:
             move_actuator(0, 0, -90, 200)
@@ -514,47 +523,81 @@ def inspection_p():
         print('cannot solve!')
         print('all', time() - strt, 's')
 
+# 安全運転
+# Slow
+def start_slow_p():
+    start_p(0.1, 0.1, 400, 1.0)
+
+# 最速運転
+# Fast
+def start_fast_p():
+    start_p(0.06, 0.07, 550, 0.65)
+
 # 実際にロボットを動かす
 # Move robot
-def start_p():
+def start_p(slp1, slp2, rpm, ratio):
     print('start!')
     strt_solv = time()
     i = 0
     while i < len(ans):
+        
         if GPIO.input(21) == GPIO.LOW:
             solvingtimevar.set('emergency stop')
-            print('emergency stop')
+            print('emergency stop 1')
             return
+        
         if i != 0:
             grab = ans[i][0] % 2
             for j in range(2):
                 move_actuator(j, grab, 1000)
-            sleep(0.06)
+            sleep(slp1)
             for j in range(2):
                 move_actuator(j, (grab + 1) % 2, 2000)
-            sleep(0.05)
+            sleep(slp2)
         ser_num = ans[i][0] // 2
-        rpm = 525
-        offset = -5
+        offset = 0
+        before = ser_motor[ans[i][0] // 2].in_waiting
         move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90 + offset, rpm)
         max_turn = abs(ans[i][1])
         flag = i < len(ans) - 1 and ans[i + 1][0] % 2 == ans[i][0] % 2
         if flag:
+            before2 = ser_motor[ans[i + 1][0] // 2].in_waiting
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, ans[i + 1][1] * 90 + offset, rpm)
             max_turn = max(max_turn, abs(ans[i + 1][1]))
-        slptim = 2 * 60 / rpm * (max_turn * 90 - offset) / 360
+            '''
+            while not before2 - ser_motor[ans[i + 1][0] // 2].in_waiting:
+                if GPIO.input(21) == GPIO.LOW:
+                    ser_motor[ans[i + 1][0] // 2].write(b's\n')
+                    ser_motor[ans[i + 1][0] // 2].flush()
+                    ser_motor[ans[i][0] // 2].write(b's\n')
+                    ser_motor[ans[i][0] // 2].flush()
+                    solvingtimevar.set('emergency stop')
+                    print('emergency stop 2')
+                    return
+            
+        while not before - ser_motor[ans[i][0] // 2].in_waiting:
+            if GPIO.input(21) == GPIO.LOW:
+                ser_motor[ans[i][0] // 2].write(b's\n')
+                ser_motor[ans[i][0] // 2].flush()
+                solvingtimevar.set('emergency stop')
+                print('emergency stop 2')
+                return
+        #sleep(slp3)
+        '''
+        
+        slptim = 2 * 60 / rpm * (max_turn * 90 - offset) / 360 * ratio
         sleep(slptim)
+        
+        '''
         move_actuator(ser_num, ans[i][0] % 2, -offset, rpm)
         if flag:
             move_actuator(ans[i + 1][0] // 2, ans[i + 1][0] % 2, -offset, rpm)
         #slptim = 2 * 60 / rpm * (-offset) / 360 * 0.9
         #sleep(slptim)
-        if flag:
-            i += 1
-        i += 1
+        '''
+        i += 1 + int(flag)
         #slptim2 = abs(2 * 60 / rpm * offset / 360)
         #sleep(slptim2)
-        #print('done', i, 'sleep:', slptim, slptim2)
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
     solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
@@ -609,8 +652,8 @@ for i in range(len(solved_solution)):
 
 
 ser_motor = [None, None]
-ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, write_timeout=0)
-ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, write_timeout=0)
+ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, timeout=0.01, write_timeout=0)
+ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, timeout=0.01, write_timeout=0)
 
 calibration()
 
@@ -635,10 +678,6 @@ for i in range(6):
 inspection = tkinter.Button(root, text="inspection", command=inspection_p)
 inspection.place(x=0, y=0)
 
-start = tkinter.Button(root, text="start", command=start_p)
-start.place(x=0, y=40)
-
-
 solutionvar = tkinter.StringVar(master=root, value='')
 solution = tkinter.Label(textvariable=solutionvar)
 solution.place(x=120, y=0)
@@ -654,8 +693,13 @@ release = tkinter.Button(root, text="release", command=release_p)
 release.place(x=150, y=150)
 
 calib = tkinter.Button(root, text='calibration', command=calibration)
-calib.place(x=325, y=0)
+calib.place(x=300, y=0)
 
+start_slow = tkinter.Button(root, text="start slow", command=start_slow_p)
+start_slow.place(x=300, y=50)
+
+start_fast = tkinter.Button(root, text="start fast", command=start_fast_p)
+start_fast.place(x=300, y=90)
 
 root.mainloop()
 
