@@ -507,7 +507,7 @@ def inspection_p():
             f.write(str(min_cost) + ' ' + str(ans))
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
-        solvingtimevar.set('fast:' + str(round(min_cost * 0.084, 2)) + 's slow:' + str(round(min_cost * 0.12, 2)) + 's')
+        solvingtimevar.set('fast:' + str(round(min_cost * 0.084, 2)) + 's medium:' + str(round(min_cost * 0.09, 2)) + 's')
         print('all', time() - strt, 's')
         if ans_adopt[2]:
             move_actuator(0, 0, -90, 200)
@@ -538,7 +538,7 @@ def start_medium_p():
 # 速運転
 # Fast
 def start_fast_p():
-    start_p(0.06, 0.07, 550, 0.65)
+    start_p(0.06, 0.07, 510, 0.65)
 
 # 爆速運転
 # Super Fast
@@ -548,6 +548,7 @@ def start_superfast_p():
 # 実際にロボットを動かす
 # Move robot
 def start_p(slp1, slp2, rpm, ratio):
+    global ans
     print('start!')
     if bluetoothmode:
         client_socket.send('start\n')
@@ -620,6 +621,7 @@ def start_p(slp1, slp2, rpm, ratio):
         client_socket.send(solv_time + '\n')
     solvingtimevar.set(solv_time + 's')
     print('solving time:', solv_time, 's')
+    ans = []
 
 
 move_candidate = ["U", "U2", "U'", "F", "F2", "F'", "R", "R2", "R'"] #回転の候補
@@ -639,7 +641,7 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
-bluetoothmode = False
+bluetoothmode = True
 if bluetoothmode:
     subprocess.call(['sh', 'bluetooth_script.sh'])
     PORT = 1
