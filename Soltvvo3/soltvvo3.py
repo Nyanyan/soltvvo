@@ -551,12 +551,14 @@ def start_p(slp1, slp2, rpm, ratio):
     print('start!')
     if bluetoothmode:
         client_socket.send('start\n')
-    sleep(0.5)
+        sleep(0.4)
     strt_solv = time()
     i = 0
     while i < len(ans):
         
         if GPIO.input(21) == GPIO.LOW:
+            if bluetoothmode:
+                client_socket.send('emergency\n')
             solvingtimevar.set('emergency stop')
             print('emergency stop 1')
             return

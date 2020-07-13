@@ -11,11 +11,14 @@ def main():
     if receive == 'start':
         strt = time()
         solv_flag = True
+    elif receive == 'emergency':
+        solvingtimevar.set('EMR')
+        solv_flag = False
     elif len(receive):
         solvingtimevar.set(receive)
         solv_flag = False
     elif solv_flag:
-        solvingtimevar.set(str(round(time() - strt, 1)))
+        solvingtimevar.set(str(round(time() - strt, 3)))
     root.after(1, main)
 
 
