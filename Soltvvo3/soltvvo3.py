@@ -217,7 +217,7 @@ def detect():
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
         for _ in range(5):
             ret, frame = capture.read()
-        d = 30
+        d = 10
         size_x = 130
         size_y = 100
         center = [size_x // 2, size_y // 2]
@@ -246,15 +246,15 @@ def detect():
                         cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
                         loopflag[i] = 0
                         break
-        cv2.imshow('title',show_frame)
-        if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
-            for i in range(4):
-                colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
-            confirm_p()
-            move_actuator(0, 0, -90, rpm)
-            move_actuator(1, 0, 90, rpm)
-            sleep(0.2)
-        cv2.destroyAllWindows()
+        #cv2.imshow('title',show_frame)
+        #if cv2.waitKey(0) == 32: #スペースキーが押されたとき When space key pressed
+        for i in range(4):
+            colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = tmp_colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]]
+        confirm_p()
+        move_actuator(0, 0, -90, rpm)
+        move_actuator(1, 0, 90, rpm)
+        sleep(0.2)
+        #cv2.destroyAllWindows()
     capture.release()
     '''
     for i in range(2):
@@ -268,7 +268,7 @@ def inspection_p():
 
     ans = []
     colors = [['' for _ in range(8)] for _ in range(6)]
-    
+    '''
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'w', 'w', '', '', '', '']
     colors[2] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
@@ -310,7 +310,7 @@ def inspection_p():
     colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
     colors[4] = ['', '', 'y', 'y', '', '', '', '']
     colors[5] = ['', '', 'y', 'y', '', '', '', '']
-    '''
+    
     colors[0] = ['', '', 'w', 'w', '', '', '', '']
     colors[1] = ['', '', 'o', 'g', '', '', '', '']
     colors[2] = ['o', 'g', 'w', 'r', 'w', 'r', 'b', 'b']
@@ -346,7 +346,7 @@ def inspection_p():
     colors[4] = ['', '', 'y', 'w', '', '', '', '']
     colors[5] = ['', '', 'g', 'g', '', '', '', '']
     '''
-    #detect()
+    detect()
     
     with open('log.txt', mode='w') as f:
         f.write(str(colors) + '\n')
@@ -551,7 +551,7 @@ def start_p(slp1, slp2, rpm, ratio):
     print('start!')
     if bluetoothmode:
         client_socket.send('start\n')
-    sleep(0.3)
+    sleep(0.5)
     strt_solv = time()
     i = 0
     while i < len(ans):
