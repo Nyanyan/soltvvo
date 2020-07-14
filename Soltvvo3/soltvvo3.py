@@ -507,8 +507,8 @@ def inspection_p():
             f.write(str(min_cost) + ' ' + str(ans))
         print('answer:', ans)
         solutionvar.set(str(len(ans)) + 'moves, ' + str(min_cost) + 'cost')
-        solvingtimevar.set('fast:' + str(round(min_cost * 0.084, 2)) + 's medium:' + str(round(min_cost * 0.09, 2)) + 's')
-        print('all', time() - strt, 's')
+        solvingtimevar.set('fast:' + str(round(min_cost * 0.083, 2)) + 's medium:' + str(round(min_cost * 0.088, 2)) + 's')
+        print('calculate', time() - strt, 's')
         if ans_adopt[2]:
             move_actuator(0, 0, -90, 200)
             move_actuator(1, 0, 90, 200)
@@ -533,17 +533,17 @@ def start_slow_p():
 # 通常運転
 # Medium
 def start_medium_p():
-    start_p(0.07, 0.08, 500, 0.65)
+    start_p(0.07, 0.08, 500, 0.6)
 
 # 速運転
 # Fast
 def start_fast_p():
-    start_p(0.06, 0.07, 510, 0.65)
+    start_p(0.07, 0.07, 510, 0.55)
 
 # 爆速運転
 # Super Fast
 def start_superfast_p():
-    start_p(0.06, 0.06, 550, 0.6)
+    start_p(0.06, 0.06, 550, 0.55)
 
 # 実際にロボットを動かす
 # Move robot
