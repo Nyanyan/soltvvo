@@ -6,7 +6,7 @@
 
 Soltvvos are robots that solve 2x2x2 rubik’s cubes.
 
-![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
+![Soltvvo3](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
 
 ### Videos
 
@@ -80,7 +80,33 @@ This code uses two phase algorithm, so the solution is not the fastest.
 
 ### Soltvvo3
 
+![Soltvvo3](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
 
+The latest version
+
+#### soltvvo3_arduino
+
+The program for ATMEGA328P
+
+#### co.csv, co_cost.csv, cp.csv, cp_cost.csv, solved.csv, solved_solution.csv
+
+CSV files used in Python program
+
+#### log.txt
+
+Log
+
+#### soltvvo3.py
+
+Main program
+
+#### soltvvo3_display.py
+
+This program is executed on PC, which shows the time to solve a cube
+
+#### soltvvo3_pre.py
+
+This must be executed before executing the main program.
 
 ## Want to learn more?
 
@@ -104,13 +130,15 @@ Facebook: https://www.facebook.com/people/Takuto-Yamana/100011203000448
 
 Soltvvo(ソルヴォ)は2x2x2ルービックキューブを自動で解くロボットです。
 
-![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo2.jpg)
+![Soltvvo3](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
 
 ## 動画
 
 画像をクリックしてください(YouTubeに飛びます)。
 
 プロモーションビデオ: 
+
+[![Soltvvo PV](http://img.youtube.com/vi/Fok7bAn-NSs/0.jpg)](http://www.youtube.com/watch?v=Fok7bAn-NSs)
 
 [![Soltvvo PV](http://img.youtube.com/vi/76N6BOrEjSo/0.jpg)](http://www.youtube.com/watch?v=76N6BOrEjSo)
 
@@ -151,6 +179,10 @@ ATMEGA328P向けのプログラム
 
 
 ### Soltvvo2
+
+![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo2.jpg)
+
+2つ目のロボットです。
 
 #### human
 
@@ -200,6 +232,36 @@ ATMEGA328P用のプログラム
 
 2フェーズアルゴリズムを使ったプログラム。高速に解を探索しますが出力される解は最適ではありません。
 
+### Soltvvo3
+
+![Soltvvo3](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
+
+最新のロボットです。
+
+#### soltvvo3_arduino
+
+ATMEGA328Pで動かすプログラム
+
+#### co.csv, co_cost.csv, cp.csv, cp_cost.csv, solved.csv, solved_solution.csv
+
+Pythonのプログラムで使うCSVファイル
+
+#### log.txt
+
+ログ
+
+#### soltvvo3.py
+
+メインプログラム
+
+#### soltvvo3_display.py
+
+PCで実行してタイムを表示するためのプログラム
+
+#### soltvvo3_pre.py
+
+前計算を行うプログラム。メインプログラム実行前に実行する。
+
 ## もっと詳しく
 
 詳細を書いた記事と動画があります。: 
@@ -213,6 +275,3 @@ https://qiita.com/Nyanyan_Cube/items/a1b6e6bc7e4ac832b3d0
 Twitter: https://twitter.com/Nyanyan_Cube
 
 Facebook: https://www.facebook.com/people/Takuto-Yamana/100011203000448
-
-
-
