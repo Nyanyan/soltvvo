@@ -6,13 +6,15 @@
 
 Soltvvos are robots that solve 2x2x2 rubik’s cubes.
 
-![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo2.jpg)
+![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo3.jpg)
 
 ### Videos
 
 Click the image and see on YouTube please.
 
 Promotion Video: 
+
+[![Soltvvo PV](http://img.youtube.com/vi/Fok7bAn-NSs/0.jpg)](http://www.youtube.com/watch?v=Fok7bAn-NSs)
 
 [![Soltvvo PV](http://img.youtube.com/vi/76N6BOrEjSo/0.jpg)](http://www.youtube.com/watch?v=76N6BOrEjSo)
 
@@ -52,7 +54,9 @@ A program which makes coX.csv and cpX.csv
 
 ### Soltvvo2
 
-There are files of Soltvvo2, the latest version.
+![Soltvvo2](https://github.com/Nyanyan/soltvvo/blob/master/img/soltvvo2.jpg)
+
+There are files of Soltvvo2, the second robot.
 
 #### human
 
@@ -66,34 +70,6 @@ Test code and legacy program
 
 The latest code, explores a solution fast and the solution is the fastest.
 
-##### legacy
-
-legacy programs
-
-##### co.csv, cp.csv
-
-Files for pruning
-
-##### log.txt
-
-log
-
-##### soltvvo2_one_phase.py
-
-Main program
-
-##### soltvvo2_one_phase_pre.py
-
-A program which makes co.csv, cp.csv, colved.csv, solved_solution.csv
-
-##### solved.csv
-
-List of statuses under 5 moves
-
-##### solved_solution.csv
-
-List of solution under 5 moves
-
 #### soltvvo2_arduino
 
 The program for ATMEGA328P
@@ -101,6 +77,10 @@ The program for ATMEGA328P
 #### two_phase
 
 This code uses two phase algorithm, so the solution is not the fastest.
+
+### Soltvvo3
+
+
 
 ## Want to learn more?
 
