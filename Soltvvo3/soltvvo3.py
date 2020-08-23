@@ -48,7 +48,7 @@ import serial
 import csv
 import RPi.GPIO as GPIO
 import bluetooth
-import subprocess
+
 
 class Cube:
     def __init__(self):
@@ -538,17 +538,17 @@ def start_slow_p():
 # 通常運転
 # Medium
 def start_medium_p():
-    start_p(0.09, 0.09, 500, 1.0)
+    start_p(0.1, 0.1, 550, 1.0)
 
 # 速運転
 # Fast
 def start_fast_p():
-    start_p(0.07, 0.07, 510, 1.0)
+    start_p(0.1, 0.1, 650, 1.0)
 
 # 爆速運転
 # Super Fast
 def start_superfast_p():
-    start_p(0.06, 0.06, 550, 1.0)
+    start_p(0.095, 0.095, 730, 0.9)
 
 # 実際にロボットを動かす
 # Move robot
