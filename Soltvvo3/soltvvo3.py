@@ -151,7 +151,7 @@ def calibration():
     sleep(0.1)
     for i in range(2):
         for j in range(2):
-            move_actuator(j, i, -90, 500)
+            move_actuator(j, i, 0, 500)
 
 # ボックスに色を反映させる
 # Color the boxes
@@ -533,22 +533,22 @@ def inspection_p():
 # 安全運転
 # Slow
 def start_slow_p():
-    start_p(0.1, 0.1, 400, 1.2)
+    start_p(0.15, 0.15, 300, 1.2)
 
 # 通常運転
 # Medium
 def start_medium_p():
-    start_p(0.1, 0.1, 550, 1.0)
+    start_p(0.1, 0.1, 400, 1.0)
 
 # 速運転
 # Fast
 def start_fast_p():
-    start_p(0.1, 0.1, 650, 1.0)
+    start_p(0.095, 0.095, 500, 0.9)
 
 # 爆速運転
 # Super Fast
 def start_superfast_p():
-    start_p(0.095, 0.095, 730, 0.9)
+    start_p(0.09, 0.09, 700, 0.8)
 
 # 実際にロボットを動かす
 # Move robot
@@ -658,8 +658,8 @@ if bluetoothmode:
     print("connection success!!")
 
 ser_motor = [None, None]
-ser_motor[0] = serial.Serial('/dev/ttyUSB0', 9600, timeout=0.01, write_timeout=0)
-ser_motor[1] = serial.Serial('/dev/ttyUSB1', 9600, timeout=0.01, write_timeout=0)
+ser_motor[0] = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.01, write_timeout=0)
+ser_motor[1] = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.01, write_timeout=0)
 
 # 前計算
 # Read data from csv
