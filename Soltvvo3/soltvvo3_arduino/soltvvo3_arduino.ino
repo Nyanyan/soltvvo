@@ -5,10 +5,10 @@ const long turn_steps = 400;
 const int step_dir[2] = {11, 9};
 const int step_pul[2] = {12, 10};
 const int sensor[2] = {14, 15};
-const int grab_deg[2] = {79, 75}; //手前
-const int release_deg[2] = {101, 97};
-//const int grab_deg[2] = {74, 74}; //奥
-//const int release_deg[2] = {96, 96};
+//const int grab_deg[2] = {79, 75}; //手前
+//const int release_deg[2] = {101, 97};
+const int grab_deg[2] = {74, 74}; //奥
+const int release_deg[2] = {96, 96};
 const int offset = 3;
 
 char buf[30];

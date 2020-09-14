@@ -548,7 +548,7 @@ def start_fast_p():
 # 爆速運転
 # Super Fast
 def start_superfast_p():
-    start_p(0.09, 0.09, 700, 0.8)
+    start_p(0.075, 0.075, 700, 0.75)
 
 # 実際にロボットを動かす
 # Move robot
