@@ -91,7 +91,8 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
             n_depth = depth - cost - grip_cost
             n_now_cost = now_cost + grip_cost + cost
             n_mode = twist // 6
-            if distance(n_cp_idx, n_co_idx) > n_depth:
+            n_dis = distance(n_cp_idx, n_co_idx)
+            if n_dis > n_depth:
                 continue
             solution.append(twist)
             #print(solution)
@@ -153,16 +154,29 @@ solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
 
-''' TEST
-scramble_cp = [0, 1, 2, 3, 4, 5, 6, 7]
-scramble_co = [0, 0, 0, 0, 0, 0, 0, 0]
-scramble = [[[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]]]
-for twist in scramble:
-    for each_twist in twist:
-        scramble_cp = move_cp(scramble_cp, each_twist)
-        scramble_co = move_co(scramble_co, each_twist)
-
-print(scramble_cp, scramble_co)
-
-print(solver(scramble_cp, scramble_co))
-'''
+# TEST
+from time import time
+from random import randint
+num = 1000
+max_scramble_num = 20
+twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
+time_lst = []
+cost_lst = []
+for _ in range(num):
+    scramble_cp = [0, 1, 2, 3, 4, 5, 6, 7]
+    scramble_co = [0, 0, 0, 0, 0, 0, 0, 0]
+    scramble_num = randint(1, max_scramble_num)
+    scramble = [twist_lst[i] for i in [randint(0, 11) for _ in range(scramble_num)]]
+    for twist in scramble:
+        for each_twist in twist:
+            scramble_cp = move_cp(scramble_cp, each_twist)
+            scramble_co = move_co(scramble_co, each_twist)
+    #print(scramble_cp, scramble_co)
+    strt = time()
+    cost = solver(scramble_cp, scramble_co)[1]
+    solv_time = time() - strt
+    #print(solv_time)
+    time_lst.append(solv_time)
+    cost_lst.append(cost)
+print('time max, avg', max(time_lst), sum(time_lst) / num)
+print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
