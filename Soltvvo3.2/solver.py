@@ -108,10 +108,18 @@ def solver(cp, co):
     co_idx = co2idx(co)
     if distance(cp_idx, co_idx) == 0:
         return solution, 0
-    l = 0
-    r = 30
     res = []
     res_cost = 0
+    ''' # IDA* Algorithm
+    for depth in range(1, 30):
+        tmp, cost = search(cp_idx, co_idx, depth, -1, 0)
+        if tmp:
+            res = solution
+            res_cost = cost
+    '''
+    # BDA* Algorithm
+    l = 0
+    r = 30
     while l < r:
         solution = []
         c = (l + r) // 2
