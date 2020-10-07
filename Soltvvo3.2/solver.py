@@ -5,8 +5,8 @@ Written by Nyanyan
 Copyright 2020 Nyanyan
 
 
-Cube.Cp[その位置にあるパーツの番号]
-Cube.Co[白または黄ステッカーの向き]
+cp[その位置にあるパーツの番号]
+co[白または黄ステッカーの向き]
 U面
         B
 L [0, 0] [1, 0] R
@@ -20,8 +20,8 @@ L [6, 0] [7, 0] R
 
 向きは揃っている方向(白黄ステッカー)から時計回りに1, 2となる
 
-Cube.Cp[part number]
-Cube.Co[direction of white or yellow sticker]
+cp[part number]
+co[direction of white or yellow sticker]
 U face
         B
 L [0, 0] [1, 0] R
