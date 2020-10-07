@@ -70,13 +70,10 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
     global solution
     if depth == 0:
         return distance(cp_idx, co_idx) == 0, now_cost
-    elif depth <= 18:
-        tmp = bin_search(cp_idx * 2187 + co_idx)
-        if tmp >= 0:
-            solution.extend(neary_solved_solution[tmp])
-            return True, now_cost + neary_solved_idx[tmp][1]
-        else:
-            return False, -1
+    tmp = bin_search(cp_idx * 2187 + co_idx)
+    if tmp >= 0:
+        solution.extend(neary_solved_solution[tmp])
+        return True, now_cost + neary_solved_idx[tmp][1]
     if mode == -1:
         twist_lst = range(12)
     elif mode == 0:
@@ -110,7 +107,8 @@ def solver(cp, co):
         return solution, 0
     res = []
     res_cost = 0
-    ''' # IDA* Algorithm
+    '''
+    # IDA* Algorithm
     for depth in range(1, 30):
         tmp, cost = search(cp_idx, co_idx, depth, -1, 0)
         if tmp:
@@ -171,6 +169,7 @@ max_scramble_num = 50
 twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
 time_lst = []
 cost_lst = []
+cnt = 0
 for _ in range(num):
     scramble_cp = [0, 1, 2, 3, 4, 5, 6, 7]
     scramble_co = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -182,11 +181,15 @@ for _ in range(num):
             scramble_co = move_co(scramble_co, each_twist)
     #print(scramble_cp, scramble_co)
     strt = time()
-    cost = solver(scramble_cp, scramble_co)[1]
+    tmp = solver(scramble_cp, scramble_co)
+    if tmp != -1:
+        cnt += 1
+    cost = tmp[1]
     solv_time = time() - strt
     #print(solv_time)
     time_lst.append(solv_time)
     cost_lst.append(cost)
+print('cnt', cnt)
 print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
 '''
