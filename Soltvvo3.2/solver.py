@@ -154,6 +154,7 @@ solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
 
+'''
 # TEST
 from time import time
 from random import randint
@@ -180,3 +181,4 @@ for _ in range(num):
     cost_lst.append(cost)
 print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
+'''
