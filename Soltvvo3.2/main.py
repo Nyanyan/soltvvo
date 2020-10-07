@@ -120,6 +120,9 @@ def inspection_p():
         print('cannot solve!')
         solutionvar.set('cannot solve!')
         return
+    with open('log.txt', mode='a') as f:
+        f.write(str(cost) + '\n')
+        f.write(str(solution) + '\n')
     solutionvar.set('cost: ' + str(cost) + ' ex: ' + str(round(cost * 0.083, 2)) + 's')
     grab = solution[0][0][0] % 2
     for j in range(2):
