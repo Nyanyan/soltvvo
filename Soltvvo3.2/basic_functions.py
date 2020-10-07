@@ -2,6 +2,8 @@ fac = [1]
 for i in range(1, 9):
     fac.append(fac[-1] * i)
 
+grip_cost = 1
+
 # 回転処理 CP
 # Rotate CP
 def move_cp(cp, arr):
