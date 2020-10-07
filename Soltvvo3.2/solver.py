@@ -77,7 +77,6 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
             return True, now_cost + neary_solved_idx[tmp][1]
         else:
             return False, -1
-    #print(' ' * depth, distance(cp_idx, co_idx))
     if mode == -1:
         twist_lst = range(12)
     elif mode == 0:
@@ -97,7 +96,6 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
             if n_dis > n_depth:
                 continue
             solution.append(twist)
-            #print(solution)
             tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
             if tmp:
                 return True, ans_cost
