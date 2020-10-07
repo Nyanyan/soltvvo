@@ -34,7 +34,6 @@ def fill(colors):
 # Get colors of stickers
 def detector():
     colors = [['' for _ in range(8)] for _ in range(6)]
-    '''
     for i in range(2):
         move_actuator(i, 0, 1000)
     for i in range(2):
@@ -100,4 +99,5 @@ def detector():
     colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
     colors[4] = ['', '', 'r', 'r', '', '', '', '']
     colors[5] = ['', '', 'y', 'b', '', '', '', '']
+    '''
     return colors
