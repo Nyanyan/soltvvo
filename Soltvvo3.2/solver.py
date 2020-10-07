@@ -68,35 +68,29 @@ def bin_search(num):
 
 def search(cp_idx, co_idx, depth, mode, now_cost):
     global solution
-    if distance(cp_idx, co_idx) == 0:
-        return True, now_cost
-    tmp = bin_search(cp_idx * 2187 + co_idx)
-    if tmp >= 0:
-        solution.extend(neary_solved_solution[tmp])
-        return True, now_cost + neary_solved_idx[tmp][1]
-    if mode == -1:
-        twist_lst = range(12)
-    elif mode == 0:
-        twist_lst = range(6, 12)
-    elif mode == 1:
-        twist_lst = range(6)
+    twist_idx_lst = [range(6, 12), range(6), range(12)]
     cost_lst = [1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2]
-    dis = distance(cp_idx, co_idx)
-    if dis <= depth:
-        for twist in twist_lst:
-            cost = cost_lst[twist]
-            n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
-            n_depth = depth - cost - grip_cost
-            n_now_cost = now_cost + grip_cost + cost
-            n_mode = twist // 6
-            n_dis = distance(n_cp_idx, n_co_idx)
-            if n_dis > n_depth:
-                continue
-            solution.append(twist)
-            tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
-            if tmp:
-                return True, ans_cost
-            solution.pop()
+    for twist in twist_idx_lst[mode]:
+        cost = cost_lst[twist]
+        n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
+        n_depth = depth - cost - grip_cost
+        n_now_cost = now_cost + grip_cost + cost
+        n_mode = twist // 6
+        n_dis = distance(n_cp_idx, n_co_idx)
+        if n_dis > n_depth:
+            continue
+        solution.append(twist)
+        if n_dis == 0:
+            return True, n_now_cost
+        if n_dis <= 18:
+            tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
+            if tmp >= 0:
+                solution.extend(neary_solved_solution[tmp])
+                return True, now_cost + neary_solved_idx[tmp][1]
+        tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
+        if tmp:
+            return True, ans_cost
+        solution.pop()
     return False, -1
 
 def solver(cp, co):
@@ -107,13 +101,14 @@ def solver(cp, co):
         return solution, 0
     res = []
     res_cost = 0
-    '''
+    
     # IDA* Algorithm
     for depth in range(1, 30):
         tmp, cost = search(cp_idx, co_idx, depth, -1, 0)
         if tmp:
             res = solution
             res_cost = cost
+            break
     '''
     # BDA* Algorithm
     l = 0
@@ -121,13 +116,14 @@ def solver(cp, co):
     while l < r:
         solution = []
         c = (l + r) // 2
-        tmp, cost = search(cp_idx, co_idx, c, -1, 0)
+        tmp, cost = search(cp_idx, co_idx, c, 2, 0)
         if tmp:
             res = [i for i in solution]
             res_cost = cost
-            r = c
+            r = min(c, cost)
         else:
             l = c + 1
+    '''
     if res == []:
         return -1, res_cost
     twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
