@@ -1,3 +1,43 @@
+# coding:utf-8
+'''
+Code for Soltvvo2
+Written by Nyanyan
+Copyright 2020 Nyanyan
+
+
+Cube.Cp[その位置にあるパーツの番号]
+Cube.Co[白または黄ステッカーの向き]
+U面
+        B
+L [0, 0] [1, 0] R
+L [2, 0] [3, 0] R
+        F
+D面
+        F
+L [4, 0] [5, 0] R
+L [6, 0] [7, 0] R
+        B
+
+向きは揃っている方向(白黄ステッカー)から時計回りに1, 2となる
+
+Cube.Cp[part number]
+Cube.Co[direction of white or yellow sticker]
+U face
+        B
+L [0, 0] [1, 0] R
+L [2, 0] [3, 0] R
+        F
+D face
+        F
+L [4, 0] [5, 0] R
+L [6, 0] [7, 0] R
+        B
+the direction of white or yellow sticker is 
+0 if the sticker is on U or D face, 
+1 if it is 120 degrees clockwise rotated from U or D face,
+2 if it is 240 degrees clockwise rotated from U or D face.
+'''
+
 from basic_functions import *
 
 def distance(cp_idx, co_idx):
@@ -74,7 +114,6 @@ def solver(cp, co):
     while l < r:
         solution = []
         c = (l + r) // 2
-        print(c)
         tmp, cost = search(cp_idx, co_idx, c, -1, 0)
         if tmp:
             res = [i for i in solution]
@@ -114,9 +153,10 @@ solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
 
+''' TEST
 scramble_cp = [0, 1, 2, 3, 4, 5, 6, 7]
 scramble_co = [0, 0, 0, 0, 0, 0, 0, 0]
-scramble = [[[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]]]
+scramble = [[[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]], [[0, -1]], [[1, -2]], [[0, -1], [2, -1]], [[1, -2], [3, -1]]]
 for twist in scramble:
     for each_twist in twist:
         scramble_cp = move_cp(scramble_cp, each_twist)
@@ -125,3 +165,4 @@ for twist in scramble:
 print(scramble_cp, scramble_co)
 
 print(solver(scramble_cp, scramble_co))
+'''

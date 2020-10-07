@@ -1,3 +1,4 @@
+# coding:utf-8
 from collections import deque
 import csv
 
@@ -141,4 +142,4 @@ def create_neary_solved():
 #create_co_cost()
 #create_cp_trans()
 #create_co_trans()
-create_neary_solved()
+#create_neary_solved()

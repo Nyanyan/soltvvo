@@ -1,9 +1,4 @@
-fac = [1]
-for i in range(1, 9):
-    fac.append(fac[-1] * i)
-
-grip_cost = 1
-
+# coding:utf-8
 # 回転処理 CP
 # Rotate CP
 def move_cp(cp, arr):
@@ -71,3 +66,9 @@ def idx2co(co_idx):
         co_idx //= 3
     res[7] = (3 - sum(res) % 3) % 3
     return res
+
+fac = [1]
+for i in range(1, 9):
+    fac.append(fac[-1] * i)
+
+grip_cost = 1
