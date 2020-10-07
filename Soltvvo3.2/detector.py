@@ -30,39 +30,11 @@ def fill(colors):
                         break
     return colors
 
-# 色の情報からパズルの状態配列を作る
-# Make CO and CP array from the colors of stickers
-def create_arr(colors):
-    for i in j2color:
-        cnt = 0
-        for j in colors:
-            if i in j:
-                cnt += j.count(i)
-        if cnt != 4:
-            return -1
-    cp = [-1 for _ in range(8)]
-    co = [-1 for _ in range(8)]
-    set_parts_color = [set(i) for i in parts_color]
-    for i in range(8):
-        tmp = []
-        for j in range(3):
-            tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
-        tmp1 = 'w' if 'w' in tmp else 'y'
-        co[i] = tmp.index(tmp1)
-        if not set(tmp) in set_parts_color:
-            return -1
-        cp[i] = set_parts_color.index(set(tmp))
-    tmp2 = list(set(range(7)) - set(cp))
-    if len(tmp2):
-        tmp2 = tmp2[0]
-        for i in range(7):
-            if cp[i] > tmp2:
-                cp[i] -= 1
-    return cp, co
-
 # パズルの状態の取得
 # Get colors of stickers
 def detector():
+    colors = [['' for _ in range(8)] for _ in range(6)]
+    '''
     for i in range(2):
         move_actuator(i, 0, 1000)
     for i in range(2):
@@ -121,8 +93,11 @@ def detector():
         sleep(0.2)
         #cv2.destroyAllWindows()
     capture.release()
-    with open('log.txt', mode='w') as f:
-        f.write(str(colors) + '\n')
-    return create_arr(colors)
-
-j2color = ['g', 'b', 'r', 'o', 'y', 'w']
+    '''
+    colors[0] = ['', '', 'w', 'g', '', '', '', '']
+    colors[1] = ['', '', 'o', 'o', '', '', '', '']
+    colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
+    colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
+    colors[4] = ['', '', 'r', 'r', '', '', '', '']
+    colors[5] = ['', '', 'y', 'b', '', '', '', '']
+    return colors

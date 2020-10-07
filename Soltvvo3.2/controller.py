@@ -66,9 +66,9 @@ def controller(slp1, slp2, rpm, ratio, solution):
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
     return solv_time
 
+ser_motor = [None, None]
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(21,GPIO.IN)
-
-ser_motor = [None, None]
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.01, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.01, write_timeout=0)
