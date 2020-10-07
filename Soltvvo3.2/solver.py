@@ -57,6 +57,8 @@ def bin_search(num):
             r = c
         else:
             l = c
+    if r == len_neary_solved:
+        return -1
     if num == neary_solved_idx[l][0]:
         return l
     elif num == neary_solved_idx[r][0]:
@@ -158,7 +160,7 @@ solved_co_idx = 0
 from time import time
 from random import randint
 num = 1000
-max_scramble_num = 20
+max_scramble_num = 50
 twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
 time_lst = []
 cost_lst = []
