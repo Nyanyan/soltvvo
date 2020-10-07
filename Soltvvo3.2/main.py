@@ -88,13 +88,6 @@ def inspection_p():
             if 1 < i < 4 or 1 < j < 4:
                 entry[i][j]['bg'] = 'gray'
     colors0 = detector()
-    with open('log.txt', mode='w') as f:
-        f.write(str(colors0) + '\n')
-    cp0, co0 = create_arr(colors0)
-    if cp0 == co0 == -1:
-        print('cannot solve!')
-        solutionvar.set('cannot solve!')
-        return
     for i in range(6):
         for j in range(8):
             if 1 < i < 4 or 1 < j < 4:
@@ -102,6 +95,13 @@ def inspection_p():
                     entry[i][j]['bg'] = dic[colors0[i][j]]
                 else:
                     entry[i][j]['bg'] = 'gray'
+    with open('log.txt', mode='w') as f:
+        f.write(str(colors0) + '\n')
+    cp0, co0 = create_arr(colors0)
+    if cp0 == co0 == -1:
+        print('cannot solve!')
+        solutionvar.set('cannot solve!')
+        return
     solution0, cost0 = solver(cp0, co0)
     colors1 = rotate_colors(colors0)
     cp1, co1 = create_arr(colors1)
