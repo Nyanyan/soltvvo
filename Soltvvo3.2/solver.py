@@ -70,7 +70,7 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
     global solution
     if depth == 0:
         return distance(cp_idx, co_idx) == 0, now_cost
-    elif 15 <= depth <= 18:
+    elif depth <= 18:
         tmp = bin_search(cp_idx * 2187 + co_idx)
         if tmp >= 0:
             solution.extend(neary_solved_solution[tmp])
