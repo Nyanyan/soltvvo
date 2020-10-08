@@ -109,9 +109,13 @@ def inspection_p():
     if cost0 <= cost1:
         solution = solution0
         cost = cost0
+        with open('log.txt', mode='a') as f:
+            f.write('0\n')
     else:
         solution = solution1
         cost = cost1
+        with open('log.txt', mode='a') as f:
+            f.write('1\n')
         move_actuator(0, 0, -90, 200)
         move_actuator(1, 0, 90, 200)
         sleep(0.3)
