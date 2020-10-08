@@ -33,36 +33,6 @@ def start_superfast_p():
     controller(0.1, 0.1, 600, 1, solution)
     solution = []
 
-# 色の情報からパズルの状態配列を作る
-# Make CO and CP array from the colors of stickers
-def create_arr(colors):
-    for i in j2color:
-        cnt = 0
-        for j in colors:
-            if i in j:
-                cnt += j.count(i)
-        if cnt != 4:
-            return -1, -1
-    cp = [-1 for _ in range(8)]
-    co = [-1 for _ in range(8)]
-    set_parts_color = [set(i) for i in parts_color]
-    for i in range(8):
-        tmp = []
-        for j in range(3):
-            tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
-        tmp1 = 'w' if 'w' in tmp else 'y'
-        co[i] = tmp.index(tmp1)
-        if not set(tmp) in set_parts_color:
-            return -1, -1
-        cp[i] = set_parts_color.index(set(tmp))
-    tmp2 = list(set(range(7)) - set(cp))
-    if len(tmp2):
-        tmp2 = tmp2[0]
-        for i in range(7):
-            if cp[i] > tmp2:
-                cp[i] -= 1
-    return cp, co
-
 def rotate_colors(colors):
     replace = [
         [[-1, -1], [-1, -1], [2, 2], [2, 3], [-1, -1], [-1, -1], [-1, -1], [-1, -1]],
@@ -97,15 +67,13 @@ def inspection_p():
                     entry[i][j]['bg'] = 'gray'
     with open('log.txt', mode='w') as f:
         f.write(str(colors0) + '\n')
-    cp0, co0 = create_arr(colors0)
-    if cp0 == co0 == -1:
+    solution0, cost0 = solver(colors0)
+    if solution0 == -1:
         print('cannot solve!')
         solutionvar.set('cannot solve!')
         return
-    solution0, cost0 = solver(cp0, co0)
     colors1 = rotate_colors(colors0)
-    cp1, co1 = create_arr(colors1)
-    solution1, cost1 = solver(cp1, co1)
+    solution1, cost1 = solver(colors1)
     if cost0 <= cost1:
         solution = solution0
         cost = cost0
@@ -138,7 +106,6 @@ def inspection_p():
 
 solution = []
 dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
-j2color = ['g', 'b', 'r', 'o', 'y', 'w']
 parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'b', 'o'], ['y', 'r', 'b']]
 parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 2], [3, 7], [3, 0]], [[5, 3], [3, 5], [3, 6]]]
 

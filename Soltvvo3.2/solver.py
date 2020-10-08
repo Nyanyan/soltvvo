@@ -40,6 +40,37 @@ the direction of white or yellow sticker is
 
 from basic_functions import *
 
+# 色の情報からパズルの状態配列を作る
+# Make CO and CP array from the colors of stickers
+def create_arr(colors):
+    j2color = ['g', 'b', 'r', 'o', 'y', 'w']
+    for i in j2color:
+        cnt = 0
+        for j in colors:
+            if i in j:
+                cnt += j.count(i)
+        if cnt != 4:
+            return -1, -1
+    cp = [-1 for _ in range(8)]
+    co = [-1 for _ in range(8)]
+    set_parts_color = [set(i) for i in parts_color]
+    for i in range(8):
+        tmp = []
+        for j in range(3):
+            tmp.append(colors[parts_place[i][j][0]][parts_place[i][j][1]])
+        tmp1 = 'w' if 'w' in tmp else 'y'
+        co[i] = tmp.index(tmp1)
+        if not set(tmp) in set_parts_color:
+            return -1, -1
+        cp[i] = set_parts_color.index(set(tmp))
+    tmp2 = list(set(range(7)) - set(cp))
+    if len(tmp2):
+        tmp2 = tmp2[0]
+        for i in range(7):
+            if cp[i] > tmp2:
+                cp[i] -= 1
+    return cp, co
+
 def distance(cp_idx, co_idx):
     return max(cp_cost[cp_idx], co_cost[co_idx])
 
@@ -93,8 +124,9 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         solution.pop()
     return False, -1
 
-def solver(cp, co):
+def solver(colors):
     global solution
+    cp, co = create_arr(colors)
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
     if distance(cp_idx, co_idx) == 0:
