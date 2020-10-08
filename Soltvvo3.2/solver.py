@@ -82,7 +82,7 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         solution.append(twist)
         if n_dis == 0:
             return True, n_now_cost
-        if n_dis <= 18:
+        if n_dis <= 17:
             tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
             if tmp >= 0:
                 solution.extend(neary_solved_solution[tmp])
@@ -101,10 +101,9 @@ def solver(cp, co):
         return solution, 0
     res = []
     res_cost = 0
-    
     # IDA* Algorithm
     for depth in range(1, 30):
-        tmp, cost = search(cp_idx, co_idx, depth, -1, 0)
+        tmp, cost = search(cp_idx, co_idx, depth, 2, 0)
         if tmp:
             res = solution
             res_cost = cost
@@ -161,7 +160,7 @@ solved_co_idx = 0
 from time import time
 from random import randint
 num = 1000
-max_scramble_num = 50
+max_scramble_num = 100
 twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
 time_lst = []
 cost_lst = []
