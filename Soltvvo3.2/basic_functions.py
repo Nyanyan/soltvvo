@@ -72,3 +72,5 @@ for i in range(1, 9):
     fac.append(fac[-1] * i)
 
 grip_cost = 1
+
+print('basic functions initialized')

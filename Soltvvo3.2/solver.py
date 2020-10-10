@@ -187,6 +187,8 @@ solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
 
+print('solver initialized')
+
 '''
 # TEST
 from time import time

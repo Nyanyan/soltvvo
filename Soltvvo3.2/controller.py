@@ -72,3 +72,5 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(21,GPIO.IN)
 ser_motor[0] = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.01, write_timeout=0)
 ser_motor[1] = serial.Serial('/dev/ttyUSB1', 115200, timeout=0.01, write_timeout=0)
+
+print('controller initialized')

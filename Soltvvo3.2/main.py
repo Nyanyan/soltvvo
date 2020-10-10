@@ -168,6 +168,8 @@ start_fast.place(x=300, y=130)
 start_superfast = tkinter.Button(root, text="super fast", command=start_superfast_p)
 start_superfast.place(x=300, y=170)
 
+print('main initialized')
+
 root.mainloop()
 
 '''

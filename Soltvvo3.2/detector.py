@@ -101,3 +101,5 @@ def detector():
     colors[5] = ['', '', 'y', 'b', '', '', '', '']
     '''
     return colors
+
+print('detector initialized')
