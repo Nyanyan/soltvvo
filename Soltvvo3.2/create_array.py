@@ -97,44 +97,44 @@ def create_co_cost():
     print('co cost done')
 
 def create_cp_trans_rev():
-    cp_trans = [[-1 for _ in range(12)] for _ in range(fac[8])]
+    cp_trans_rev = [[-1 for _ in range(12)] for _ in range(fac[8])]
     for idx in range(fac[8]):
         if idx % 1000 == 0:
             print(idx / fac[8])
-        if idx % 1000 == 0:
-            print(idx / fac[8])
         cp = idx2cp(idx)
-        twist_lst_rev = [[[0, 1]], [[0, 2]], [[2, 1]], [[0, 1], [2, 1]], [[0, 2], [2, 1]], [[0, 1], [2, 2]], [[1, 1]], [[1, 2]], [[3, 1]], [[1, 1], [3, 1]], [[1, 2], [3, 1]], [[1, 1], [3, 2]]]
-        for i, twist in enumerate(twist_lst_rev):
+        for i, twist in enumerate(twist_lst):
             twisted_cp = [j for j in cp]
             for each_twist in twist:
+                lst = [0, -3, -2, -1]
+                each_twist[1] = lst[-each_twist[1]]
                 twisted_cp = move_cp(twisted_cp, each_twist)
             twisted_idx = cp2idx(twisted_cp)
-            cp_trans[twisted_idx][i] = idx
+            cp_trans_rev[idx][i] = twisted_idx
     with open('cp_trans_rev.csv', mode='w') as f:
         writer = csv.writer(f, lineterminator='\n')
-        for line in cp_trans:
+        for line in cp_trans_rev:
             writer.writerow(line)
-    print('cp trans done')
+    print('cp trans rev done')
 
 def create_co_trans_rev():
-    co_trans = [[-1 for _ in range(12)] for _ in range(3 ** 7)]
+    co_trans_rev = [[-1 for _ in range(12)] for _ in range(3 ** 7)]
     for idx in range(3 ** 7):
         if idx % 1000 == 0:
             print(idx / 3 ** 7)
         co = idx2co(idx)
-        twist_lst_rev = [[[0, 1]], [[0, 2]], [[2, 1]], [[0, 1], [2, 1]], [[0, 2], [2, 1]], [[0, 1], [2, 2]], [[1, 1]], [[1, 2]], [[3, 1]], [[1, 1], [3, 1]], [[1, 2], [3, 1]], [[1, 1], [3, 2]]]
-        for i, twist in enumerate(twist_lst_rev):
+        for i, twist in enumerate(twist_lst):
             twisted_co = [j for j in co]
             for each_twist in twist:
+                lst = [0, -3, -2, -1]
+                each_twist[1] = lst[-each_twist[1]]
                 twisted_co = move_co(twisted_co, each_twist)
             twisted_idx = co2idx(twisted_co)
-            co_trans[twisted_idx][i] = idx
+            co_trans_rev[idx][i] = twisted_idx
     with open('co_trans_rev.csv', mode='w') as f:
         writer = csv.writer(f, lineterminator='\n')
-        for line in co_trans:
+        for line in co_trans_rev:
             writer.writerow(line)
-    print('co trans done')
+    print('co trans rev done')
 
 def create_neary_solved():
     neary_solved_depth = 15
@@ -154,20 +154,21 @@ def create_neary_solved():
     #solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2]]
     solved_cp_idx = [0, 11824, 23616, 34560, 9680, 18290, 12316, 3706, 40319, 28495, 16703, 5759, 30639, 22029, 28003, 36613, 10210, 16313, 30109, 24006, 33826, 39049, 6493, 1270]
     solved_co_idx = [0, 1858, 0, 1858, 1421, 1421, 1421, 1421, 0, 1858, 0, 1858, 1421, 1421, 1421, 1421, 0, 1858, 0, 1858, 0, 1858, 0, 1858]
-    que = deque([[solved_cp_idx[i], solved_co_idx[i], 0, [], -1] for i in range(24)])
+    for i in range(24):
+        twisted_idx = solved_cp_idx[i] * 2187 + solved_co_idx[i]
+        neary_solved_idx.add(twisted_idx)
+        neary_solved_cost_dic[twisted_idx] = 0
+        neary_solved_idx_dic[twisted_idx] = len(neary_solved)
+        neary_solved.append([twisted_idx, 0, []])
+    que = deque([[solved_cp_idx[i], solved_co_idx[i], 0, [], 2] for i in range(24)])
     cnt = 0
     while que:
         cnt += 1
         if cnt % 1000 == 0:
             print(cnt, len(que))
         cp_idx, co_idx, cost, move, mode = que.popleft()
-        if mode == -1:
-            twists = range(12)
-        elif mode == 0:
-            twists = range(6, 12)
-        elif mode == 1:
-            twists = range(6)
-        for twist in twists:
+        twists = [range(6, 12), range(6), range(12)]
+        for twist in twists[mode]:
             cost_pls = cost_lst[twist]
             twisted_cp_idx = cp_trans_rev[cp_idx][twist]
             twisted_co_idx = co_trans_rev[co_idx][twist]
@@ -201,6 +202,6 @@ create_cp_trans()
 create_co_trans()
 create_cp_cost()
 create_co_cost()
-create_co_trans_rev()
-create_cp_trans_rev()
-create_neary_solved()
+#create_cp_trans_rev()
+#create_co_trans_rev()
+#create_neary_solved()

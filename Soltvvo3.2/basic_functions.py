@@ -5,8 +5,8 @@ def move_cp(cp, arr):
     surface = [[3, 1, 7, 5], [1, 0, 7, 6], [0, 2, 4, 6], [2, 3, 5, 4]]
     replace = [[3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]]
     res = [i for i in cp]
-    for i, j in zip(surface[arr[0]], replace[(arr[1] + 1) % 3]):
-        res[i] = cp[surface[arr[0]][j]]
+    for i, j in zip(surface[arr[0]], replace[-(arr[1] + 1)]):
+        res[surface[arr[0]][j]] = cp[i]
     return res
 
 # 回転処理 CO
@@ -14,11 +14,11 @@ def move_cp(cp, arr):
 def move_co(co, arr):
     surface = [[3, 1, 7, 5], [1, 0, 7, 6], [0, 2, 4, 6], [2, 3, 5, 4]]
     replace = [[3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]]
-    pls = [2, 1, 1, 2]
+    pls = [2, 1, 2, 1]
     res = [i for i in co]
-    for i, j in zip(surface[arr[0]], replace[(arr[1] + 1) % 3]):
-        res[i] = co[surface[arr[0]][j]]
-    if abs(arr[1]) != 2:
+    for i, j in zip(surface[arr[0]], replace[-(arr[1] + 1)]):
+        res[surface[arr[0]][j]] = co[i]
+    if arr[1] != -2:
         for i in range(4):
             res[surface[arr[0]][i]] += pls[i]
             res[surface[arr[0]][i]] %= 3

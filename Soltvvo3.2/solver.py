@@ -102,11 +102,13 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
     for twist in twist_idx_lst[mode]:
         cost = cost_lst[twist]
         n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
+        #n_cp_idx = cp2idx(move_cp(idx2cp(cp_idx), twist_lst[twist]))
+        #n_co_idx = co2idx(move_co(idx2co(co_idx), twist_lst[twist]))
         n_depth = depth - cost - grip_cost
         n_now_cost = now_cost + grip_cost + cost
         n_mode = twist // 6
         n_dis = distance(n_cp_idx, n_co_idx)
-        print(n_dis, n_depth, twist, twist_lst[twist], idx2cp(n_cp_idx))
+        #print(n_dis, n_depth, twist, twist_lst[twist], idx2cp(n_cp_idx))
         if n_dis > n_depth:
             continue
         solution.append(twist)
@@ -114,7 +116,7 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         if n_dis == 0:
             return True, n_now_cost
         '''
-        if n_dis <= 17:
+        if n_dis <= 15:
             tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
             if tmp >= 0:
                 print(idx2cp(n_cp_idx))
@@ -136,6 +138,7 @@ def solver(colors):
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
     print(cp_cost[cp_idx], co_cost[co_idx])
+    print(idx2cp(cp_idx), idx2co(co_idx))
     print(distance(cp_idx, co_idx))
     if distance(cp_idx, co_idx) == 0:
         return solution, 0
@@ -180,6 +183,7 @@ co_trans = []
 with open('co_trans.csv', mode='r') as f:
     for line in map(str.strip, f):
         co_trans.append([int(i) for i in line.replace('\n', '').split(',')])
+'''
 neary_solved_idx = []
 with open('neary_solved_idx.csv', mode='r') as f:
     for line in map(str.strip, f):
@@ -187,10 +191,13 @@ with open('neary_solved_idx.csv', mode='r') as f:
 neary_solved_solution = []
 with open('neary_solved_solution.csv', mode='r') as f:
     for line in map(str.strip, f):
-        neary_solved_solution.append([int(i) for i in line.replace('\n', '').split(',')])
+        if line.replace('\n', '') == '':
+            neary_solved_solution.append([])
+        else:
+            neary_solved_solution.append([int(i) for i in line.replace('\n', '').split(',')])
 
 len_neary_solved = len(neary_solved_idx)
-
+'''
 solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
@@ -231,12 +238,14 @@ print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
 '''
 colors = [None for _ in range(6)]
-colors[0] = ['', '', 'w', 'g', '', '', '', '']
-colors[1] = ['', '', 'o', 'o', '', '', '', '']
-colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
-colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
-colors[4] = ['', '', 'r', 'r', '', '', '', '']
-colors[5] = ['', '', 'y', 'b', '', '', '', '']
+
+# U' R F R F' U2 R' F2 R2
+colors[0] = ['', '', 'g', 'o', '', '', '', '']
+colors[1] = ['', '', 'r', 'y', '', '', '', '']
+colors[2] = ['w', 'b', 'w', 'b', 'r', 'w', 'b', 'r']
+colors[3] = ['o', 'y', 'g', 'w', 'g', 'o', 'g', 'b']
+colors[4] = ['', '', 'r', 'o', '', '', '', '']
+colors[5] = ['', '', 'y', 'y', '', '', '', '']
 '''
 colors[0] = ['', '', 'w', 'g', '', '', '', '']
 colors[1] = ['', '', 'b', 'y', '', '', '', '']
@@ -244,5 +253,30 @@ colors[2] = ['o', 'r', 'y', 'g', 'o', 'w', 'o', 'b']
 colors[3] = ['o', 'w', 'b', 'r', 'y', 'r', 'g', 'b']
 colors[4] = ['', '', 'r', 'g', '', '', '', '']
 colors[5] = ['', '', 'y', 'w', '', '', '', '']
+
+colors[0] = ['', '', 'w', 'w', '', '', '', '']
+colors[1] = ['', '', 'w', 'w', '', '', '', '']
+colors[2] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
+colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
+colors[4] = ['', '', 'y', 'y', '', '', '', '']
+colors[5] = ['', '', 'y', 'y', '', '', '', '']
 '''
+
+cp, co = create_arr(colors)
+print(cp, co)
+cp_idx, co_idx = cp2idx(cp), co2idx(co)
+print(cp_idx, co_idx)
+cp_m_idx, co_m_idx = move(cp_idx, co_idx, 8)
+print(twist_lst[8], cp_m_idx, co_m_idx)
+print(idx2cp(cp_m_idx), idx2co(co_m_idx))
+'''
+neary_solved_i = bin_search(cp_m_idx * 2187 + co_m_idx)
+print(neary_solved_i)
+print(neary_solved_idx[neary_solved_i])
+print(neary_solved_solution[neary_solved_i])
+cp_m, co_m = idx2cp(cp_m_idx), idx2co(co_m_idx)
+print(cp_m, co_m)
+'''
+print('templa')
+
 print(solver(colors))
