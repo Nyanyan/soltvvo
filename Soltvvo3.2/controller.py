@@ -1,7 +1,7 @@
 # coding:utf-8
 import serial
 import RPi.GPIO as GPIO
-from time import time
+from time import time, sleep
 
 # アクチュエータを動かすコマンドを送る
 # Send commands to move actuators
@@ -39,7 +39,6 @@ def calibration():
 # 実際にロボットを動かす
 # Move robot
 def controller(slp1, slp2, rpm, ratio, solution):
-    global ans
     strt_solv = time()
     for i, twist in enumerate(solution):
         if GPIO.input(21) == GPIO.LOW:
@@ -58,10 +57,11 @@ def controller(slp1, slp2, rpm, ratio, solution):
             sleep(slp2)
         max_turn = 0
         for each_twist in twist:
-            ser_num = twist[0] // 2
-            move_actuator(ser_num, ans[i][0] % 2, ans[i][1] * 90, rpm)
-            max_turn = max(abs(each_twist[1]))
-        slptim = 2 * 60 / rpm * (max_turn * 90 - offset) / 360 * ratio
+            move_actuator(each_twist[0] // 2, each_twist[0] % 2, each_twist[1] * 90, rpm)
+            print(each_twist[0] // 2, each_twist[0] % 2, each_twist[1] * 90)
+            max_turn = max(max_turn, abs(each_twist[1]))
+        slptim = 2 * 60 / rpm * max_turn * 90 / 360 * ratio
+        print(twist)
         sleep(slptim)
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
     return solv_time

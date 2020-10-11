@@ -1,6 +1,8 @@
 # coding:utf-8
 import tkinter
+from time import sleep
 
+from basic_functions import *
 from solver import solver
 from controller import controller, grab_p, release_p, calibration, move_actuator
 from detector import detector
@@ -9,28 +11,28 @@ from detector import detector
 # Slow
 def start_slow_p():
     global solution
-    controller(0.15, 0.15, 300, 1.2, solution)
+    solutionvar.set(controller(0.15, 0.15, 300, 1.2, solution))
     solution = []
 
 # 通常運転
 # Medium
 def start_medium_p():
     global solution
-    controller(0.1, 0.1, 400, 1.0, solution)
+    solutionvar.set(controller(0.1, 0.1, 400, 1, solution))
     solution = []
 
 # 速運転
 # Fast
 def start_fast_p():
     global solution
-    controller(0.095, 0.095, 550, 0.9, solution)
+    solutionvar.set(controller(0.095, 0.095, 550, 0.9, solution))
     solution = []
 
 # 爆速運転
 # Super Fast
 def start_superfast_p():
     global solution
-    controller(0.1, 0.1, 600, 1, solution)
+    solutionvar.set(controller(0.1, 0.1, 600, 1, solution))
     solution = []
 
 def rotate_colors(colors):
@@ -102,12 +104,10 @@ def inspection_p():
     sleep(0.2)
     for j in range(2):
         move_actuator(j, (grab + 1) % 2, 2000)
+    print(solution)
 
 
 solution = []
-dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
-parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'b', 'o'], ['y', 'r', 'b']]
-parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 2], [3, 7], [3, 0]], [[5, 3], [3, 5], [3, 6]]]
 
 
 bluetoothmode = False

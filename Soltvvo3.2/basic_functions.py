@@ -2,23 +2,23 @@
 # 回転処理 CP
 # Rotate CP
 def move_cp(cp, arr):
-    surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
-    replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+    surface = [[3, 1, 7, 5], [1, 0, 7, 6], [0, 2, 4, 6], [2, 3, 5, 4]]
+    replace = [[3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]]
     res = [i for i in cp]
-    for i, j in zip(surface[arr[0]], replace[-arr[1] - 1]):
+    for i, j in zip(surface[arr[0]], replace[(arr[1] + 1) % 3]):
         res[i] = cp[surface[arr[0]][j]]
     return res
 
 # 回転処理 CO
 # Rotate CO
 def move_co(co, arr):
-    surface = [[3, 1, 5, 7], [1, 0, 7, 6], [0, 2, 6, 4], [2, 3, 4, 5]]
-    replace = [[1, 3, 0, 2], [3, 2, 1, 0], [2, 0, 3, 1]]
+    surface = [[3, 1, 7, 5], [1, 0, 7, 6], [0, 2, 4, 6], [2, 3, 5, 4]]
+    replace = [[3, 0, 1, 2], [2, 3, 0, 1], [1, 2, 3, 0]]
     pls = [2, 1, 1, 2]
     res = [i for i in co]
-    for i, j in zip(surface[arr[0]], replace[-arr[1] - 1]):
+    for i, j in zip(surface[arr[0]], replace[(arr[1] + 1) % 3]):
         res[i] = co[surface[arr[0]][j]]
-    if arr[1] != -2:
+    if abs(arr[1]) != 2:
         for i in range(4):
             res[surface[arr[0]][i]] += pls[i]
             res[surface[arr[0]][i]] %= 3
@@ -72,5 +72,11 @@ for i in range(1, 9):
     fac.append(fac[-1] * i)
 
 grip_cost = 1
+j2color = ['g', 'b', 'r', 'o', 'y', 'w']
+dic = {'w':'white', 'g':'green', 'r':'red', 'b':'blue', 'o':'magenta', 'y':'yellow'}
+parts_color = [['w', 'o', 'b'], ['w', 'b', 'r'], ['w', 'g', 'o'], ['w', 'r', 'g'], ['y', 'o', 'g'], ['y', 'g', 'r'], ['y', 'b', 'o'], ['y', 'r', 'b']]
+parts_place = [[[0, 2], [2, 0], [2, 7]], [[0, 3], [2, 6], [2, 5]], [[1, 2], [2, 2], [2, 1]], [[1, 3], [2, 4], [2, 3]], [[4, 2], [3, 1], [3, 2]], [[4, 3], [3, 3], [3, 4]], [[5, 2], [3, 7], [3, 0]], [[5, 3], [3, 5], [3, 6]]]
+twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -2]]]
+cost_lst = [1, 2, 1, 1, 2, 2, 1, 2, 1, 1, 2, 2]
 
 print('basic functions initialized')

@@ -1,6 +1,8 @@
 # coding:utf-8
+from basic_functions import *
 from controller import move_actuator
 import cv2
+from time import sleep
 
 # 埋まっていないところで色が確定するところを埋める
 # Fill boxes if the color can be decided

@@ -43,7 +43,6 @@ from basic_functions import *
 # 色の情報からパズルの状態配列を作る
 # Make CO and CP array from the colors of stickers
 def create_arr(colors):
-    j2color = ['g', 'b', 'r', 'o', 'y', 'w']
     for i in j2color:
         cnt = 0
         for j in colors:
@@ -100,7 +99,6 @@ def bin_search(num):
 def search(cp_idx, co_idx, depth, mode, now_cost):
     global solution
     twist_idx_lst = [range(6, 12), range(6), range(12)]
-    cost_lst = [1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2]
     for twist in twist_idx_lst[mode]:
         cost = cost_lst[twist]
         n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
@@ -111,13 +109,18 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         if n_dis > n_depth:
             continue
         solution.append(twist)
+        #print(n_dis, n_depth, solution, idx2cp(n_cp_idx))
         if n_dis == 0:
             return True, n_now_cost
+        '''
         if n_dis <= 17:
             tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
             if tmp >= 0:
+                print(idx2cp(n_cp_idx))
+                print(neary_solved_solution[tmp])
                 solution.extend(neary_solved_solution[tmp])
-                return True, now_cost + neary_solved_idx[tmp][1]
+                return True, now_cost + grip_cost + neary_solved_idx[tmp][1]
+        '''
         tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
         if tmp:
             return True, ans_cost
@@ -127,8 +130,12 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
 def solver(colors):
     global solution
     cp, co = create_arr(colors)
+    if cp == -1 or co == -1:
+        return -1, -1
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
+    print(cp_cost[cp_idx], co_cost[co_idx])
+    print(distance(cp_idx, co_idx))
     if distance(cp_idx, co_idx) == 0:
         return solution, 0
     res = []
@@ -157,7 +164,7 @@ def solver(colors):
     '''
     if res == []:
         return -1, res_cost
-    twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
+    twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -2]]]
     return [twist_lst[i] for i in res], res_cost
 
 with open('cp_cost.csv', mode='r') as f:
@@ -222,3 +229,19 @@ print('cnt', cnt)
 print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
 '''
+colors = [None for _ in range(6)]
+colors[0] = ['', '', 'w', 'g', '', '', '', '']
+colors[1] = ['', '', 'o', 'o', '', '', '', '']
+colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
+colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
+colors[4] = ['', '', 'r', 'r', '', '', '', '']
+colors[5] = ['', '', 'y', 'b', '', '', '', '']
+'''
+colors[0] = ['', '', 'w', 'g', '', '', '', '']
+colors[1] = ['', '', 'b', 'y', '', '', '', '']
+colors[2] = ['o', 'r', 'y', 'g', 'o', 'w', 'o', 'b']
+colors[3] = ['o', 'w', 'b', 'r', 'y', 'r', 'g', 'b']
+colors[4] = ['', '', 'r', 'g', '', '', '', '']
+colors[5] = ['', '', 'y', 'w', '', '', '', '']
+'''
+print(solver(colors))
