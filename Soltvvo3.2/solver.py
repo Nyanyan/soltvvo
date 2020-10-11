@@ -106,6 +106,7 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         n_now_cost = now_cost + grip_cost + cost
         n_mode = twist // 6
         n_dis = distance(n_cp_idx, n_co_idx)
+        print(n_dis, n_depth, twist, twist_lst[twist], idx2cp(n_cp_idx))
         if n_dis > n_depth:
             continue
         solution.append(twist)
