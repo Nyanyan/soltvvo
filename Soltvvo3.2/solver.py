@@ -113,7 +113,7 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
             continue
         solution.append(twist)
         #print(n_dis, n_depth, solution, idx2cp(n_cp_idx))
-        if n_dis == 0:
+        if n_dis == 0 and solved_cp.index(idx2cp(n_cp_idx)) == solved_co.index(idx2co(n_co_idx)):
             return True, n_now_cost
         '''
         if n_dis <= 15:
@@ -130,22 +130,20 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
         solution.pop()
     return False, -1
 
-def solver(colors):
+def solver(cp, co):
     global solution
-    cp, co = create_arr(colors)
+    #cp, co = create_arr(colors)
     if cp == -1 or co == -1:
         return -1, -1
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
-    print(cp_cost[cp_idx], co_cost[co_idx])
-    print(idx2cp(cp_idx), idx2co(co_idx))
-    print(distance(cp_idx, co_idx))
     if distance(cp_idx, co_idx) == 0:
-        return solution, 0
+        return [], 0
     res = []
     res_cost = 0
     # IDA* Algorithm
-    for depth in range(1, 30):
+    for depth in range(1, 34):
+        solution = []
         tmp, cost = search(cp_idx, co_idx, depth, 2, 0)
         if tmp:
             res = solution
@@ -204,17 +202,15 @@ solved_co_idx = 0
 
 print('solver initialized')
 
-'''
+
 # TEST
 from time import time
 from random import randint
-num = 1000
+num = 100
 max_scramble_num = 100
-twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -3]]]
 time_lst = []
-cost_lst = []
 cnt = 0
-for _ in range(num):
+for i in range(num):
     scramble_cp = [0, 1, 2, 3, 4, 5, 6, 7]
     scramble_co = [0, 0, 0, 0, 0, 0, 0, 0]
     scramble_num = randint(1, max_scramble_num)
@@ -233,11 +229,21 @@ for _ in range(num):
     #print(solv_time)
     time_lst.append(solv_time)
     cost_lst.append(cost)
+    #print(i, solv_time, cost)
 print('cnt', cnt)
 print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
+
 '''
 colors = [None for _ in range(6)]
+
+# F' U2 R U' R2 U F2 U R'
+colors[0] = ['', '', 'g', 'r', '', '', '', '']
+colors[1] = ['', '', 'o', 'y', '', '', '', '']
+colors[2] = ['y', 'g', 'w', 'r', 'g', 'b', 'w', 'o']
+colors[3] = ['o', 'y', 'r', 'b', 'w', 'r', 'g', 'b']
+colors[4] = ['', '', 'b', 'o', '', '', '', '']
+colors[5] = ['', '', 'y', 'w', '', '', '', '']
 
 # U' R F R F' U2 R' F2 R2
 colors[0] = ['', '', 'g', 'o', '', '', '', '']
@@ -246,7 +252,7 @@ colors[2] = ['w', 'b', 'w', 'b', 'r', 'w', 'b', 'r']
 colors[3] = ['o', 'y', 'g', 'w', 'g', 'o', 'g', 'b']
 colors[4] = ['', '', 'r', 'o', '', '', '', '']
 colors[5] = ['', '', 'y', 'y', '', '', '', '']
-'''
+
 colors[0] = ['', '', 'w', 'g', '', '', '', '']
 colors[1] = ['', '', 'b', 'y', '', '', '', '']
 colors[2] = ['o', 'r', 'y', 'g', 'o', 'w', 'o', 'b']
@@ -260,23 +266,13 @@ colors[2] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
 colors[3] = ['o', 'o', 'g', 'g', 'r', 'r', 'b', 'b']
 colors[4] = ['', '', 'y', 'y', '', '', '', '']
 colors[5] = ['', '', 'y', 'y', '', '', '', '']
-'''
 
-cp, co = create_arr(colors)
-print(cp, co)
-cp_idx, co_idx = cp2idx(cp), co2idx(co)
-print(cp_idx, co_idx)
-cp_m_idx, co_m_idx = move(cp_idx, co_idx, 8)
-print(twist_lst[8], cp_m_idx, co_m_idx)
-print(idx2cp(cp_m_idx), idx2co(co_m_idx))
-'''
-neary_solved_i = bin_search(cp_m_idx * 2187 + co_m_idx)
-print(neary_solved_i)
-print(neary_solved_idx[neary_solved_i])
-print(neary_solved_solution[neary_solved_i])
-cp_m, co_m = idx2cp(cp_m_idx), idx2co(co_m_idx)
-print(cp_m, co_m)
-'''
-print('templa')
+colors[0] = ['', '', 'w', 'o', '', '', '', '']
+colors[1] = ['', '', 'w', 'g', '', '', '', '']
+colors[2] = ['b', 'o', 'g', 'y', 'r', 'w', 'b', 'r']
+colors[3] = ['o', 'o', 'g', 'g', 'w', 'r', 'b', 'b']
+colors[4] = ['', '', 'y', 'r', '', '', '', '']
+colors[5] = ['', '', 'y', 'y', '', '', '', '']
 
 print(solver(colors))
+'''

@@ -46,7 +46,7 @@ def create_cp_cost():
         for line in map(str.strip, f):
             cp_trans.append([int(i) for i in line.replace('\n', '').split(',')])
     cp_cost = [1000 for _ in range(fac[8])]
-    solved_cp_idx = [0, 11824, 23616, 34560, 9680, 18290, 12316, 3706, 40319, 28495, 16703, 5759, 30639, 22029, 28003, 36613, 10210, 16313, 30109, 24006, 33826, 39049, 6493, 1270]
+    solved_cp_idx = [cp2idx(i) for i in solved_cp]
     que = deque([[i, 0] for i in solved_cp_idx])
     for i in solved_cp_idx:
         cp_cost[i] = 0
@@ -74,7 +74,7 @@ def create_co_cost():
         for line in map(str.strip, f):
             co_trans.append([int(i) for i in line.replace('\n', '').split(',')])
     co_cost = [1000 for _ in range(3 ** 7)]
-    solved_co_idx = [0, 1858, 1421]
+    solved_co_idx = list(set([co2idx(i) for i in solved_co]))
     que = deque([[i, 0] for i in solved_co_idx])
     for i in solved_co_idx:
         co_cost[i] = 0
@@ -150,10 +150,8 @@ def create_neary_solved():
     neary_solved_idx = set()
     neary_solved_cost_dic = {}
     neary_solved_idx_dic = {}
-    #solved_cp = [[0, 1, 2, 3, 4, 5, 6, 7], [2, 3, 4, 5, 6, 7, 0, 1], [4, 5, 6, 7, 0, 1, 2, 3], [6, 7, 0, 1, 2, 3, 4, 5], [1, 7, 3, 5, 2, 4, 0, 6], [3, 5, 2, 4, 0, 6, 1, 7], [2, 4, 0, 6, 1, 7, 3, 5], [0, 6, 1, 7, 3, 5, 2, 4], [7, 6, 5, 4, 3, 2, 1, 0], [5, 4, 3, 2, 1, 0, 7, 6], [3, 2, 1, 0, 7, 6, 5, 4], [1, 0, 7, 6, 5, 4, 3, 2], [6, 0, 4, 2, 5, 3, 7, 1], [4, 2, 5, 3, 7, 1, 6, 0], [5, 3, 7, 1, 6, 0, 4, 2], [7, 1, 6, 0, 4, 2, 5, 3], [2, 0, 3, 1, 5, 7, 4, 6], [3, 1, 5, 7, 4, 6, 2, 0], [5, 7, 4, 6, 2, 0, 3, 1], [4, 6, 2, 0, 3, 1, 5, 7], [6, 4, 7, 5, 1, 3, 0, 2], [7, 5, 1, 3, 0, 2, 6, 4], [1, 3, 0, 2, 6, 4, 7, 5], [0, 2, 6, 4, 7, 5, 1, 3]]
-    #solved_co = [[0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [1, 2, 2, 1, 1, 2, 2, 1], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2], [0, 0, 0, 0, 0, 0, 0, 0], [2, 1, 1, 2, 2, 1, 1, 2]]
-    solved_cp_idx = [0, 11824, 23616, 34560, 9680, 18290, 12316, 3706, 40319, 28495, 16703, 5759, 30639, 22029, 28003, 36613, 10210, 16313, 30109, 24006, 33826, 39049, 6493, 1270]
-    solved_co_idx = [0, 1858, 0, 1858, 1421, 1421, 1421, 1421, 0, 1858, 0, 1858, 1421, 1421, 1421, 1421, 0, 1858, 0, 1858, 0, 1858, 0, 1858]
+    solved_cp_idx = [cp2idx(i) for i in solved_cp]
+    solved_co_idx = [co2idx(i) for i in solved_co]
     for i in range(24):
         twisted_idx = solved_cp_idx[i] * 2187 + solved_co_idx[i]
         neary_solved_idx.add(twisted_idx)
@@ -198,8 +196,8 @@ def create_neary_solved():
             writer.writerow(line)
     print('neary solved done')
 
-create_cp_trans()
-create_co_trans()
+#create_cp_trans()
+#create_co_trans()
 create_cp_cost()
 create_co_cost()
 #create_cp_trans_rev()
