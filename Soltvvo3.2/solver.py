@@ -102,43 +102,35 @@ def search(cp_idx, co_idx, depth, mode, now_cost):
     for twist in twist_idx_lst[mode]:
         cost = cost_lst[twist]
         n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
-        #n_cp_idx = cp2idx(move_cp(idx2cp(cp_idx), twist_lst[twist]))
-        #n_co_idx = co2idx(move_co(idx2co(co_idx), twist_lst[twist]))
         n_depth = depth - cost - grip_cost
         n_now_cost = now_cost + grip_cost + cost
         n_mode = twist // 6
         n_dis = distance(n_cp_idx, n_co_idx)
-        #print(n_dis, n_depth, twist, twist_lst[twist], idx2cp(n_cp_idx))
         if n_dis > n_depth:
             continue
         solution.append(twist)
-        #print(n_dis, n_depth, solution, idx2cp(n_cp_idx))
-        if n_dis == 0 and solved_cp.index(idx2cp(n_cp_idx)) == solved_co.index(idx2co(n_co_idx)):
-            return True, n_now_cost
-        '''
-        if n_dis <= 15:
+        if n_dis <= neary_solved_depth <= n_depth:
             tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
-            if tmp >= 0:
-                print(idx2cp(n_cp_idx))
-                print(neary_solved_solution[tmp])
+            if tmp >= 0 and neary_solved_solution[tmp][0] // 6 != solution[-1] // 6:
                 solution.extend(neary_solved_solution[tmp])
                 return True, now_cost + grip_cost + neary_solved_idx[tmp][1]
-        '''
         tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
         if tmp:
             return True, ans_cost
         solution.pop()
     return False, -1
 
-def solver(cp, co):
+def solver(colors):
     global solution
-    #cp, co = create_arr(colors)
+    cp, co = create_arr(colors)
     if cp == -1 or co == -1:
         return -1, -1
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
-    if distance(cp_idx, co_idx) == 0:
-        return [], 0
+    if distance(cp_idx, co_idx) <= neary_solved_depth:
+        tmp = bin_search(cp_idx * 2187 + co_idx)
+        if tmp >= 0:
+            return [twist_lst[i] for i in neary_solved_solution[tmp]], neary_solved_idx[tmp][1]
     res = []
     res_cost = 0
     # IDA* Algorithm
@@ -166,7 +158,7 @@ def solver(cp, co):
     '''
     if res == []:
         return -1, res_cost
-    twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -2]]]
+    #twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -2]]]
     return [twist_lst[i] for i in res], res_cost
 
 with open('cp_cost.csv', mode='r') as f:
@@ -181,7 +173,6 @@ co_trans = []
 with open('co_trans.csv', mode='r') as f:
     for line in map(str.strip, f):
         co_trans.append([int(i) for i in line.replace('\n', '').split(',')])
-'''
 neary_solved_idx = []
 with open('neary_solved_idx.csv', mode='r') as f:
     for line in map(str.strip, f):
@@ -195,14 +186,14 @@ with open('neary_solved_solution.csv', mode='r') as f:
             neary_solved_solution.append([int(i) for i in line.replace('\n', '').split(',')])
 
 len_neary_solved = len(neary_solved_idx)
-'''
+
 solution = []
 solved_cp_idx = 0
 solved_co_idx = 0
 
 print('solver initialized')
 
-
+'''
 # TEST
 from time import time
 from random import randint
@@ -233,7 +224,7 @@ for i in range(num):
 print('cnt', cnt)
 print('time max, avg', max(time_lst), sum(time_lst) / num)
 print('cost max, avg', max(cost_lst), sum(cost_lst) / num)
-
+'''
 '''
 colors = [None for _ in range(6)]
 

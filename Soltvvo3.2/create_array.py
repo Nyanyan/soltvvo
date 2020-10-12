@@ -105,11 +105,9 @@ def create_cp_trans_rev():
         for i, twist in enumerate(twist_lst):
             twisted_cp = [j for j in cp]
             for each_twist in twist:
-                lst = [0, -3, -2, -1]
-                each_twist[1] = lst[-each_twist[1]]
                 twisted_cp = move_cp(twisted_cp, each_twist)
             twisted_idx = cp2idx(twisted_cp)
-            cp_trans_rev[idx][i] = twisted_idx
+            cp_trans_rev[twisted_idx][i] = idx
     with open('cp_trans_rev.csv', mode='w') as f:
         writer = csv.writer(f, lineterminator='\n')
         for line in cp_trans_rev:
@@ -125,11 +123,9 @@ def create_co_trans_rev():
         for i, twist in enumerate(twist_lst):
             twisted_co = [j for j in co]
             for each_twist in twist:
-                lst = [0, -3, -2, -1]
-                each_twist[1] = lst[-each_twist[1]]
                 twisted_co = move_co(twisted_co, each_twist)
             twisted_idx = co2idx(twisted_co)
-            co_trans_rev[idx][i] = twisted_idx
+            co_trans_rev[twisted_idx][i] = idx
     with open('co_trans_rev.csv', mode='w') as f:
         writer = csv.writer(f, lineterminator='\n')
         for line in co_trans_rev:
@@ -137,7 +133,6 @@ def create_co_trans_rev():
     print('co trans rev done')
 
 def create_neary_solved():
-    neary_solved_depth = 15
     cp_trans_rev = []
     with open('cp_trans_rev.csv', mode='r') as f:
         for line in map(str.strip, f):
@@ -152,20 +147,21 @@ def create_neary_solved():
     neary_solved_idx_dic = {}
     solved_cp_idx = [cp2idx(i) for i in solved_cp]
     solved_co_idx = [co2idx(i) for i in solved_co]
+    que = deque([])
     for i in range(24):
         twisted_idx = solved_cp_idx[i] * 2187 + solved_co_idx[i]
         neary_solved_idx.add(twisted_idx)
         neary_solved_cost_dic[twisted_idx] = 0
         neary_solved_idx_dic[twisted_idx] = len(neary_solved)
         neary_solved.append([twisted_idx, 0, []])
-    que = deque([[solved_cp_idx[i], solved_co_idx[i], 0, [], 2] for i in range(24)])
+        que.append([solved_cp_idx[i], solved_co_idx[i], 0, [], 2])
+    twists = [range(6, 12), range(6), range(12)]
     cnt = 0
     while que:
         cnt += 1
         if cnt % 1000 == 0:
             print(cnt, len(que))
         cp_idx, co_idx, cost, move, mode = que.popleft()
-        twists = [range(6, 12), range(6), range(12)]
         for twist in twists[mode]:
             cost_pls = cost_lst[twist]
             twisted_cp_idx = cp_trans_rev[cp_idx][twist]
@@ -198,8 +194,8 @@ def create_neary_solved():
 
 #create_cp_trans()
 #create_co_trans()
-create_cp_cost()
-create_co_cost()
+#create_cp_cost()
+#create_co_cost()
 #create_cp_trans_rev()
 #create_co_trans_rev()
-#create_neary_solved()
+create_neary_solved()

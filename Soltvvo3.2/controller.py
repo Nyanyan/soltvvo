@@ -58,10 +58,10 @@ def controller(slp1, slp2, rpm, ratio, solution):
         max_turn = 0
         for each_twist in twist:
             move_actuator(each_twist[0] // 2, each_twist[0] % 2, each_twist[1] * 90, rpm)
-            print(each_twist[0] // 2, each_twist[0] % 2, each_twist[1] * 90)
+            #print(each_twist[0] // 2, each_twist[0] % 2, each_twist[1] * 90)
             max_turn = max(max_turn, abs(each_twist[1]))
         slptim = 2 * 60 / rpm * max_turn * 90 / 360 * ratio
-        print(twist)
+        #print(twist)
         sleep(slptim)
     solv_time = str(int((time() - strt_solv) * 1000) / 1000).ljust(5, '0')
     return solv_time
