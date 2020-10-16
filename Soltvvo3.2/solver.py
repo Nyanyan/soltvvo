@@ -1,6 +1,6 @@
 # coding:utf-8
 '''
-Code for Soltvvo2
+Code for Soltvvo3.2
 Written by Nyanyan
 Copyright 2020 Nyanyan
 
@@ -40,9 +40,11 @@ the direction of white or yellow sticker is
 
 from basic_functions import *
 
-# 色の情報からパズルの状態配列を作る
-# Make CO and CP array from the colors of stickers
+''' 色の情報からパズルの状態配列を作る '''
+''' Create CO and CP arrays from the colors of stickers '''
+
 def create_arr(colors):
+    # すべての色が4つずつ現れているかチェック
     for i in j2color:
         cnt = 0
         for j in colors:
@@ -53,6 +55,7 @@ def create_arr(colors):
     cp = [-1 for _ in range(8)]
     co = [-1 for _ in range(8)]
     set_parts_color = [set(i) for i in parts_color]
+    # パーツ1つずつCPとCOを埋めていく
     for i in range(8):
         tmp = []
         for j in range(3):
@@ -63,20 +66,34 @@ def create_arr(colors):
             return -1, -1
         cp[i] = set_parts_color.index(set(tmp))
     tmp2 = list(set(range(7)) - set(cp))
-    if len(tmp2):
+    if tmp2:
         tmp2 = tmp2[0]
         for i in range(7):
             if cp[i] > tmp2:
                 cp[i] -= 1
     return cp, co
 
+
+''' その状態から解までの距離を返す '''
+''' Returns the distance between the state and the solved state '''
+
 def distance(cp_idx, co_idx):
+    # CPだけ、COだけを揃えるときのそれぞれの最小コストの最大値を返す
     return max(cp_cost[cp_idx], co_cost[co_idx])
+
+
+''' 遷移テーブルを使ってパズルの状態を変化させる '''
+''' Change the state using transition tables '''
 
 def move(cp_idx, co_idx, twist):
     return cp_trans[cp_idx][twist], co_trans[co_idx][twist]
 
+
+''' 二分探索 '''
+''' Binary search '''
+
 def bin_search(num):
+    # 二分探索でneary_solvedの中で目的のインデックスを探す
     l = 0
     r = len_neary_solved
     while r - l > 1:
@@ -96,70 +113,73 @@ def bin_search(num):
     else:
         return -1
 
-def search(cp_idx, co_idx, depth, mode, now_cost):
+
+''' 深さ優先探索 '''
+''' Depth-first search '''
+
+def search(cp_idx, co_idx, depth, mode):
     global solution
+    # 前回に回した手と直交する方向の回転を使う
     twist_idx_lst = [range(6, 12), range(6), range(12)]
     for twist in twist_idx_lst[mode]:
+        # パズルを回転させる
         cost = cost_lst[twist]
         n_cp_idx, n_co_idx = move(cp_idx, co_idx, twist)
+        # 残り深さを更新
         n_depth = depth - cost - grip_cost
-        n_now_cost = now_cost + grip_cost + cost
+        # 次の再帰に使う値を計算
         n_mode = twist // 6
         n_dis = distance(n_cp_idx, n_co_idx)
         if n_dis > n_depth:
             continue
+        # グローバルの手順配列に要素を追加
         solution.append(twist)
+        # 前計算した少ないコストで揃う状態のどれかになった場合
         if n_dis <= neary_solved_depth <= n_depth:
             tmp = bin_search(n_cp_idx * 2187 + n_co_idx)
             if tmp >= 0 and neary_solved_solution[tmp][0] // 6 != solution[-1] // 6:
                 solution.extend(neary_solved_solution[tmp])
-                return True, now_cost + grip_cost + neary_solved_idx[tmp][1]
-        tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode, n_now_cost)
+                return True, grip_cost + neary_solved_idx[tmp][1]
+        # 次の深さの探索
+        tmp, ans_cost = search(n_cp_idx, n_co_idx, n_depth, n_mode)
         if tmp:
             return True, ans_cost
+        # 解が見つからなかったらグローバルの手順配列から要素をpop
         solution.pop()
     return False, -1
 
+
+''' IDA*探索 '''
+''' IDA* algorithm '''
+
 def solver(colors):
     global solution
+    # CPとCOのインデックスを求める
     cp, co = create_arr(colors)
     if cp == -1 or co == -1:
         return -1, -1
     cp_idx = cp2idx(cp)
     co_idx = co2idx(co)
+    # 探索する前にもう答えがわかってしまう場合
     if distance(cp_idx, co_idx) <= neary_solved_depth:
         tmp = bin_search(cp_idx * 2187 + co_idx)
         if tmp >= 0:
             return [twist_lst[i] for i in neary_solved_solution[tmp]], neary_solved_idx[tmp][1]
-    res = []
     res_cost = 0
-    # IDA* Algorithm
+    # IDA*
     for depth in range(1, 34):
         solution = []
-        tmp, cost = search(cp_idx, co_idx, depth, 2, 0)
+        tmp, cost = search(cp_idx, co_idx, depth, 2)
         if tmp:
-            res = solution
-            res_cost = cost
+            res_cost = depth + cost
             break
-    '''
-    # BDA* Algorithm
-    l = 0
-    r = 30
-    while l < r:
-        solution = []
-        c = (l + r) // 2
-        tmp, cost = search(cp_idx, co_idx, c, 2, 0)
-        if tmp:
-            res = [i for i in solution]
-            res_cost = cost
-            r = min(c, cost)
-        else:
-            l = c + 1
-    '''
-    if res == []:
+    if solution == []:
         return -1, res_cost
-    #twist_lst = [[[0, -1]], [[0, -2]], [[2, -1]], [[0, -1], [2, -1]], [[0, -2], [2, -1]], [[0, -1], [2, -2]], [[1, -1]], [[1, -2]], [[3, -1]], [[1, -1], [3, -1]], [[1, -2], [3, -1]], [[1, -1], [3, -2]]]
-    return [twist_lst[i] for i in res], res_cost
+    return [twist_lst[i] for i in solution], res_cost
+
+
+''' 配列の読み込み '''
+''' Load arrays '''
 
 with open('cp_cost.csv', mode='r') as f:
     cp_cost = [int(i) for i in f.readline().replace('\n', '').split(',')]
@@ -185,8 +205,8 @@ with open('neary_solved_solution.csv', mode='r') as f:
         else:
             neary_solved_solution.append([int(i) for i in line.replace('\n', '').split(',')])
 
-len_neary_solved = len(neary_solved_idx)
 
+len_neary_solved = len(neary_solved_idx)
 solution = []
 solved_cp_idx = 0
 solved_co_idx = 0

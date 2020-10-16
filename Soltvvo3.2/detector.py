@@ -94,14 +94,15 @@ def detector():
         sleep(0.2)
         #cv2.destroyAllWindows()
     capture.release()
-    '''
-    colors[0] = ['', '', 'w', 'g', '', '', '', '']
-    colors[1] = ['', '', 'o', 'o', '', '', '', '']
-    colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
-    colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
-    colors[4] = ['', '', 'r', 'r', '', '', '', '']
-    colors[5] = ['', '', 'y', 'b', '', '', '', '']
-    '''
     return colors
 
 print('detector initialized')
+
+'''
+colors[0] = ['', '', 'w', 'g', '', '', '', '']
+colors[1] = ['', '', 'o', 'o', '', '', '', '']
+colors[2] = ['o', 'y', 'g', 'g', 'w', 'r', 'w', 'b']
+colors[3] = ['o', 'b', 'y', 'y', 'g', 'r', 'w', 'b']
+colors[4] = ['', '', 'r', 'r', '', '', '', '']
+colors[5] = ['', '', 'y', 'b', '', '', '', '']
+'''
