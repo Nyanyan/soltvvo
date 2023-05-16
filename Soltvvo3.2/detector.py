@@ -71,7 +71,6 @@ def detector():
             x = center[1] + dx[i] * d
             cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
             val = show_frame[x, y]
-            print(idx, i, y, x, val)
             min_dis = 100000000
             min_color_idx = 0
             for j in range(6):
@@ -85,7 +84,8 @@ def detector():
             cv2.circle(show_frame, (y, x), 15, circlecolor[min_color_idx], thickness=3, lineType=cv2.LINE_8, shift=0)
             cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
             cv2.imshow('face',show_frame)
-            print('img shown')
+            cv2.waitKey(0)
+            print(idx, i, y, x, val, j2color[min_color_idx])
         colors = fill(colors)
         move_actuator(0, 0, -90, rpm)
         move_actuator(1, 0, 90, rpm)
