@@ -85,7 +85,7 @@ def detector():
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[min_color_idx]
             cv2.circle(show_frame, (y, x), 15, circlecolor[min_color_idx], thickness=3, lineType=cv2.LINE_8, shift=0)
             cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
-        cv2.imshow('title',show_frame)
+            cv2.imshow('face',show_frame)
         colors = fill(colors)
         move_actuator(0, 0, -90, rpm)
         move_actuator(1, 0, 90, rpm)
