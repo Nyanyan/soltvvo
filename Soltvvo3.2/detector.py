@@ -81,7 +81,7 @@ def detector():
                     min_color_idx = j
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[min_color_idx]
             cv2.circle(show_frame, (y, x), 2, circlecolor[min_color_idx], thickness=2, lineType=cv2.LINE_8, shift=0)
-            print(idx, i, y, x, val, j2color[min_color_idx])
+            #print(idx, i, y, x, val, j2color[min_color_idx])
         #cv2.imshow('face',show_frame)
         #cv2.waitKey(0)
         colors = fill(colors)
