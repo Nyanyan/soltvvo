@@ -69,7 +69,7 @@ def detector():
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
-            val = show_frame[x, y]
+            val = [elem for elem in show_frame[x, y]]
             min_dis = 100000000
             min_color_idx = 0
             for j in range(6):
