@@ -51,7 +51,7 @@ def detector():
         #color_hgh = [[90, 255, 255], [140, 255, 255], [10, 255, 200], [20, 255, 255], [50, 255, 255], [179, 50, 255]]
         #color_low = [[40, 50, 50],   [90, 50, 70],    [160, 50, 50],   [170, 50, 50],    [20, 50, 30],   [0, 0, 50]]
         #color_hgh = [[90, 255, 255], [140, 255, 200], [170, 255, 255], [10, 255, 255], [40, 255, 255], [179, 50, 255]]
-        color_center = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
+        color_center = [(80, 116, 61), (103, 53, 38), (0, 0, 255), (0, 170, 255), (72, 149, 149), (157, 144, 145)]
         circlecolor = [(0, 255, 0), (255, 0, 0), (0, 0, 255), (0, 170, 255), (0, 255, 255), (255, 255, 255)]
         surfacenum = [[[4, 2], [4, 3], [5, 2], [5, 3]], [[2, 2], [2, 3], [3, 2], [3, 3]], [[0, 2], [0, 3], [1, 2], [1, 3]], [[3, 7], [3, 6], [2, 7], [2, 6]]]
         for _ in range(5):
@@ -60,7 +60,6 @@ def detector():
         size_x = 130
         size_y = 100
         center = [size_x // 2, size_y // 2]
-        tmp_colors = [['' for _ in range(8)] for _ in range(6)]
         dx = [-1, -1, 1, 1]
         dy = [-1, 1, -1, 1]
         ret, show_frame = capture.read()
@@ -72,7 +71,7 @@ def detector():
             x = center[1] + dx[i] * d
             cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
             val = show_frame[x, y]
-            print(i, y, x, val)
+            print(idx, i, y, x, val)
             min_dis = 100000000
             min_color_idx = 0
             for j in range(6):
@@ -86,6 +85,7 @@ def detector():
             cv2.circle(show_frame, (y, x), 15, circlecolor[min_color_idx], thickness=3, lineType=cv2.LINE_8, shift=0)
             cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
             cv2.imshow('face',show_frame)
+            print('img shown')
         colors = fill(colors)
         move_actuator(0, 0, -90, rpm)
         move_actuator(1, 0, 90, rpm)
