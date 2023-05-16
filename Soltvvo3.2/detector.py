@@ -69,7 +69,6 @@ def detector():
         for i in range(4):
             y = center[0] + dy[i] * d
             x = center[1] + dx[i] * d
-            cv2.circle(show_frame, (y, x), 5, (0, 0, 0), thickness=3, lineType=cv2.LINE_8, shift=0)
             val = show_frame[x, y]
             min_dis = 100000000
             min_color_idx = 0
@@ -81,8 +80,7 @@ def detector():
                     min_dis = dis
                     min_color_idx = j
             colors[surfacenum[idx][i][0]][surfacenum[idx][i][1]] = j2color[min_color_idx]
-            cv2.circle(show_frame, (y, x), 15, circlecolor[min_color_idx], thickness=3, lineType=cv2.LINE_8, shift=0)
-            cv2.circle(show_frame, (y, x), 20, (0, 0, 0), thickness=2, lineType=cv2.LINE_8, shift=0)
+            cv2.circle(show_frame, (y, x), 2, circlecolor[min_color_idx], thickness=2, lineType=cv2.LINE_8, shift=0)
             cv2.imshow('face',show_frame)
             cv2.waitKey(0)
             print(idx, i, y, x, val, j2color[min_color_idx])
